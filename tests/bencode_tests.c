@@ -116,6 +116,56 @@ char *test_zero_padded_integers()
     return NULL;
 }
 
+char *test_decode_list()
+{
+    char *lists[] = {"le", "li0ee", "li0eli1ei2eleee",
+		     "li0ei1ei3ee",
+                     "li0ei1ei2ei3ee",
+		     "li0ei1ei2ei3ei4ee",
+		     "li0ei1ei2ei3ei4ei5ee",
+		     "li0ei1ei2ei3ei4ei5ei6ee",
+		     "li0ei1ei2ei3ei4ei5ei6ei7ee",
+		     "li0ei1ei2ei3ei4ei5ei6ei7ei8ee",
+		     "li0ei1ei2ei3ei4ei5ei6ei7ei8ei9ee"};
+    const size_t lists_len = 10;
+    size_t i = 0;
+
+    for (i = 0; i < lists_len; i++)
+    {
+	debug("List: '%s'", lists[i]);
+
+	size_t len = strlen(lists[i]);
+	BNode *node = BDecode(lists[i], len);
+	mu_assert(node != NULL, "BDecode failed");
+	mu_assert(node->type == BList, "Wrong BType");
+	mu_assert(node->count == i, "Wrong count");
+	mu_assert(node->data == lists[i], "Wrong data pointer");
+	mu_assert(node->data_len == len, "Wrong len");
+
+	BNode_destroy(node);
+    }
+
+    return NULL;
+}
+
+char *test_bad_lists()
+{
+    char *lists[] = {"l", "lle", "li00ee", "li0e", "li0eli1eeli0ei01eee"};
+    const size_t lists_len = 5;
+    size_t i = 0;
+
+    for (i = 0; i < lists_len; i++)
+    {
+	debug("Bad list: '%s'", lists[i]);
+
+	size_t len = strlen(lists[i]);
+	BNode *node = BDecode(lists[i], len);
+	mu_assert(node == NULL, "Decoded bad list without error");
+    }
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -125,6 +175,9 @@ char *all_tests()
     mu_run_test(test_integer_overflow);
     mu_run_test(test_negative_zero);
     mu_run_test(test_zero_padded_integers);
+
+    mu_run_test(test_decode_list);
+    mu_run_test(test_bad_lists);
     
     return NULL;
 }

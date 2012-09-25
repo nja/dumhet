@@ -16,7 +16,7 @@ typedef struct BNode {
     union {
 	char *string;
 	long integer;
-	struct BNode **list;
+	struct BNode **nodes;
 	BKeyVal **dictionary;
     } value;
     size_t count;

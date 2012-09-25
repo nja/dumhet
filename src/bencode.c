@@ -1,6 +1,7 @@
 #include <dbg.h>
 #include <bencode.h>
 #include <ctype.h>
+#include <assert.h>
 
 BNode *BNode_create(BType type)
 {
@@ -77,6 +78,79 @@ BNode *BDecode_integer(char *data, size_t len)
     return node;
 error:
     return NULL;
+}
+
+BNode **add_to_list(BNode *node, BNode **nodes, size_t *count, size_t *capacity)
+{
+    const size_t InitialCapacity = 8;
+
+    if (*count == *capacity)
+    {
+	assert(*capacity > 0 || nodes == NULL);
+
+	size_t new_capacity = *capacity > 0 ? *capacity * 2 : InitialCapacity;
+	BNode **new_nodes = realloc(nodes, new_capacity * sizeof(BNode *));
+	check_mem(new_nodes);
+
+	memset(new_nodes + *capacity,
+	       0,
+	       (new_capacity - *capacity) * sizeof(BNode *));
+
+	nodes = new_nodes;
+	*capacity = new_capacity;
+    }
+
+    nodes[(*count)++] = node;
+    return nodes;
+error:
+    free(nodes);
+    return NULL;
+}
+
+BNode *BDecode_list(char *data, size_t len)
+{
+    BNode **nodes = NULL;
+    size_t count = 0, capacity = 0, i = 0;
+
+    check(len > 0, "Not enough data for a list");
+    check(*data == 'l', "Bad list start");
+
+    char *next = data + 1;
+    size_t next_len = len - 1;
+
+    while (next_len > 0 && *next != 'e')
+    {
+	BNode *node = BDecode(next, next_len);
+	check(node != NULL, "Decoding list node failed");
+
+	nodes = add_to_list(node, nodes, &count, &capacity);
+	check(node != NULL, "Growing list failed");
+
+	next += node->data_len;
+	next_len -= node->data_len;
+    }
+
+    check(*next == 'e', "Non-terminated list");
+
+    BNode *list = BNode_create(BList);
+    check_mem(list);
+
+    list->value.nodes = nodes;
+    list->count = count;
+    list->data = data;
+    list->data_len = next - data + 1;
+
+    return list;
+
+error:
+    for (i = 0; i < count; i++)
+    {
+	BNode_destroy(nodes[i]);
+    }
+	
+    free(nodes);
+
+    return NULL;
 }    
 
 BNode *BDecode(char *data, size_t len)
@@ -85,7 +159,20 @@ BNode *BDecode(char *data, size_t len)
 
     check(data != NULL, "NULL data");
 
-    node = BDecode_integer(data, len);
+    if (len == 0)
+	return NULL;
+
+    switch (*data)
+    {
+    case 'i': 
+	node = BDecode_integer(data, len);
+	break;
+    case 'l':
+	node = BDecode_list(data, len);
+	break;
+    default:
+	log_err("Bad bencode start byte: 0x%02X", *data);
+    }	
 
     return node;
 
@@ -98,5 +185,19 @@ error:
 
 void BNode_destroy(BNode *node)
 {
+    if (node == NULL)
+	return;
+
+    if (node->type == BList)
+    {
+	size_t i = 0;
+	for (i = 0; i < node->count; i++)
+	{
+	    BNode_destroy(node->value.nodes[i]);
+	}
+	
+	free(node->value.nodes);
+    }
+
     free(node);
 }
