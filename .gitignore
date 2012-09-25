@@ -1,0 +1,8 @@
+*~
+*.o
+/build
+/bin
+/tests/tests.log
+/tests/*_tests
+cachegrind.out.*
+callgrind.out.*
