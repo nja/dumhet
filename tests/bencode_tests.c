@@ -11,13 +11,13 @@ static const int values_len = 10;
 char *test_decode_integer()
 {
     const int buffer_size = 128;
-    char string[buffer_size];
+    uint8_t string[buffer_size];
     int i = 0;
 
     for (i = 0; i < values_len; i++)
     {
-	sprintf(string, "'i%lde'", values[i]);
-	size_t len = strlen(string) - 2;
+	sprintf((char *)string, "'i%lde'", values[i]);
+	size_t len = strlen((char *)string) - 2;
 
 	debug("Integer: %s", string);
 
@@ -45,9 +45,7 @@ char *test_undelimited_integers()
     {
 	debug("Undelimited integer: '%s'", strings[i]);
 
-	size_t len = strlen(strings[i]);
-
-	BNode *node = BDecode(strings[i], len);
+	BNode *node = BDecode_strlen(strings[i]);
 	mu_assert(node == NULL, "Decoded undelimited integer without error");
     }
 
@@ -68,7 +66,7 @@ char *test_integer_overflow()
 
 	debug("Overflow integer: '%s'", string);
 
-	BNode *node = BDecode(string, string_max_len);
+	BNode *node = BDecode_str(string, string_max_len);
 	mu_assert(node == NULL, "Decoded overflowing integer without error");
     }
 
@@ -78,9 +76,8 @@ char *test_integer_overflow()
 char *test_negative_zero()
 {
     char *negative_zero = "i-0e";
-    size_t len = strlen(negative_zero);
 
-    BNode *node = BDecode(negative_zero, len);
+    BNode *node = BDecode_strlen(negative_zero);
     mu_assert(node == NULL, "Decoded negative zero without error");
 
     return NULL;
@@ -109,7 +106,7 @@ char *test_zero_padded_integers()
 	
 	debug("Integer: %s", string);
 
-	BNode *node = BDecode(string + 1, buffer_size - 1);
+	BNode *node = BDecode_str(string + 1, buffer_size - 1);
 	mu_assert(node == NULL, "Decoded zero padded integer without error");
     }
     
@@ -135,11 +132,11 @@ char *test_decode_list()
 	debug("List: '%s'", lists[i]);
 
 	size_t len = strlen(lists[i]);
-	BNode *node = BDecode(lists[i], len);
+	BNode *node = BDecode_str(lists[i], len);
 	mu_assert(node != NULL, "BDecode failed");
 	mu_assert(node->type == BList, "Wrong BType");
 	mu_assert(node->count == i, "Wrong count");
-	mu_assert(node->data == lists[i], "Wrong data pointer");
+	mu_assert(node->data == (uint8_t *)lists[i], "Wrong data pointer");
 	mu_assert(node->data_len == len, "Wrong len");
 
 	BNode_destroy(node);
@@ -158,8 +155,7 @@ char *test_bad_lists()
     {
 	debug("Bad list: '%s'", lists[i]);
 
-	size_t len = strlen(lists[i]);
-	BNode *node = BDecode(lists[i], len);
+	BNode *node = BDecode_strlen(lists[i]);
 	mu_assert(node == NULL, "Decoded bad list without error");
     }
 
@@ -180,11 +176,11 @@ char *test_decode_string()
 
 	debug("String: '%s'", buffer);
 
-	BNode *node = BDecode(buffer, buffer_size);
+	BNode *node = BDecode_str(buffer, buffer_size);
 	mu_assert(node != NULL, "BDecode failed");
-	mu_assert(strncmp(strings[i], node->value.string, len) == 0, "Wrong string");
+	mu_assert(strncmp(strings[i], (char *)node->value.string, len) == 0, "Wrong string");
 	mu_assert(node->count == len, "Wrong count");
-	mu_assert(node->data == buffer, "Wrong data pointer");
+	mu_assert(node->data == (uint8_t *)buffer, "Wrong data pointer");
 	mu_assert(node->data_len == strlen(buffer), "Wrong data len");
 
 	BNode_destroy(node);
@@ -203,8 +199,49 @@ char *test_bad_strings()
     {
 	debug("Bad string: '%s'", strings[i]);
 
-	BNode *node = BDecode(strings[i], strlen(strings[i]));
+	BNode *node = BDecode_strlen(strings[i]);
 	mu_assert(node == NULL, "Decoded bad string without error");
+    }
+
+    return NULL;
+}
+
+char *test_decode_dictionary()
+{
+    char *dicts[] = {"de", "d1:b2:bae", "d0:li1ei11ee2:xxd3:vvvi-3e3:xxxi-3eee",
+		     "d1:\0010:1:\1760:1:\1770:e"};
+    const size_t dicts_len = 4;
+    size_t i = 0;
+
+    for (i = 0; i < dicts_len; i++)
+    {
+	debug("Dictionary: '%s'", dicts[i]);
+
+	BNode *node = BDecode_strlen(dicts[i]);
+	mu_assert(node != NULL, "BDecode failed");
+	mu_assert(node->type == BDictionary, "Wrong BType");
+	mu_assert(node->count == i * 2, "Wrong count");
+	mu_assert(node->data == (uint8_t *)dicts[i], "Wrong data pointer");
+	mu_assert(node->data_len = strlen(dicts[i]), "Wrong data_len");
+
+	BNode_destroy(node);
+    }
+
+    return NULL;
+}
+
+char *test_bad_dictionaries()
+{
+    char *dicts[] = {"d2:ab0:2:cde", "d1:zi1e2:ai2ee", "d1:a0:2:bb0:"};
+    const size_t dicts_len = 3;
+    size_t i = 0;
+
+    for (i = 0; i < dicts_len; i++)
+    {
+	debug("Bad dictioniary: '%s'", dicts[i]);
+
+	BNode *node = BDecode_strlen(dicts[i]);
+	mu_assert(node == NULL, "Decoded bad dictionary without error");
     }
 
     return NULL;
@@ -225,6 +262,9 @@ char *all_tests()
 
     mu_run_test(test_decode_string);
     mu_run_test(test_bad_strings);
+
+    mu_run_test(test_decode_dictionary);
+    mu_run_test(test_bad_dictionaries);
    
     return NULL;
 }
