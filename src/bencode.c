@@ -103,13 +103,12 @@ BNode **add_to_list(BNode *node, BNode **nodes, size_t *count, size_t *capacity)
     nodes[(*count)++] = node;
     return nodes;
 error:
-    free(nodes);
     return NULL;
 }
 
 BNode *BDecode_list_or_dict(uint8_t *data, size_t len, char head_ch, BType type)
 {
-    
+    BNode *node = NULL;
     BNode **nodes = NULL;
     size_t count = 0, capacity = 0, i = 0;
 
@@ -121,11 +120,12 @@ BNode *BDecode_list_or_dict(uint8_t *data, size_t len, char head_ch, BType type)
 
     while (next_len > 0 && *next != 'e')
     {
-	BNode *node = BDecode(next, next_len);
+	node = BDecode(next, next_len);
 	check(node != NULL, "Decoding list node failed");
 
-	nodes = add_to_list(node, nodes, &count, &capacity);
-	check(node != NULL, "Growing list failed");
+	BNode **new_nodes = add_to_list(node, nodes, &count, &capacity);
+	check(new_nodes != NULL, "Growing list failed");
+	nodes = new_nodes;
 
 	next += node->data_len;
 	next_len -= node->data_len;
@@ -147,7 +147,12 @@ error:
     for (i = 0; i < count; i++)
     {
 	BNode_destroy(nodes[i]);
+
+	if (node == nodes[i])
+	    node = NULL;
     }
+
+    BNode_destroy(node);
 	
     free(nodes);
 
