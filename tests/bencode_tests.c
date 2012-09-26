@@ -166,6 +166,50 @@ char *test_bad_lists()
     return NULL;
 }
 
+char *test_decode_string()
+{
+    char *strings[] = {"", "a", "123456789012345", "abcdefghijklmnopq@#$%^&*()!"};
+    const size_t strings_len = 4, buffer_size = 128;
+    size_t i = 0;
+    char buffer[buffer_size];
+
+    for (i = 0; i < strings_len; i++)
+    {
+	size_t len = strlen(strings[i]);
+	sprintf(buffer, "%lu:%s", len, strings[i]);
+
+	debug("String: '%s'", buffer);
+
+	BNode *node = BDecode(buffer, buffer_size);
+	mu_assert(node != NULL, "BDecode failed");
+	mu_assert(strncmp(strings[i], node->value.string, len) == 0, "Wrong string");
+	mu_assert(node->count == len, "Wrong count");
+	mu_assert(node->data == buffer, "Wrong data pointer");
+	mu_assert(node->data_len == strlen(buffer), "Wrong data len");
+
+	BNode_destroy(node);
+    }
+
+    return NULL;
+}
+
+char *test_bad_strings()
+{
+    char *strings[] = {"1:", "2:a", "3abcd", "03:abc"};
+    const size_t strings_len = 4;
+    size_t i = 0;
+    
+    for (i = 0; i < strings_len; i++)
+    {
+	debug("Bad string: '%s'", strings[i]);
+
+	BNode *node = BDecode(strings[i], strlen(strings[i]));
+	mu_assert(node == NULL, "Decoded bad string without error");
+    }
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -178,7 +222,10 @@ char *all_tests()
 
     mu_run_test(test_decode_list);
     mu_run_test(test_bad_lists);
-    
+
+    mu_run_test(test_decode_string);
+    mu_run_test(test_bad_strings);
+   
     return NULL;
 }
 

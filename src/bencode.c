@@ -151,7 +151,59 @@ error:
     free(nodes);
 
     return NULL;
-}    
+}
+
+char *find_string_length_end(char *data, size_t len)
+{
+    size_t i = 0;
+
+    if (len <= i || !isdigit(data[i]))
+    {
+	return NULL;
+    }
+
+    for (i = 1; i < len; i++)
+    {
+	if (data[i] == ':')
+	    return &data[i];
+
+	if(!isdigit(data[i]))
+	    break;
+    }
+
+    return NULL;
+}
+
+BNode *BDecode_string(char *data, size_t len)
+{
+    char *expected_length_end = find_string_length_end(data, len);
+    check(expected_length_end != NULL, "Bad string length");
+
+    char *length_end = NULL;
+    long string_len = strtol(data, &length_end, 10);
+    char *string = length_end + 1,
+	*string_end = string + string_len;
+
+    check(length_end == expected_length_end, "Bad string length");
+    check(errno == 0, "Bad string length");
+    check(string_len >= 0, "Bad string length");
+    check(string_end <= data + len, "String overflows data len");
+
+    if (string_len > 0)
+	check(*data != '0', "Zero padded string length");
+
+    BNode *node = BNode_create(BString);
+    check_mem(node);
+
+    node->value.string = string;
+    node->count = string_len;
+    node->data = data;
+    node->data_len = string_end - data;
+
+    return node;
+error:
+    return NULL;
+}
 
 BNode *BDecode(char *data, size_t len)
 {
@@ -169,6 +221,18 @@ BNode *BDecode(char *data, size_t len)
 	break;
     case 'l':
 	node = BDecode_list(data, len);
+	break;
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+	node = BDecode_string(data, len);
 	break;
     default:
 	log_err("Bad bencode start byte: 0x%02X", *data);
