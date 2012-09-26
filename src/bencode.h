@@ -6,19 +6,12 @@
 
 typedef enum BType { BString, BInteger, BList, BDictionary } BType;
 
-typedef struct BKeyVal {
-    char *key;
-    struct BNode *value;
-    size_t key_len;
-} BKeyVal;
-
 typedef struct BNode {
     enum BType type;
     union {
 	uint8_t *string;
 	long integer;
 	struct BNode **nodes;
-	BKeyVal **dictionary;
     } value;
     size_t count;
     uint8_t *data;
