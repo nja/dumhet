@@ -44,7 +44,7 @@ $(PROGRAMS): %: $(TARGET) src/%.c
 	$(CC) $(LIBS) $(CFLAGS) src/$@.c $< -o $@
 
 valgrind:
-	VALGRIND="valgrind --log-file=/tmp/valgrind-%p.log" $(MAKE)
+	VALGRIND="valgrind --leak-check=full --error-exitcode=1" $(MAKE)
 
 # The Cleaner
 clean:
