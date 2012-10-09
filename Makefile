@@ -2,6 +2,8 @@ CFLAGS=-g -O2 -Wall -Wextra -Werror -Isrc -rdynamic -DNDEBUG $(OPTFLAGS)
 LIBS=-ldl $(OPTLIBS)
 PREFIX?=/usr/local
 
+HEADERS=$(wildcard src/*.h)
+
 SOURCES=$(wildcard src/**/*.c src/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 
@@ -36,6 +38,8 @@ build:
 .PHONY: tests
 tests: $(TESTS)
 	sh ./tests/runtests.sh
+
+$(OBJECTS): %: $(HEADERS)
 
 $(TESTS): %: $(TARGET) %.c
 	$(CC) $(LIBS) $(CFLAGS) $@.c $< -o $@
