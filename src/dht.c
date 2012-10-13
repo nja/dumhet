@@ -172,7 +172,74 @@ void DhtTable_Destroy(DhtTable *table)
     }
 
     free(table);
-}    
+}
+
+int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)
+{
+    int hi = 0, bi = 0;
+
+    for (hi = 0; hi < HASH_BYTES; hi++)
+    {
+	if (a->value[hi] == b->value[hi])
+	{
+	    bi += 8;
+	    continue;
+	}
+
+	uint8_t mask = 1 << 7;
+	while (mask)
+	{
+	    if ((a->value[hi] & mask) == (b->value[hi] & mask))
+	    {
+		bi++;
+		mask = mask >> 1;
+	    }
+	    else
+	    {
+		goto done;
+	    }
+	}
+    }
+
+done:
+    return bi;
+}
+
+int DhtTable_HasShiftableNodes(DhtHash *id, DhtBucket *bucket, DhtNode *node)
+{
+    assert(id != NULL && "NULL DhtHash pointer");
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+    assert(bucket->index < HASH_BITS && "Bad bucket index");
+
+    if (bucket->index == HASH_BITS - 1)
+	return 0;
+
+    if (bucket->index < DhtHash_SharedPrefix(id, &node->id))
+    {
+	return 1;
+    }
+
+    int i = 0;
+    for (i = 0; i < BUCKET_K; i++)
+    {
+	if (bucket->nodes[i] != NULL
+	    && bucket->index < DhtHash_SharedPrefix(id, &bucket->nodes[i]->id))
+	{
+	    return 1;
+	}
+    }
+
+    return 0;
+}
+
+int DhtTable_IsLastBucket(DhtTable *table, DhtBucket *bucket)
+{
+    assert(table != NULL && "NULL DhtTable pointer");
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+
+    return table->end - 1 == bucket->index;
+}
 
 DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 {
@@ -184,7 +251,7 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 
     if (DhtBucket_ContainsNode(bucket, node)) {
 	return (DhtTable_InsertNodeResult)
-	{ .rc = OKAdded, .bucket = bucket, .replaced = NULL};
+	{ .rc = OKAlreadyAdded, .bucket = bucket, .replaced = NULL};
     }
 
     if (bucket->count == BUCKET_K)
@@ -201,7 +268,8 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 	    { .rc = OKReplaced, .bucket = bucket, replaced = replaced};
 	}
 
-	if (table->end - 1 == bucket->index && table->end < HASH_BITS)
+	if (DhtTable_IsLastBucket(table, bucket)
+	    && DhtTable_HasShiftableNodes(&table->id, bucket, node))
 	{
 	    DhtBucket *new_bucket = DhtTable_AddBucket(table);
 	    check(new_bucket != NULL, "Error adding new bucket");
@@ -255,6 +323,7 @@ int DhtTable_ReaddBucketNodes(DhtTable *table, DhtBucket *bucket)
 
 	DhtTable_InsertNodeResult result = DhtTable_InsertNode(table, node);
 	check(result.rc == OKAdded, "Readd failed");
+
 	assert(result.bucket != NULL && "NULL bucket from insert");
 	assert(result.replaced == NULL && "Unexpected replaced");
     }
@@ -274,9 +343,9 @@ DhtBucket *DhtTable_AddBucket(DhtTable *table)
     bucket->index = table->end;
     table->buckets[table->end++] = bucket;
 
-    if (table->end > 1)
+    if (bucket->index > 0)
     {
-	DhtBucket *prev_bucket = table->buckets[table->end - 1];
+	DhtBucket *prev_bucket = table->buckets[bucket->index - 1];
 	int rc = DhtTable_ReaddBucketNodes(table, prev_bucket);
 	check(rc, "Readding nodes failed");
     }
@@ -290,35 +359,11 @@ DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtNode *node)
 {
     assert(table != NULL && "NULL DhtTable pointer");
     assert(node != NULL && "NULL DhtNode pointer");
-    
-    int hi = 0, bi = 0;
 
-    for (hi = 0; hi < HASH_BYTES && bi < table->end; hi++)
-    {
-	if (table->id.value[hi] == node->id.value[hi])
-	{
-	    bi += 8;
-	    continue;
-	}
+    int pfx = DhtHash_SharedPrefix(&table->id, &node->id);
+    int i = pfx < table->end ? pfx : table->end - 1;
 
-	uint8_t mask = 1 << 7;
-	while (mask)
-	{
-	    if ((table->id.value[hi] & mask) == (node->id.value[hi] & mask))
-	    {
-		bi++;
-		mask = mask >> 1;
-	    }
-	    else
-	    {
-		goto done;
-	    }
-	}
-		
-    }
-
-done:
-    return table->buckets[bi < table->end ? bi : table->end - 1];
+    return table->buckets[i];
 }
 
 DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)

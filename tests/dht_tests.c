@@ -111,25 +111,39 @@ char *test_DhtTable_InsertNode()
     DhtHash id = {{0}};
     
     DhtTable *table = DhtTable_Create(&id);
-    DhtNode *good_nodes = calloc(BUCKET_K, sizeof(DhtNode));
-    DhtNode *bad_nodes = calloc(BUCKET_K, sizeof(DhtNode));
+
+    /* good and bad are near the id and shiftable to new buckets */
+    DhtNode *good_nodes = calloc(BUCKET_K + 1, sizeof(DhtNode));
+    DhtNode *bad_nodes = calloc(BUCKET_K + 1, sizeof(DhtNode));
+
+    /* far only fit in the first bucket */
+    DhtNode *far_nodes = calloc(BUCKET_K + 1, sizeof(DhtNode));
     
     time_t now = time(NULL);
-    
+
+    /* create nodes */
     int i = 0;
-    for (i = 0; i < BUCKET_K; i++)
+    for (i = 0; i < BUCKET_K + 1; i++)
     {
-	good_nodes[i].id.value[0] = i;
+	good_nodes[i].id.value[0] = id.value[0];
+	good_nodes[i].id.value[1] = i;
 	good_nodes[i].reply_time = now;
 	mu_assert(DhtNode_Status(&good_nodes[i], now) == Good, "Wrong status");
 
-	bad_nodes[i].id.value[1] = i;
+	bad_nodes[i].id.value[0] = id.value[0];
+	bad_nodes[i].id.value[2] = i;
 	bad_nodes[i].pending_queries = NODE_MAX_PENDING;
 	mu_assert(DhtNode_Status(&bad_nodes[i], now) == Bad, "Wrong status");
+
+	far_nodes[i].id.value[0] = ~id.value[0];
+	far_nodes[i].id.value[3] = i;
+	far_nodes[i].reply_time = now;
+	mu_assert(DhtNode_Status(&far_nodes[i], now) == Good, "Wrong status");
     }
 
     DhtTable_InsertNodeResult result;
 
+    /* fill first bucket with bad nodes */
     for (i = 0; i < BUCKET_K; i++)
     {
 	result = DhtTable_InsertNode(table, &bad_nodes[i]);
@@ -138,6 +152,7 @@ char *test_DhtTable_InsertNode()
 	mu_assert(result.replaced == NULL, "Bad replaced");
     }
 
+    /* replace bad nodes with good */
     for (i = 0; i < BUCKET_K; i++)
     {
 	result = DhtTable_InsertNode(table, &good_nodes[i]);
@@ -148,10 +163,38 @@ char *test_DhtTable_InsertNode()
 	mu_assert(result.bucket == table->buckets[0], "Wrong bucket");
     }
 
-    mu_assert(table->end == 1, "Too many buckets");
+    /* readd a single good node */
+    result = DhtTable_InsertNode(table, &good_nodes[0]);
+    mu_assert(result.rc == OKAlreadyAdded, "Wrong result");
+    mu_assert(result.replaced == NULL, "Bad replaced");
+    mu_assert(result.bucket == table->buckets[0], "Wrong bucket");
+
+    /* adding far nodes, will shift good nodes to second bucket */
+    for (i = 0; i < BUCKET_K; i++)
+    {
+	result = DhtTable_InsertNode(table, &far_nodes[i]);
+	mu_assert(result.rc == OKAdded, "Wrong result");
+	mu_assert(result.bucket == table->buckets[0], "Wrong bucket");
+	mu_assert(result.replaced == NULL, "Bad replaced");
+    }
+
+    /* the ninth far node will not be added: the first bucket is full */
+    result = DhtTable_InsertNode(table, &far_nodes[BUCKET_K]);
+    mu_assert(result.rc == OKFull, "Wrong result");
+    mu_assert(result.bucket == NULL, "Bad bucket");
+    mu_assert(result.replaced == NULL, "Bad replaced");
+    
+    /* readd a single good node  */
+    result = DhtTable_InsertNode(table, &good_nodes[0]);
+    mu_assert(result.rc == OKAlreadyAdded, "Wrong result");
+    mu_assert(result.replaced == NULL, "Bad replaced");
+    mu_assert(result.bucket == table->buckets[1], "Wrong bucket");
+
+    mu_assert(table->end == 2, "Too many buckets");
 
     free(good_nodes);
     free(bad_nodes);
+    free(far_nodes);
     DhtTable_Destroy(table);
 
     return NULL;
