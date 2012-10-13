@@ -6,11 +6,14 @@
 
 void DhtHash_Destroy(DhtHash *hash)
 {
+    assert(hash != NULL && "NULL DhtHash pointer");
     free(hash);
 }
 
 DhtDistance *DhtHash_Distance(DhtHash *a, DhtHash *b)
 {
+    assert(a != NULL && b != NULL && "NULL DhtHash pointer");
+
     DhtDistance *distance = malloc(sizeof(DhtDistance));
     check_mem(distance);
 
@@ -28,6 +31,8 @@ error:
 
 int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
 {
+    assert(a != NULL && b != NULL && "NULL DhtDistance pointer");
+
     int i = 0;
 
     for (i = 0; i < HASH_BYTES; i++)
@@ -54,11 +59,15 @@ error:
 
 void DhtBucket_Destroy(DhtBucket *bucket)
 {
+    assert(bucket != NULL && "NULL DhtBucket pointer");
     free(bucket);
 }
 
 int DhtBucket_ContainsNode(DhtBucket *bucket, DhtNode *node)
 {
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+
     int i = 0;
 
     for (i = 0; i < BUCKET_K; i++)
@@ -73,6 +82,9 @@ int DhtBucket_ContainsNode(DhtBucket *bucket, DhtNode *node)
 /* Returns the replaced node, or NULL when no bad was found */
 DhtNode *DhtBucket_ReplaceBad(DhtBucket *bucket, DhtNode *node)
 {
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+
     time_t now = time(NULL);
 
     int i = 0;
@@ -94,6 +106,9 @@ DhtNode *DhtBucket_ReplaceBad(DhtBucket *bucket, DhtNode *node)
 
 DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node)
 {
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+
     time_t now = time(NULL), oldest_time = now;
     int oldest_i = -1, i = 0;
 
@@ -127,6 +142,8 @@ DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node)
 
 DhtTable *DhtTable_Create(DhtHash *id)
 {
+    assert(id != NULL && "NULL DhtHash id pointer");
+
     DhtTable *table = calloc(1, sizeof(DhtTable));
     check_mem(table);
 
@@ -135,6 +152,10 @@ DhtTable *DhtTable_Create(DhtHash *id)
     DhtBucket *bucket = DhtTable_AddBucket(table);
     check_mem(bucket);
 
+    assert(table->end == 1 && "Wrong table end");
+    assert(table->buckets[0] == bucket && "Wrong first bucket");
+    assert(bucket->index == 0 && "Wrong index on bucket");
+
     return table;
 error:
     return NULL;
@@ -142,6 +163,8 @@ error:
 
 void DhtTable_Destroy(DhtTable *table)
 {
+    assert(table != NULL && "NULL DhtTable pointer");
+
     int i = 0;
     for (i = 0; i < table->end; i++)
     {
@@ -153,6 +176,10 @@ void DhtTable_Destroy(DhtTable *table)
 
 DhtBucket *DhtTable_InsertNode(DhtTable *table, DhtNode *node, DhtNode **replaced)
 {
+    assert(table != NULL && "NULL DhtTable pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+    assert(replaced != NULL && "NULL DhtNode* pointer");
+
     DhtBucket *bucket = DhtTable_FindBucket(table, node);
     check(bucket != NULL, "Found no bucket for node");
 
@@ -161,19 +188,14 @@ DhtBucket *DhtTable_InsertNode(DhtTable *table, DhtNode *node, DhtNode **replace
 
     if (bucket->count == BUCKET_K)
     {
-	debug("Full bucket, replacing bad");
-
 	if ((*replaced = DhtBucket_ReplaceBad(bucket, node)))
 	    return bucket;
 
-	debug("Replacing questionable");
 	if ((*replaced = DhtBucket_ReplaceQuestionable(bucket, node)))
 	    return bucket;
 
 	if (table->end - 1 == bucket->index && table->end < HASH_BITS)
 	{
-	    debug("Adding bucket");
-
 	    DhtBucket *new_bucket = DhtTable_AddBucket(table);
 	    check(new_bucket != NULL, "Error adding new bucket");
 
@@ -206,6 +228,9 @@ error:
 
 int DhtTable_ReaddBucketNodes(DhtTable *table, DhtBucket *bucket)
 {
+    assert(table != NULL && "NULL DhtTable pointer");
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+
     int i = 0;
     for (i = 0; i < BUCKET_K; i++)
     {
@@ -231,10 +256,10 @@ error:
 DhtBucket *DhtTable_AddBucket(DhtTable *table)
 {
     assert(table->end < HASH_BITS && "Adding one bucket too many");
-    DhtBucket *bucket = NULL;
 
-    bucket = DhtBucket_Create();
+    DhtBucket *bucket = DhtBucket_Create();
     check_mem(bucket);
+    
     bucket->index = table->end;
     table->buckets[table->end++] = bucket;
 
@@ -252,6 +277,9 @@ error:
 
 DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtNode *node)
 {
+    assert(table != NULL && "NULL DhtTable pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+    
     int hi = 0, bi = 0;
 
     for (hi = 0; hi < HASH_BYTES && bi < table->end; hi++)
@@ -262,7 +290,7 @@ DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtNode *node)
 	    continue;
 	}
 
-	uint8_t mask = 0x80;
+	uint8_t mask = 1 << 7;
 	while (mask)
 	{
 	    if ((table->id.value[hi] & mask) == (node->id.value[hi] & mask))
@@ -284,6 +312,8 @@ done:
 
 DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)
 {
+    assert(node != NULL && "NULL DhtNode pointer");
+    
     if (node->reply_time != 0)
     {
 	if (difftime(time, node->reply_time) < NODE_RESPITE)
