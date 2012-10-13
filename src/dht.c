@@ -204,7 +204,7 @@ error:
     return NULL;
 }
 
-void DhtTable_ReaddBucketNodes(DhtTable *table, DhtBucket *bucket)
+int DhtTable_ReaddBucketNodes(DhtTable *table, DhtBucket *bucket)
 {
     int i = 0;
     for (i = 0; i < BUCKET_K; i++)
@@ -217,9 +217,15 @@ void DhtTable_ReaddBucketNodes(DhtTable *table, DhtBucket *bucket)
 	bucket->count--;
 
 	DhtNode *replaced = NULL;
-	DhtTable_InsertNode(table, node, &replaced);
+	DhtBucket *added_to = DhtTable_InsertNode(table, node, &replaced);
+
+	check(added_to != NULL, "Insert failed when readding nodes");
 	assert(replaced == NULL && "Unexpected replaced");
-    }    
+    }
+
+    return 1;
+error:
+    return 0;
 }
 
 DhtBucket *DhtTable_AddBucket(DhtTable *table)
@@ -235,7 +241,8 @@ DhtBucket *DhtTable_AddBucket(DhtTable *table)
     if (table->end > 1)
     {
 	DhtBucket *prev_bucket = table->buckets[table->end - 1];
-	DhtTable_ReaddBucketNodes(table, prev_bucket);
+	int rc = DhtTable_ReaddBucketNodes(table, prev_bucket);
+	check(rc, "Readding nodes failed");
     }
 
     return bucket;
