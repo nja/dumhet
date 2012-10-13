@@ -6,3 +6,4 @@
 /tests/*_tests
 cachegrind.out.*
 callgrind.out.*
+/TAGS

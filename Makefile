@@ -50,6 +50,9 @@ $(PROGRAMS): %: $(TARGET) src/%.c
 valgrind:
 	VALGRIND="valgrind --leak-check=full --error-exitcode=1" $(MAKE)
 
+TAGS: $(SOURCES) $(PROGRAMS_SRC) $(TEST_SRC) $(HEADERS)
+	etags $^
+
 # The Cleaner
 clean:
 	rm -rf build $(OBJECTS) $(TESTS) $(PROGRAMS)
