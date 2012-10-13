@@ -174,38 +174,48 @@ void DhtTable_Destroy(DhtTable *table)
     free(table);
 }    
 
-DhtBucket *DhtTable_InsertNode(DhtTable *table, DhtNode *node, DhtNode **replaced)
+DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 {
     assert(table != NULL && "NULL DhtTable pointer");
     assert(node != NULL && "NULL DhtNode pointer");
-    assert(replaced != NULL && "NULL DhtNode* pointer");
 
     DhtBucket *bucket = DhtTable_FindBucket(table, node);
     check(bucket != NULL, "Found no bucket for node");
 
-    if (DhtBucket_ContainsNode(bucket, node))
-	return bucket;
+    if (DhtBucket_ContainsNode(bucket, node)) {
+	return (DhtTable_InsertNodeResult)
+	{ .rc = OKAdded, .bucket = bucket, .replaced = NULL};
+    }
 
     if (bucket->count == BUCKET_K)
     {
-	if ((*replaced = DhtBucket_ReplaceBad(bucket, node)))
-	    return bucket;
+	DhtNode *replaced = NULL;
 
-	if ((*replaced = DhtBucket_ReplaceQuestionable(bucket, node)))
-	    return bucket;
+	if ((replaced = DhtBucket_ReplaceBad(bucket, node))) {
+	    return (DhtTable_InsertNodeResult)
+	    { .rc = OKReplaced, .bucket = bucket, replaced = replaced};
+	}
+
+	if ((replaced = DhtBucket_ReplaceQuestionable(bucket, node))) {
+	    return (DhtTable_InsertNodeResult)
+	    { .rc = OKReplaced, .bucket = bucket, replaced = replaced};
+	}
 
 	if (table->end - 1 == bucket->index && table->end < HASH_BITS)
 	{
 	    DhtBucket *new_bucket = DhtTable_AddBucket(table);
 	    check(new_bucket != NULL, "Error adding new bucket");
 
-	    DhtBucket *added_to = DhtTable_InsertNode(table, node, replaced);
-	    assert(*replaced == NULL && "Unexpected replaced node");
+	    DhtTable_InsertNodeResult result = DhtTable_InsertNode(table, node);
+	    check(result.rc != ERROR, "Insert when growing failed");
+	    assert(result.bucket != NULL && "NULL bucket");
+	    assert(result.replaced == NULL && "Unexpected replaced node");
 
-	    return added_to;
+	    return result;
 	}
 
-	return NULL;
+	return (DhtTable_InsertNodeResult)
+	{ .rc = OKFull, .bucket = NULL, replaced = NULL};
     }
 
     int i = 0;
@@ -215,15 +225,17 @@ DhtBucket *DhtTable_InsertNode(DhtTable *table, DhtNode *node, DhtNode **replace
 	{
 	    bucket->nodes[i] = node;
 	    bucket->count++;
-	    return bucket;
+
+	    return (DhtTable_InsertNodeResult)
+	    { .rc = OKAdded, .bucket = bucket, .replaced = NULL};
 	}
     }
 
     sentinel("Bucket with full count but no empty slots");
 
 error:
-    // TODO: return error marker?
-    return NULL;
+    return (DhtTable_InsertNodeResult)
+    { .rc = ERROR, .bucket = NULL, .replaced = NULL};
 }
 
 int DhtTable_ReaddBucketNodes(DhtTable *table, DhtBucket *bucket)
@@ -241,11 +253,10 @@ int DhtTable_ReaddBucketNodes(DhtTable *table, DhtBucket *bucket)
 	bucket->nodes[i] = NULL;
 	bucket->count--;
 
-	DhtNode *replaced = NULL;
-	DhtBucket *added_to = DhtTable_InsertNode(table, node, &replaced);
-
-	check(added_to != NULL, "Insert failed when readding nodes");
-	assert(replaced == NULL && "Unexpected replaced");
+	DhtTable_InsertNodeResult result = DhtTable_InsertNode(table, node);
+	check(result.rc == OKAdded, "Readd failed");
+	assert(result.bucket != NULL && "NULL bucket from insert");
+	assert(result.replaced == NULL && "Unexpected replaced");
     }
 
     return 1;

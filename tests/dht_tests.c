@@ -128,23 +128,24 @@ char *test_DhtTable_InsertNode()
 	mu_assert(DhtNode_Status(&bad_nodes[i], now) == Bad, "Wrong status");
     }
 
-    DhtNode *replaced = NULL;
-    DhtBucket *bucket = NULL;
+    DhtTable_InsertNodeResult result;
 
     for (i = 0; i < BUCKET_K; i++)
     {
-	bucket = DhtTable_InsertNode(table, &bad_nodes[i], &replaced);
-	mu_assert(bucket == table->buckets[0], "Wrong bucket");
-	mu_assert(replaced == NULL, "Bad replaced");
+	result = DhtTable_InsertNode(table, &bad_nodes[i]);
+	mu_assert(result.rc == OKAdded, "Wrong result");
+	mu_assert(result.bucket == table->buckets[0], "Wrong bucket");
+	mu_assert(result.replaced == NULL, "Bad replaced");
     }
 
     for (i = 0; i < BUCKET_K; i++)
     {
-	bucket = DhtTable_InsertNode(table, &good_nodes[i], &replaced);
-	mu_assert(replaced != NULL, "Nothing replaced");
-	mu_assert(&bad_nodes[0] <= replaced
-		  && replaced < &bad_nodes[BUCKET_K], "Wrong replaced");
-	mu_assert(bucket == table->buckets[0], "Wrong bucket");
+	result = DhtTable_InsertNode(table, &good_nodes[i]);
+	mu_assert(result.rc == OKReplaced, "Wrong result");
+	mu_assert(result.replaced != NULL, "Nothing replaced");
+	mu_assert(&bad_nodes[0] <= result.replaced
+		  && result.replaced < &bad_nodes[BUCKET_K], "Wrong replaced");
+	mu_assert(result.bucket == table->buckets[0], "Wrong bucket");
     }
 
     mu_assert(table->end == 1, "Too many buckets");

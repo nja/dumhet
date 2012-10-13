@@ -53,7 +53,18 @@ void DhtTable_Destroy(DhtTable *dht);
 
 DhtBucket *DhtTable_AddBucket(DhtTable *table);
 DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtNode *node);
-DhtBucket *DhtTable_InsertNode(DhtTable *table, DhtNode *node, DhtNode **replaced);
+
+enum DhtTable_InsertNodeResultRc {
+    ERROR, OKAdded, OKReplaced, OKFull, OKAlreadyAdded
+};
+
+typedef struct DhtTable_InsertNodeResult {
+    enum DhtTable_InsertNodeResultRc rc;
+    DhtBucket *bucket;
+    DhtNode *replaced;
+} DhtTable_InsertNodeResult;
+
+DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node);
 
 typedef enum DhtNodeStatus { Unknown, Good, Questionable, Bad } DhtNodeStatus;
 
