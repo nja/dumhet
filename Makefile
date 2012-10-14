@@ -55,8 +55,8 @@ TAGS: $(SOURCES) $(PROGRAMS_SRC) $(TEST_SRC) $(HEADERS)
 
 # The Cleaner
 clean:
-	rm -rf build $(OBJECTS) $(TESTS) $(PROGRAMS)
-	rm -f tests/tests.log 
+	rm -rf build bin $(OBJECTS) $(TESTS) $(PROGRAMS)
+	rm -f TAGS tests/tests.log 
 
 # The Install
 install: all
