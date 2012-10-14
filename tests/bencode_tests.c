@@ -16,7 +16,7 @@ char *test_decode_integer()
 
     for (i = 0; i < values_len; i++)
     {
-	sprintf((char *)string, "'i%lde'", values[i]);
+	snprintf((char *)string, buffer_size, "'i%lde'", values[i]);
 	size_t len = strlen((char *)string) - 2;
 
 	debug("Integer: %s", string);
@@ -62,7 +62,7 @@ char *test_integer_overflow()
     {
 	const int string_max_len = 32;
 	char string[string_max_len];
-	sprintf(string, "i%ld0e", overflows[i]);
+	snprintf(string, string_max_len, "i%ld0e", overflows[i]);
 
 	debug("Overflow integer: '%s'", string);
 
@@ -94,14 +94,14 @@ char *test_zero_padded_integers()
 	long val = values[i];
 
 	if (val >= 0)
-	    sprintf(string, "'i0%lde'", values[i]);
+	    snprintf(string, buffer_size, "'i0%lde'", values[i]);
 	else if (val == LONG_MIN)
 	{
-	    sprintf(string, "'i-0%lde'", LONG_MAX);
+	    snprintf(string, buffer_size, "'i-0%lde'", LONG_MAX);
 	}
 	else
 	{
-	    sprintf(string, "'i-0%lde'", labs(val));
+	    snprintf(string, buffer_size, "'i-0%lde'", labs(val));
 	}
 	
 	debug("Integer: %s", string);
@@ -172,7 +172,7 @@ char *test_decode_string()
     for (i = 0; i < strings_len; i++)
     {
 	size_t len = strlen(strings[i]);
-	sprintf(buffer, "%lu:%s", len, strings[i]);
+	snprintf(buffer, buffer_size, "%lu:%s", len, strings[i]);
 
 	debug("String: '%s'", buffer);
 
