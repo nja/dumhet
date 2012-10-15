@@ -389,3 +389,53 @@ DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)
 
     return Bad;
 }
+
+DhtHash *DhtHash_Clone(DhtHash *hash)
+{
+    assert(hash != NULL && "NULL DhtHash hash pointer");
+
+    DhtHash *clone = malloc(sizeof(DhtHash));
+    check_mem(clone);
+
+    int i = 0;
+    for (i = 0; i < HASH_BYTES; i++)
+    {
+	clone->value[i] = hash->value[i];
+    }
+
+    return clone;
+error:
+    return NULL;
+}
+
+DhtHash *DhtHash_Prefixed(DhtHash *hash, DhtHash *prefix, int prefix_len)
+{
+    assert(hash != NULL && "NULL DhtHash hash pointer");
+    assert(prefix != NULL && "NULL DhtHash prefix pointer");
+
+    check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
+
+    DhtHash *result = DhtHash_Clone(hash);
+    check(result != NULL, "DhtHash_Clone failed");
+
+    int i = 0;
+
+    while (prefix_len >= 8)
+    {
+	result->value[i] = prefix->value[i];
+
+	prefix_len -= 8;
+	i++;
+    }
+
+    if (i < HASH_BYTES)
+    {
+	char mask = ((char)~0) << (8 - prefix_len);
+	result->value[i] &= ~mask;
+	result->value[i] |= mask & prefix->value[i];
+    }
+
+    return result;
+error:
+    return NULL;
+}

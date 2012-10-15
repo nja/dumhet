@@ -2,6 +2,56 @@
 #include <dht.h>
 #include <time.h>
 
+char *test_DhtHash_Clone()
+{
+    DhtHash *orig = malloc(sizeof(DhtHash));
+
+    int i = 0;
+    for (i = 0; i < HASH_BYTES; i++)
+    {
+	orig->value[i] = i;
+    }
+
+    DhtHash *clone = DhtHash_Clone(orig);
+    mu_assert(clone != NULL, "DhtHash_Clone failed");
+    mu_assert(clone != orig, "Not cloned");
+
+    int cmp = DhtDistance_Compare(orig, clone);
+    mu_assert(cmp == 0, "Clone different from original");
+
+    DhtHash_Destroy(orig);
+    DhtHash_Destroy(clone);
+
+    return NULL;
+}
+
+char *test_DhtHash_Prefixed()
+{
+    DhtHash *prefix = malloc(sizeof(DhtHash)),
+	*inv = malloc(sizeof(DhtHash));
+
+    int i = 0;
+    for (i = 0; i < HASH_BYTES; i++)
+    {
+	prefix->value[i] = i;
+	inv->value[i] = ~i;
+    }
+
+    for (i = 0; i <= HASH_BITS; i++)
+    {
+	DhtHash *result = DhtHash_Prefixed(inv, prefix, i);
+	int shared = DhtHash_SharedPrefix(result, prefix);
+	mu_assert(shared == i, "Wrong prefix");
+
+	DhtHash_Destroy(result);
+    }
+
+    DhtHash_Destroy(prefix);
+    DhtHash_Destroy(inv);
+
+    return NULL;
+}
+
 char *test_DhtHash_Distance()
 {
     DhtHash ha = {{0}}, hb = {{0}}, hc = {{0}};
@@ -23,7 +73,7 @@ char *test_DhtHash_Distance()
     DhtDistance_Destroy(daa);
     DhtDistance_Destroy(dab);
     DhtDistance_Destroy(dac);
-		   
+
     return NULL;
 }
 
@@ -204,6 +254,8 @@ char *all_tests()
 {
     mu_suite_start();
 
+    mu_run_test(test_DhtHash_Clone);
+    mu_run_test(test_DhtHash_Prefixed);
     mu_run_test(test_DhtHash_Distance);
     mu_run_test(test_DhtTable_AddBucket);
     mu_run_test(test_DhtNode_Status);

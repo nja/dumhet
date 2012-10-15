@@ -12,6 +12,9 @@ typedef struct DhtHash {
 } DhtHash;
 
 void DhtHash_Destroy(DhtHash *hash);
+DhtHash *DhtHash_Prefixed(DhtHash *hash, DhtHash *prefix, int prefix_len);
+DhtHash *DhtHash_Clone(DhtHash *hash);
+int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b);
 
 typedef DhtHash DhtDistance;
 
