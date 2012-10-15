@@ -29,6 +29,21 @@ error:
     return NULL;
 }
 
+DhtHash *DhtHash_Random(RandomState *rs)
+{
+    assert(rs != NULL && "NULL RandomState pointer");
+
+    DhtHash *hash = malloc(sizeof(DhtHash));
+    check_mem(hash);
+
+    int rc = Random_Fill(rs, hash->value, HASH_BYTES);
+    check(rc == 0, "Random_Fill failed");
+
+    return hash;
+error:
+    return NULL;
+}
+
 int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
 {
     assert(a != NULL && b != NULL && "NULL DhtDistance pointer");
@@ -437,5 +452,27 @@ DhtHash *DhtHash_Prefixed(DhtHash *hash, DhtHash *prefix, int prefix_len)
 
     return result;
 error:
+    return NULL;
+}
+
+DhtHash *DhtHash_PrefixedRandom(RandomState *rs, DhtHash *prefix, int prefix_len)
+{
+    assert(rs != NULL && "NULL RandomState pointer");
+    assert(prefix != NULL && "NULL DhtHash prefix pointer");
+
+    check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
+
+    DhtHash *random = DhtHash_Random(rs);
+    check(random != NULL, "DhtHash_Random failed");
+
+    DhtHash *prefixed = DhtHash_Prefixed(random, prefix, prefix_len);
+    check(prefixed != NULL, "DhtHash_Prefixed failed");
+
+    DhtHash_Destroy(random);
+
+    return prefixed;
+error:
+    DhtHash_Destroy(random);
+
     return NULL;
 }

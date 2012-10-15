@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <random.h>
 
 #define HASH_BYTES 20
 #define HASH_BITS (HASH_BYTES * 8)
@@ -15,6 +16,8 @@ void DhtHash_Destroy(DhtHash *hash);
 DhtHash *DhtHash_Prefixed(DhtHash *hash, DhtHash *prefix, int prefix_len);
 DhtHash *DhtHash_Clone(DhtHash *hash);
 int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b);
+DhtHash *DhtHash_Random(RandomState *rs);
+DhtHash *DhtHash_PrefixedRandom(RandomState *rs, DhtHash *prefix, int prefix_len);
 
 typedef DhtHash DhtDistance;
 

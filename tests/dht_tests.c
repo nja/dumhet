@@ -52,6 +52,36 @@ char *test_DhtHash_Prefixed()
     return NULL;
 }
 
+char *test_DhtHash_PrefixedRandom()
+{
+    DhtHash *prefix = malloc(sizeof(DhtHash));
+    
+    int i = 0;
+    for (i = 0; i < HASH_BYTES; i++)
+    {
+	prefix->value[i] = i;
+    }
+
+    RandomState *rs = RandomState_Create(0);
+
+    for (i = 0; i <= HASH_BITS; i++)
+    {
+	DhtHash *random = DhtHash_PrefixedRandom(rs, prefix, i);
+	mu_assert(random != NULL, "DhtHash_PrefixedRandom failed");
+
+	int shared = DhtHash_SharedPrefix(prefix, random);
+
+	mu_assert(shared >= i, "Wrong prefix");
+
+	DhtHash_Destroy(random);
+    }
+
+    DhtHash_Destroy(prefix);
+    RandomState_Destroy(rs);
+
+    return NULL;
+}
+
 char *test_DhtHash_Distance()
 {
     DhtHash ha = {{0}}, hb = {{0}}, hc = {{0}};
@@ -256,6 +286,7 @@ char *all_tests()
 
     mu_run_test(test_DhtHash_Clone);
     mu_run_test(test_DhtHash_Prefixed);
+    mu_run_test(test_DhtHash_PrefixedRandom);
     mu_run_test(test_DhtHash_Distance);
     mu_run_test(test_DhtTable_AddBucket);
     mu_run_test(test_DhtNode_Status);
