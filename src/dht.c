@@ -4,11 +4,133 @@
 #include <assert.h>
 #include <time.h>
 
+/* DhtHash */
+
+DhtHash *DhtHash_Clone(DhtHash *hash)
+{
+    assert(hash != NULL && "NULL DhtHash hash pointer");
+
+    DhtHash *clone = malloc(sizeof(DhtHash));
+    check_mem(clone);
+
+    int i = 0;
+    for (i = 0; i < HASH_BYTES; i++)
+    {
+	clone->value[i] = hash->value[i];
+    }
+
+    return clone;
+error:
+    return NULL;
+}
+
 void DhtHash_Destroy(DhtHash *hash)
 {
     assert(hash != NULL && "NULL DhtHash pointer");
     free(hash);
 }
+
+DhtHash *DhtHash_Random(RandomState *rs)
+{
+    assert(rs != NULL && "NULL RandomState pointer");
+
+    DhtHash *hash = malloc(sizeof(DhtHash));
+    check_mem(hash);
+
+    int rc = Random_Fill(rs, hash->value, HASH_BYTES);
+    check(rc == 0, "Random_Fill failed");
+
+    return hash;
+error:
+    return NULL;
+}
+
+DhtHash *DhtHash_Prefixed(DhtHash *hash, DhtHash *prefix, int prefix_len)
+{
+    assert(hash != NULL && "NULL DhtHash hash pointer");
+    assert(prefix != NULL && "NULL DhtHash prefix pointer");
+
+    check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
+
+    DhtHash *result = DhtHash_Clone(hash);
+    check(result != NULL, "DhtHash_Clone failed");
+
+    int i = 0;
+
+    while (prefix_len >= 8)
+    {
+	result->value[i] = prefix->value[i];
+
+	prefix_len -= 8;
+	i++;
+    }
+
+    if (i < HASH_BYTES)
+    {
+	char mask = ((char)~0) << (8 - prefix_len);
+	result->value[i] &= ~mask;
+	result->value[i] |= mask & prefix->value[i];
+    }
+
+    return result;
+error:
+    return NULL;
+}
+
+DhtHash *DhtHash_PrefixedRandom(RandomState *rs, DhtHash *prefix, int prefix_len)
+{
+    assert(rs != NULL && "NULL RandomState pointer");
+    assert(prefix != NULL && "NULL DhtHash prefix pointer");
+
+    check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
+
+    DhtHash *random = DhtHash_Random(rs);
+    check(random != NULL, "DhtHash_Random failed");
+
+    DhtHash *prefixed = DhtHash_Prefixed(random, prefix, prefix_len);
+    check(prefixed != NULL, "DhtHash_Prefixed failed");
+
+    DhtHash_Destroy(random);
+
+    return prefixed;
+error:
+    DhtHash_Destroy(random);
+
+    return NULL;
+}
+
+int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)
+{
+    int hi = 0, bi = 0;
+
+    for (hi = 0; hi < HASH_BYTES; hi++)
+    {
+	if (a->value[hi] == b->value[hi])
+	{
+	    bi += 8;
+	    continue;
+	}
+
+	uint8_t mask = 1 << 7;
+	while (mask)
+	{
+	    if ((a->value[hi] & mask) == (b->value[hi] & mask))
+	    {
+		bi++;
+		mask = mask >> 1;
+	    }
+	    else
+	    {
+		goto done;
+	    }
+	}
+    }
+
+done:
+    return bi;
+}
+
+/* DhtDistance */
 
 DhtDistance *DhtHash_Distance(DhtHash *a, DhtHash *b)
 {
@@ -25,21 +147,6 @@ DhtDistance *DhtHash_Distance(DhtHash *a, DhtHash *b)
     }
 
     return distance;
-error:
-    return NULL;
-}
-
-DhtHash *DhtHash_Random(RandomState *rs)
-{
-    assert(rs != NULL && "NULL RandomState pointer");
-
-    DhtHash *hash = malloc(sizeof(DhtHash));
-    check_mem(hash);
-
-    int rc = Random_Fill(rs, hash->value, HASH_BYTES);
-    check(rc == 0, "Random_Fill failed");
-
-    return hash;
 error:
     return NULL;
 }
@@ -61,6 +168,8 @@ int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
 
     return 0;
 }
+
+/* DhtBucket */
 
 DhtBucket *DhtBucket_Create()
 {
@@ -155,6 +264,8 @@ DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node)
     return NULL;
 }
 
+/* DhtTable */
+
 DhtTable *DhtTable_Create(DhtHash *id)
 {
     assert(id != NULL && "NULL DhtHash id pointer");
@@ -187,37 +298,6 @@ void DhtTable_Destroy(DhtTable *table)
     }
 
     free(table);
-}
-
-int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)
-{
-    int hi = 0, bi = 0;
-
-    for (hi = 0; hi < HASH_BYTES; hi++)
-    {
-	if (a->value[hi] == b->value[hi])
-	{
-	    bi += 8;
-	    continue;
-	}
-
-	uint8_t mask = 1 << 7;
-	while (mask)
-	{
-	    if ((a->value[hi] & mask) == (b->value[hi] & mask))
-	    {
-		bi++;
-		mask = mask >> 1;
-	    }
-	    else
-	    {
-		goto done;
-	    }
-	}
-    }
-
-done:
-    return bi;
 }
 
 int DhtTable_HasShiftableNodes(DhtHash *id, DhtBucket *bucket, DhtNode *node)
@@ -381,6 +461,8 @@ DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtNode *node)
     return table->buckets[i];
 }
 
+/* DhtNode */
+
 DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)
 {
     assert(node != NULL && "NULL DhtNode pointer");
@@ -403,76 +485,4 @@ DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)
 	return Unknown;
 
     return Bad;
-}
-
-DhtHash *DhtHash_Clone(DhtHash *hash)
-{
-    assert(hash != NULL && "NULL DhtHash hash pointer");
-
-    DhtHash *clone = malloc(sizeof(DhtHash));
-    check_mem(clone);
-
-    int i = 0;
-    for (i = 0; i < HASH_BYTES; i++)
-    {
-	clone->value[i] = hash->value[i];
-    }
-
-    return clone;
-error:
-    return NULL;
-}
-
-DhtHash *DhtHash_Prefixed(DhtHash *hash, DhtHash *prefix, int prefix_len)
-{
-    assert(hash != NULL && "NULL DhtHash hash pointer");
-    assert(prefix != NULL && "NULL DhtHash prefix pointer");
-
-    check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
-
-    DhtHash *result = DhtHash_Clone(hash);
-    check(result != NULL, "DhtHash_Clone failed");
-
-    int i = 0;
-
-    while (prefix_len >= 8)
-    {
-	result->value[i] = prefix->value[i];
-
-	prefix_len -= 8;
-	i++;
-    }
-
-    if (i < HASH_BYTES)
-    {
-	char mask = ((char)~0) << (8 - prefix_len);
-	result->value[i] &= ~mask;
-	result->value[i] |= mask & prefix->value[i];
-    }
-
-    return result;
-error:
-    return NULL;
-}
-
-DhtHash *DhtHash_PrefixedRandom(RandomState *rs, DhtHash *prefix, int prefix_len)
-{
-    assert(rs != NULL && "NULL RandomState pointer");
-    assert(prefix != NULL && "NULL DhtHash prefix pointer");
-
-    check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
-
-    DhtHash *random = DhtHash_Random(rs);
-    check(random != NULL, "DhtHash_Random failed");
-
-    DhtHash *prefixed = DhtHash_Prefixed(random, prefix, prefix_len);
-    check(prefixed != NULL, "DhtHash_Prefixed failed");
-
-    DhtHash_Destroy(random);
-
-    return prefixed;
-error:
-    DhtHash_Destroy(random);
-
-    return NULL;
 }
