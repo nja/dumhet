@@ -178,6 +178,8 @@ DhtBucket *DhtBucket_Create()
     DhtBucket *bucket = calloc(1, sizeof(DhtBucket));
     check_mem(bucket);
 
+    bucket->change_time = time(NULL);
+
     return bucket;
 error:
     return NULL;
@@ -222,6 +224,7 @@ DhtNode *DhtBucket_ReplaceBad(DhtBucket *bucket, DhtNode *node)
 	{
 	    DhtNode *replaced = bucket->nodes[i];
 	    bucket->nodes[i] = node;
+	    bucket->change_time = now;
 
 	    return replaced;
 	}
@@ -259,6 +262,7 @@ DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node)
 	// TODO: ping before replacing
 	DhtNode *replaced = bucket->nodes[oldest_i];
 	bucket->nodes[oldest_i] = node;
+	bucket->change_time = now;
 
 	return replaced;
     }
@@ -390,6 +394,8 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 	{
 	    bucket->nodes[i] = node;
 	    bucket->count++;
+
+	    bucket->change_time = time(NULL);
 
 	    return (DhtTable_InsertNodeResult)
 	    { .rc = OKAdded, .bucket = bucket, .replaced = NULL};
