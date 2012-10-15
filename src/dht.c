@@ -82,9 +82,11 @@ DhtHash *DhtHash_PrefixedRandom(RandomState *rs, DhtHash *prefix, int prefix_len
     assert(rs != NULL && "NULL RandomState pointer");
     assert(prefix != NULL && "NULL DhtHash prefix pointer");
 
+    DhtHash *random = NULL;
+
     check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
 
-    DhtHash *random = DhtHash_Random(rs);
+    random = DhtHash_Random(rs);
     check(random != NULL, "DhtHash_Random failed");
 
     DhtHash *prefixed = DhtHash_Prefixed(random, prefix, prefix_len);
