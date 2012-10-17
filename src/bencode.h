@@ -6,6 +6,8 @@
 
 typedef enum BType { BString, BInteger, BList, BDictionary } BType;
 
+char *BType_Name(BType type);
+
 typedef struct BNode {
     enum BType type;
     union {

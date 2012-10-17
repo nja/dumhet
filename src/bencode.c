@@ -3,6 +3,19 @@
 #include <ctype.h>
 #include <assert.h>
 
+char *BType_Name(BType type)
+{
+    switch (type)
+    {
+    case BString: return "BString";
+    case BInteger: return "BInteger";
+    case BList: return "BList";
+    case BDictionary: return "BDictionary";
+    }
+
+    return NULL;
+}
+
 BNode *BNode_create(BType type)
 {
     BNode *node = calloc(1, sizeof(BNode));
