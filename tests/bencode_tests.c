@@ -178,6 +178,7 @@ char *test_decode_string()
 
 	BNode *node = BDecode_str(buffer, buffer_size);
 	mu_assert(node != NULL, "BDecode failed");
+	mu_assert(node->type == BString, "Wrong type");
 	mu_assert(strncmp(strings[i], (char *)node->value.string, len) == 0, "Wrong string");
 	mu_assert(node->count == len, "Wrong count");
 	mu_assert(node->data == (uint8_t *)buffer, "Wrong data pointer");
@@ -247,6 +248,74 @@ char *test_bad_dictionaries()
     return NULL;
 }
 
+char *test_BNode_GetValue()
+{
+    const int len = 16;
+
+    char *d5 = "d1:ai0e2:aai1e2:azi2e3:bbbi3e1:zi4ee",
+	*d4 = "d1:ai0e2:aai1e2:azi2e3:bbbi3ee",
+	*d3 = "d1:ai0e2:aai1e2:azi2ee",
+	*d2 = "d1:ai0e2:azi2ee",
+	*d1 = "d1:ai0ee",
+	*d0 = "de";
+
+    char *dicts[] = {d5, d5, d5, d5, d5, d5,
+		     d4, d4, d4, d4, d4,
+		     d3, d3, d3, d3,
+		     d2, d2, d2,
+		     d1, d1,
+		     d0};	
+    char *keys[] = {"a", "aa", "az", "bbb", "z", "bbbb",
+		    "a", "aa", "az", "bbb", "bb",
+		    "a", "aa", "az", "x",
+		    "a", "az", "",
+		    "a", "x",
+		    "foo"};
+    int values[] = {0, 1, 2, 3, 4, -1,
+		    0, 1, 2, 3, -1,
+		    0, 1, 2, -1,
+		    0, 2, -1,
+		    0, -1,
+		    -1};
+
+    int i = 0;
+    for (i = 0; i < len; i++)
+    {
+	debug("Dict %d key %s: %s", i, keys[i], dicts[i]);
+	
+	BNode *dict = BDecode_strlen(dicts[i]);
+	mu_assert(dict != NULL, "BDecode failed");
+	mu_assert(dict->type == BDictionary, "Not dict");
+
+	debug("b");
+
+	BNode *value = BNode_GetValue(dict, (uint8_t *)keys[i], strlen(keys[i]));
+
+	debug("c");
+
+	if (values[i] >= 0)
+	{
+	    mu_assert(value != NULL, "BNode_GetValue failed");
+
+	    debug("Value type %s", BType_Name(value->type));
+	    debug("Value %ld (wanted %d)", value->value.integer, values[i]);
+
+	    mu_assert(value->type == BInteger, "Value not an int");
+	    mu_assert(value->value.integer == values[i], "Wrong value");
+	}
+	else
+	{
+	    mu_assert(value == NULL, "BNode_GetValue should have failed");
+	}
+	
+	debug("d");
+
+	BNode_destroy(dict);
+    }
+
+    return NULL;
+}	
+
 char *all_tests()
 {
     mu_suite_start();
@@ -265,6 +334,8 @@ char *all_tests()
 
     mu_run_test(test_decode_dictionary);
     mu_run_test(test_bad_dictionaries);
+
+    mu_run_test(test_BNode_GetValue);
    
     return NULL;
 }

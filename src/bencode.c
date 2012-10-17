@@ -229,20 +229,31 @@ error:
     return NULL;
 }
 
-int is_less_than(uint8_t *a, const size_t a_len, uint8_t *b, const size_t b_len)
+int compare_keys(uint8_t *a, const size_t a_len, uint8_t *b, const size_t b_len)
 {
     size_t i = 0, min_len = a_len < b_len ? a_len : b_len;
 
     for (i = 0; i < min_len; i++)
     {
 	if (a[i] < b[i])
-	    return 1;
+	    return -1;
 
 	if (b[i] < a[i])
-	    return 0;
+	    return 1;
     }
 
-    return a_len < b_len;
+    if (a_len < b_len)
+	return -1;
+
+    if (b_len < a_len)
+	return 1;
+
+    return 0;
+}    
+
+int is_less_than(uint8_t *a, const size_t a_len, uint8_t *b, const size_t b_len)
+{
+    return compare_keys(a, a_len, b, b_len) == -1;
 }
 
 int all_string_keys(BNode *nodes, size_t count)
@@ -350,4 +361,44 @@ void BNode_destroy(BNode *node)
     }
 
     free(node);
+}
+
+BNode *BNode_GetValue(BNode *dict, uint8_t *key, size_t key_len)
+{
+    check(dict->count % 2 == 0, "Odd number of dict list nodes");
+
+    size_t l = 0, r = dict->count / 2;
+    int cmp;
+
+    while (l + 1 < r)
+    {
+	size_t m = l + ((r - l) / 2);
+	BNode *mkey = dict->value.nodes[m * 2];
+
+	debug("in l: %lu m: %lu r: %lu", l, m, r);
+
+	check(mkey->type == BString, "Wrong key type");
+
+	cmp = compare_keys(key, key_len, mkey->value.string, mkey->count);
+	debug("cmp %s %s %d", key, mkey->value.string, cmp);
+
+	if (cmp <= 0)
+	    r = m;
+
+	if (0 <= cmp)
+	    l = m;
+
+	debug("ut l: %lu m: %lu r: %lu", l, m, r);
+    }
+
+    check(l * 2 + 1 < dict->count, "Empty dict");
+
+    BNode *found = dict->value.nodes[l * 2];
+    cmp = compare_keys(key, key_len, found->value.string, found->count);
+
+    check(cmp == 0, "Key not found");
+
+    return dict->value.nodes[l * 2 + 1];
+error:
+    return NULL;
 }
