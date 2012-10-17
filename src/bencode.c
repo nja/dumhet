@@ -159,13 +159,13 @@ BNode *BDecode_list_or_dict(uint8_t *data, size_t len, char head_ch, BType type)
 error:
     for (i = 0; i < count; i++)
     {
-	BNode_destroy(nodes[i]);
+	BNode_Destroy(nodes[i]);
 
 	if (node == nodes[i])
 	    node = NULL;
     }
 
-    BNode_destroy(node);
+    BNode_Destroy(node);
 	
     free(nodes);
 
@@ -294,7 +294,7 @@ BNode *BDecode_dictionary(uint8_t *data, size_t len)
     return node;
 error:
 
-    BNode_destroy(node);
+    BNode_Destroy(node);
 
     return NULL;
 }
@@ -339,12 +339,12 @@ BNode *BDecode(uint8_t *data, size_t len)
 
 error:
     if (node)
-	BNode_destroy(node);
+	BNode_Destroy(node);
 
     return NULL;
 }
 
-void BNode_destroy(BNode *node)
+void BNode_Destroy(BNode *node)
 {
     if (node == NULL)
 	return;
@@ -354,7 +354,7 @@ void BNode_destroy(BNode *node)
 	size_t i = 0;
 	for (i = 0; i < node->count; i++)
 	{
-	    BNode_destroy(node->value.nodes[i]);
+	    BNode_Destroy(node->value.nodes[i]);
 	}
 	
 	free(node->value.nodes);

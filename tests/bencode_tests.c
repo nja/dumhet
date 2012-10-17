@@ -29,7 +29,7 @@ char *test_decode_integer()
 	mu_assert(node->data == string + 1, "Wrong data pointer");
 	mu_assert(node->data_len = len, "Wrong len");
 
-	BNode_destroy(node);
+	BNode_Destroy(node);
     }
     
     return NULL;
@@ -139,7 +139,7 @@ char *test_decode_list()
 	mu_assert(node->data == (uint8_t *)lists[i], "Wrong data pointer");
 	mu_assert(node->data_len == len, "Wrong len");
 
-	BNode_destroy(node);
+	BNode_Destroy(node);
     }
 
     return NULL;
@@ -184,7 +184,7 @@ char *test_decode_string()
 	mu_assert(node->data == (uint8_t *)buffer, "Wrong data pointer");
 	mu_assert(node->data_len == strlen(buffer), "Wrong data len");
 
-	BNode_destroy(node);
+	BNode_Destroy(node);
     }
 
     return NULL;
@@ -225,7 +225,7 @@ char *test_decode_dictionary()
 	mu_assert(node->data == (uint8_t *)dicts[i], "Wrong data pointer");
 	mu_assert(node->data_len = strlen(dicts[i]), "Wrong data_len");
 
-	BNode_destroy(node);
+	BNode_Destroy(node);
     }
 
     return NULL;
@@ -310,7 +310,7 @@ char *test_BNode_GetValue()
 	
 	debug("d");
 
-	BNode_destroy(dict);
+	BNode_Destroy(dict);
     }
 
     return NULL;

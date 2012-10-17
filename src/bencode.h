@@ -29,6 +29,6 @@ BNode *BNode_GetValue(BNode *dict, uint8_t *key, size_t key_len);
 #define BDecode_str(D, L) BDecode((uint8_t *)(D), (L))
 #define BDecode_strlen(D) BDecode_str((D), strlen((D)))
 
-void BNode_destroy(BNode *node);
+void BNode_Destroy(BNode *node);
 
 #endif
