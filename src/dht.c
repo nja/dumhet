@@ -494,3 +494,8 @@ DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)
 
     return Bad;
 }
+
+void DhtNode_Destroy(DhtNode *node)
+{
+    free(node);
+}
