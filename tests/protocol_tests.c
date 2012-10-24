@@ -72,18 +72,38 @@ char *test_Decode_QGetPeersData()
     mu_assert(check_Message(message, QGetPeers) == NULL, "Bad decoded message");
 
     mu_assert(message->data.qgetpeers.info_hash != NULL, "Missing info_hash");
-    mu_assert(same_bytes(info_hash, message->data.qgetpeers.info_hash->value), "Wrong info_hash");
+    mu_assert(same_bytes(info_hash, message->data.qgetpeers.info_hash->value),
+	      "Wrong info_hash");
 
     Message_Destroy(message);
 
     return NULL;
 }
 
-    /* 
-     * mu_assert(same_bytes("abcdefghij0123456789", message->id->value), "Wrong id");
-     * mu_assert(message->data->token != NULL, "No token");
-     * mu_assert(same_bytes("
-     */
+char *test_Decode_QAnnouncePeerData()
+{
+    char *data = "d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe";
+    char *info_hash = "mnopqrstuvwxyz123456", *token = "aoeusnth";
+    const int port = 6881;
+
+    Message *message = Decode((uint8_t *)data, strlen(data));
+
+    mu_assert(check_Message(message, QAnnouncePeer) == NULL, "Bad decoded message");
+
+    mu_assert(message->data.qannouncepeer.info_hash != NULL, "Missing info_hash");
+    mu_assert(same_bytes(info_hash, message->data.qannouncepeer.info_hash->value),
+	      "Wrong info_hash");
+    mu_assert(message->data.qannouncepeer.token != NULL, "No token");
+    mu_assert(message->data.qannouncepeer.token_len == strlen(token),
+	      "Wrong token length");
+    mu_assert(same_bytes(token, message->data.qannouncepeer.token),
+	      "Wrong token");
+    mu_assert(message->data.qannouncepeer.port == port, "Wrong port");
+
+    Message_Destroy(message);
+
+    return NULL;
+}
 
 char *all_tests()
 {
@@ -92,6 +112,7 @@ char *all_tests()
     mu_run_test(test_Decode_QPing);
     mu_run_test(test_Decode_QFindNode);
     mu_run_test(test_Decode_QGetPeersData);
+    mu_run_test(test_Decode_QAnnouncePeerData);
 
     return NULL;
 }

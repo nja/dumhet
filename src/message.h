@@ -25,6 +25,7 @@ typedef struct QAnnouncePeerData {
     DhtHash *info_hash;
     int port;
     uint8_t *token;
+    size_t token_len;
 } QAnnouncePeerData;
 
 typedef struct RPingData {

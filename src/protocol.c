@@ -294,7 +294,7 @@ int GetQueryAnnouncePeerData(BNode *arguments, Message *message)
 
     message->data.qannouncepeer.info_hash = NULL;
 
-    BNode *info_hash = BNode_GetValue(arguments, (uint8_t *)"info_hash", 6);
+    BNode *info_hash = BNode_GetValue(arguments, (uint8_t *)"info_hash", 9);
 
     check(info_hash != NULL
 	  && info_hash->type == BString
@@ -311,19 +311,20 @@ int GetQueryAnnouncePeerData(BNode *arguments, Message *message)
     BNode *token = BNode_GetValue(arguments, (uint8_t *)"token", 5);
 
     check(token != NULL
-	  && token->type == BString
-	  && token->count > 0,
+	  && token->type == BString,
 	  "Missing or bad token");
 
     message->data.qannouncepeer.info_hash = malloc(HASH_BYTES);
     check_mem(message->data.qannouncepeer.info_hash);
 
-    memcpy(&message->data.qannouncepeer.info_hash, &info_hash->value.string, HASH_BYTES);
+    memcpy(message->data.qannouncepeer.info_hash->value, info_hash->value.string, HASH_BYTES);
 
     message->data.qannouncepeer.port = port->value.integer;
 
     message->data.qannouncepeer.token = BNode_CopyString(token);
     check(message->data.qannouncepeer.token != NULL, "Failed to copy token");
+
+    message->data.qannouncepeer.token_len = token->count;
 
     return 0;
 error:
