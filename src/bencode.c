@@ -375,20 +375,15 @@ BNode *BNode_GetValue(BNode *dict, uint8_t *key, size_t key_len)
 	size_t m = l + ((r - l) / 2);
 	BNode *mkey = dict->value.nodes[m * 2];
 
-	debug("in l: %lu m: %lu r: %lu", l, m, r);
-
 	check(mkey->type == BString, "Wrong key type");
 
 	cmp = compare_keys(key, key_len, mkey->value.string, mkey->count);
-	debug("cmp %s %s %d", key, mkey->value.string, cmp);
 
 	if (cmp <= 0)
 	    r = m;
 
 	if (0 <= cmp)
 	    l = m;
-
-	debug("ut l: %lu m: %lu r: %lu", l, m, r);
     }
 
     check(l * 2 + 1 < dict->count, "Empty dict");
