@@ -31,4 +31,7 @@ BNode *BNode_GetValue(BNode *dict, uint8_t *key, size_t key_len);
 
 void BNode_Destroy(BNode *node);
 
+uint8_t *BNode_CopyString(BNode *string);
+int BNode_StringEquals(char *string, BNode *bstring);
+
 #endif

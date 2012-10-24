@@ -397,3 +397,35 @@ BNode *BNode_GetValue(BNode *dict, uint8_t *key, size_t key_len)
 error:
     return NULL;
 }
+
+uint8_t *BNode_CopyString(BNode *string)
+{
+    assert(string != NULL && "NULL BNode pointer");
+
+    check(string->type == BString, "Not a BString");
+
+    uint8_t *data = malloc(string->count);
+    check_mem(data);
+
+    memcpy(data, string->value.string, string->count);
+
+    return data;
+error:
+    return NULL;
+}
+
+int BNode_StringEquals(char *string, BNode *bstring)
+{
+    assert(string != NULL && "NULL char pointer");
+    assert(bstring != NULL && "NULL BNode string pointer");
+
+    if (bstring->type != BString)
+	return 0;
+
+    size_t len = strlen(string);
+
+    if (len != bstring->count)
+	return 0;
+
+    return strncmp(string, (char *)bstring->value.string, len) == 0;
+}
