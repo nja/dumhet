@@ -18,15 +18,35 @@ int same_bytes(char *expected, uint8_t *data)
 
 char *check_Message(Message *message, MessageType type)
 {
-    char *token = "aa", *id = "abcdefghij0123456789";
+    char *tid = "aa",
+	*qid = "abcdefghij0123456789",
+	*rid = "mnopqrstuvwxyz123456";
     
     mu_assert(message != NULL, "Decode failed");
     mu_assert(message->type == type, "Wrong message type");
     mu_assert(message->t != NULL, "No transaction id");
-    mu_assert(message->t_len == strlen(token), "Unexpected token length");
-    mu_assert(same_bytes(token, message->t), "Wrong transaction id");
+    mu_assert(message->t_len == strlen(tid), "Unexpected transaction id length");
+    mu_assert(same_bytes(tid, message->t), "Wrong transaction id");
     mu_assert(message->id != NULL, "No id hash");
-    mu_assert(same_bytes(id, message->id->value), "Wrong id");
+
+    switch (type)
+    {
+    case QPing:
+    case QFindNode:
+    case QGetPeers:
+    case QAnnouncePeer:
+	mu_assert(same_bytes(qid, message->id->value), "Wrong query id");
+	break;
+    case RPing:
+    case RFindNode:
+    case RGetPeers:
+    case RAnnouncePeer:
+	mu_assert(same_bytes(rid, message->id->value), "Wrong reply id");
+	break;
+    case RError:
+	mu_assert(0, "Bad type");
+	break;
+    }
 
     return NULL;
 }    
