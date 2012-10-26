@@ -217,9 +217,9 @@ error:
     return -1;
 }
 
-int GetQueryFindNodeData(BNode *arguments, Message *message);
-int GetQueryGetPeersData(BNode *arguments, Message *message);
-int GetQueryAnnouncePeerData(BNode *arguments, Message *message);
+int GetQueryFindNodeData(BNode *arguments, QFindNodeData *data);
+int GetQueryGetPeersData(BNode *arguments, QGetPeersData *data);
+int GetQueryAnnouncePeerData(BNode *arguments, QAnnouncePeerData *data);
 
 int GetQueryData(MessageType type, BNode *dict, Message *message)
 {
@@ -236,17 +236,22 @@ int GetQueryData(MessageType type, BNode *dict, Message *message)
 
     switch (type)
     {
-    case QFindNode: return GetQueryFindNodeData(arguments, message);
-    case QGetPeers: return GetQueryGetPeersData(arguments, message);
-    case QAnnouncePeer: return GetQueryAnnouncePeerData(arguments, message);
-    default: return -1;
+    case QFindNode:
+	return GetQueryFindNodeData(arguments, &message->data.qfindnode);
+    case QGetPeers:
+	return GetQueryGetPeersData(arguments, &message->data.qgetpeers);
+    case QAnnouncePeer:
+	return GetQueryAnnouncePeerData(arguments, &message->data.qannouncepeer);
+    default:
+	log_err("Bad query MessageType");
+	return -1;
     }
 }
 
-int GetQueryFindNodeData(BNode *arguments, Message *message)
+int GetQueryFindNodeData(BNode *arguments, QFindNodeData *data)
 {
     assert(arguments != NULL && "NULL BNode dictionary pointer");
-    assert(message != NULL && "NULL Message pointer");
+    assert(data != NULL && "NULL QFindNodeData pointer");
 
     BNode *target = BNode_GetValue(arguments, (uint8_t *)"target", 6);
 
@@ -255,20 +260,20 @@ int GetQueryFindNodeData(BNode *arguments, Message *message)
 	  && target->count == HASH_BYTES,
 	  "Missing or bad target id");
 
-    message->data.qfindnode.target = malloc(HASH_BYTES);
-    check_mem(message->data.qfindnode.target);
+    data->target = malloc(HASH_BYTES);
+    check_mem(data->target);
 
-    memcpy(&message->data.qfindnode.target->value, target->value.string, HASH_BYTES);
+    memcpy(data->target->value, target->value.string, HASH_BYTES);
 
     return 0;
 error:
     return -1;
 }
 
-int GetQueryGetPeersData(BNode *arguments, Message *message)
+int GetQueryGetPeersData(BNode *arguments, QGetPeersData *data)
 {
     assert(arguments != NULL && "NULL BNode dictionary pointer");
-    assert(message != NULL && "NULL Message pointer");
+    assert(data != NULL && "NULL QGetPeersData pointer");
 
     BNode *info_hash = BNode_GetValue(arguments, (uint8_t *)"info_hash", 9);
 
@@ -277,22 +282,22 @@ int GetQueryGetPeersData(BNode *arguments, Message *message)
 	  && info_hash->count == HASH_BYTES,
 	  "Missing or bad info_hash id");
 
-    message->data.qgetpeers.info_hash = malloc(HASH_BYTES);
-    check_mem(message->data.qgetpeers.info_hash);
+    data->info_hash = malloc(HASH_BYTES);
+    check_mem(data->info_hash);
 
-    memcpy(&message->data.qgetpeers.info_hash->value, info_hash->value.string, HASH_BYTES);
+    memcpy(data->info_hash->value, info_hash->value.string, HASH_BYTES);
 
     return 0;
 error:
     return -1;
 }
 
-int GetQueryAnnouncePeerData(BNode *arguments, Message *message)
+int GetQueryAnnouncePeerData(BNode *arguments, QAnnouncePeerData *data)
 {
     assert(arguments != NULL && "NULL BNode dictionary pointer");
-    assert(message != NULL && "NULL Message pointer");
+    assert(data != NULL && "NULL QAnnouncePeerData pointer");
 
-    message->data.qannouncepeer.info_hash = NULL;
+    data->info_hash = NULL;
 
     BNode *info_hash = BNode_GetValue(arguments, (uint8_t *)"info_hash", 9);
 
@@ -314,21 +319,21 @@ int GetQueryAnnouncePeerData(BNode *arguments, Message *message)
 	  && token->type == BString,
 	  "Missing or bad token");
 
-    message->data.qannouncepeer.info_hash = malloc(HASH_BYTES);
-    check_mem(message->data.qannouncepeer.info_hash);
+    data->info_hash = malloc(HASH_BYTES);
+    check_mem(data->info_hash);
 
-    memcpy(message->data.qannouncepeer.info_hash->value, info_hash->value.string, HASH_BYTES);
+    memcpy(data->info_hash->value, info_hash->value.string, HASH_BYTES);
 
-    message->data.qannouncepeer.port = port->value.integer;
+    data->port = port->value.integer;
 
-    message->data.qannouncepeer.token = BNode_CopyString(token);
-    check(message->data.qannouncepeer.token != NULL, "Failed to copy token");
+    data->token = BNode_CopyString(token);
+    check(data->token != NULL, "Failed to copy token");
 
-    message->data.qannouncepeer.token_len = token->count;
+    data->token_len = token->count;
 
     return 0;
 error:
-    DhtHash_Destroy(message->data.qannouncepeer.info_hash);
+    DhtHash_Destroy(data->info_hash);
 
     return -1;
 }
