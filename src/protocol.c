@@ -490,6 +490,8 @@ int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
     data->token = BNode_CopyString(token);
     check(data->token != NULL, "Failed to copy token");
 
+    data->token_len = token->count;
+
     int rc = 0;
 
     BNode *values = BNode_GetValue(arguments, (uint8_t *)"values", 6);
