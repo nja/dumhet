@@ -29,15 +29,17 @@ int DhtDistance_Compare(DhtDistance *a, DhtDistance *b);
 
 typedef struct DhtNode {
     DhtHash id;
+    uint32_t addr;
+    uint16_t port;
     time_t reply_time;
     time_t query_time;
     int pending_queries;
 } DhtNode;
 
 void DhtNode_Destroy(DhtNode *node);
+void DhtNode_DestroyBlock(DhtNode *node, size_t count);
 
 #define BUCKET_K 8
-void DhtNode_DestroyBlock(DhtNode *node, size_t count);
 
 typedef struct DhtBucket {
     int index;

@@ -4,6 +4,11 @@
 #include <dht.h>
 #include <bstrlib.h>
 
+typedef struct Peer {
+    uint32_t addr;
+    uint16_t port;
+} Peer;
+
 typedef enum MessageType {
     QPing, QFindNode, QGetPeers, QAnnouncePeer,
     RPing, RFindNode, RGetPeers, RAnnouncePeer,
@@ -38,8 +43,9 @@ typedef struct RFindNodeData {
 
 typedef struct RGetPeersData {
     uint8_t *token;
-    void *values;		/* TODO: type */
-    DhtNode **nodes;
+    size_t token_len;
+    Peer *values;
+    DhtNode *nodes;
     size_t count;
 } RGetPeersData;
 

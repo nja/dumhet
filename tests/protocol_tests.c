@@ -55,9 +55,42 @@ char *test_Decode_QPing()
 {
     char *data = "d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe";
 
-    Message *message = Decode((uint8_t *)data, strlen(data));
+    Message *message = Decode((uint8_t *)data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QPing) == NULL, "Bad decoded message");
+
+    Message_Destroy(message);
+
+    return NULL;
+}
+
+int Test_GetRPingResponseType(uint8_t *tid, size_t len, MessageType *type)
+{
+    if (len != 2)
+    {
+	log_err("Bad len");
+	return -1;
+    }
+
+    if (!same_bytes("aa", tid))
+    {
+	log_err("Wrong transaction id");
+	return -1;
+    }
+
+    *type = RPing;
+    return 0;
+}
+
+char *test_Decode_RPing()
+{
+    char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
+
+    Message *message = Decode((uint8_t *)data,
+			      strlen(data),
+			      Test_GetRPingResponseType);
+
+    mu_assert(check_Message(message, RPing) == NULL, "Bad decoded message");
 
     Message_Destroy(message);
 
@@ -68,7 +101,7 @@ char *test_Decode_QFindNode()
 {
     char *data = "d1:ad2:id20:abcdefghij01234567896:target20:mnopqrstuvwxyz123456e1:q9:find_node1:t2:aa1:y1:qe";
 
-    Message *message = Decode((uint8_t *)data, strlen(data));
+    Message *message = Decode((uint8_t *)data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QFindNode) == NULL, "Bad decoded message");
 
@@ -87,7 +120,7 @@ char *test_Decode_QGetPeersData()
     char *data = "d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe";
     char *info_hash = "mnopqrstuvwxyz123456";
 
-    Message *message = Decode((uint8_t *)data, strlen(data));
+    Message *message = Decode((uint8_t *)data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QGetPeers) == NULL, "Bad decoded message");
 
@@ -106,7 +139,7 @@ char *test_Decode_QAnnouncePeerData()
     char *info_hash = "mnopqrstuvwxyz123456", *token = "aoeusnth";
     const int port = 6881;
 
-    Message *message = Decode((uint8_t *)data, strlen(data));
+    Message *message = Decode((uint8_t *)data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QAnnouncePeer) == NULL, "Bad decoded message");
 
@@ -130,6 +163,7 @@ char *all_tests()
     mu_suite_start();
 
     mu_run_test(test_Decode_QPing);
+    mu_run_test(test_Decode_RPing);
     mu_run_test(test_Decode_QFindNode);
     mu_run_test(test_Decode_QGetPeersData);
     mu_run_test(test_Decode_QAnnouncePeerData);

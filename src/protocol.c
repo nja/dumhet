@@ -3,16 +3,17 @@
 #include <protocol.h>
 #include <bencode.h>
 #include <message.h>
+#include <arpa/inet.h>
 
 int HasTransactionId(BNode *dict);
 int HasNodeId(BNode *dict);
 char GetMessageType(BNode *dict);
 
 Message *DecodeQuery(BNode *dict);
-Message *DecodeResponse(BNode *dict);
+Message *DecodeResponse(BNode *dict, GetResponseType_fp getResponseType);
 Message *DecodeError(BNode *dict);
 
-Message *Decode(uint8_t *data, size_t len)
+Message *Decode(uint8_t *data, size_t len, GetResponseType_fp getResponseType)
 {
     assert(data != NULL && "NULL data pointer");
 
@@ -30,7 +31,7 @@ Message *Decode(uint8_t *data, size_t len)
     {
     case 'q': message = DecodeQuery(dict);
 	break;
-    case 'r': message = DecodeResponse(dict);
+    case 'r': message = DecodeResponse(dict, getResponseType);
 	break;
     case 'e': message = DecodeError(dict);
 	break;
@@ -233,9 +234,8 @@ int GetQueryData(MessageType type, BNode *dict, Message *message)
     if (arguments == NULL || arguments->type != BDictionary)
 	return -1;
 
-    switch(type)
+    switch (type)
     {
-    case QPing: return 0;
     case QFindNode: return GetQueryFindNodeData(arguments, message);
     case QGetPeers: return GetQueryGetPeersData(arguments, message);
     case QAnnouncePeer: return GetQueryAnnouncePeerData(arguments, message);
@@ -333,10 +333,235 @@ error:
     return -1;
 }
 
-Message *DecodeResponse(BNode *dict)
+int GetResponseData(MessageType type, BNode *dict, Message *message);
+int GetResponseId(BNode *dict, DhtHash **id);
+
+Message *DecodeResponse(BNode *dict, GetResponseType_fp getResponseType)
 {
-    assert(dict == (BNode *)"TODO");
+    assert(dict != NULL && "NULL BNode pointer");
+
+    Message *message = calloc(1, sizeof(Message));
+    check_mem(message);
+
+    int rc = 0;
+
+    check(dict->type == BDictionary, "Not a dictionary");
+
+    rc = GetTransactionId(dict, &message->t, &message->t_len);
+    check(rc == 0, "Bad transaction id");
+
+    rc = GetResponseId(dict, &message->id);
+    check(rc == 0, "Bad response node id");
+
+    rc = getResponseType(message->t, message->t_len, &message->type);
+    check(rc == 0, "Bad response type");
+
+    rc = GetResponseData(message->type, dict, message);
+    check(rc == 0, "Bad response arguments");
+
+    return message;
+error:
+    Message_Destroy(message);
     return NULL;
+}
+
+int GetResponseId(BNode *dict, DhtHash **id)
+{
+    assert(dict != NULL && "NULL BNode dictionary pointer");
+    assert(id != NULL && "NULL pointer to DhtHash pointer");
+
+    check(dict->type == BDictionary, "Not a dictionary");
+
+    BNode *arguments = BNode_GetValue(dict, (uint8_t *)"r", 1);
+    check(arguments != NULL, "No response arguments");
+    check(arguments->type == BDictionary, "Arguments not a dictionary");
+
+    BNode *idVal = BNode_GetValue(arguments, (uint8_t *)"id", 2);
+    check(idVal != NULL, "No id argument");
+    check(idVal->type == BString, "Wrong id type");
+    check(idVal->count == HASH_BYTES, "Wrong id length");
+
+    *id = malloc(HASH_BYTES);
+    check_mem(id);
+
+    memcpy(&((*id)->value), idVal->value.string, HASH_BYTES);
+
+    return 0;
+error:
+    return -1;
+}
+
+int GetResponseFindNodeData(BNode *arguments, RFindNodeData *data);
+int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data);
+
+int GetResponseData(MessageType type, BNode *dict, Message *message)
+{
+    assert(dict != NULL && "NULL BNode dictionary pointer");
+    assert(message != NULL && "NULL Message pointer");
+
+    if (type == RPing || type == RAnnouncePeer)
+	return 0;
+
+    BNode *arguments = BNode_GetValue(dict, (uint8_t *)"r", 1);
+
+    if (arguments == NULL || arguments->type != BDictionary)
+	return -1;
+
+    switch (type)
+    {
+    case RFindNode:
+	return GetResponseFindNodeData(arguments, &message->data.rfindnode);
+    case RGetPeers:
+	return GetResponseGetPeersData(arguments, &message->data.rgetpeers);
+    default: return -1;
+    }
+}
+
+int GetCompactNodeInfo(BNode *string, DhtNode **nodes, size_t *count);
+
+int GetResponseFindNodeData(BNode *arguments, RFindNodeData *data)
+{
+    assert(arguments != NULL && "NULL BNode dictionary pointer");
+    assert(data != NULL && "NULL RFindNodeData pointer");
+
+    BNode *nodes = BNode_GetValue(arguments, (uint8_t *)"nodes", 5);
+
+    check(nodes != NULL, "Missing nodes");
+
+    int rc = GetCompactNodeInfo(nodes,
+				&data->nodes,
+				&data->count);
+    check(rc == 0, "Error reading compact node info");
+
+    return 0;
+error:
+    return -1;
+}
+
+#define COMPACTNODE_BYTES (HASH_BYTES + sizeof(uint32_t) + sizeof(uint16_t))
+
+int GetCompactNodeInfo(BNode *string, DhtNode **nodes, size_t *count)
+{
+    assert(string != NULL && "NULL BNode string pointer");
+    assert(nodes != NULL && "NULL pointer to DhtNode pointer");
+    assert(count != NULL && "NULL pointer to size_t count");
+
+    check(string->type == BString, "Not a BString");
+    check(string->count % COMPACTNODE_BYTES == 0, "Bad compact node info length");
+    
+    *count = string->count / COMPACTNODE_BYTES;
+    *nodes = calloc(*count, sizeof(DhtNode));
+    check_mem(*nodes);
+    
+    DhtNode *node = *nodes;
+    uint8_t *data = string->value.string;
+
+    while (node < *nodes + *count)
+    {
+	memcpy(node->id.value, data, HASH_BYTES);
+	node->addr = ntohl(*(uint32_t *)(data + HASH_BYTES));
+	node->port = ntohs(*(uint16_t *)(data + HASH_BYTES + sizeof(uint32_t)));
+
+	data += COMPACTNODE_BYTES;
+	node++;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int GetCompactPeerInfo(BNode *string, Peer **values, size_t *count);
+
+int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
+{
+    assert(arguments != NULL && "NULL BNode dictionary pointer");
+    assert(data != NULL && "NULL RGetPeersData pointer");
+
+    BNode *token = BNode_GetValue(arguments, (uint8_t *)"token", 5);
+    check(token != NULL, "Missing token");
+    check(token->type == BString, "Bad token type");
+
+    data->token = BNode_CopyString(token);
+    check(data->token != NULL, "Failed to copy token");
+
+    int rc = 0;
+
+    BNode *values = BNode_GetValue(arguments, (uint8_t *)"values", 6);
+    BNode *nodes = BNode_GetValue(arguments, (uint8_t *)"nodes", 5);
+
+    if (values != NULL && nodes != NULL)
+    {
+	sentinel("Both values and nodes in response");
+    }
+    else if (values != NULL)
+    {
+	check(values->type == BString, "Bad values type");
+
+	rc = GetCompactPeerInfo(values,
+				&data->values,
+				&data->count);
+	check(rc == 0, "Failed to get peer values compact info");
+    }
+    else if (nodes != NULL)
+    {
+	rc = GetCompactNodeInfo(nodes,
+				&data->nodes,
+				&data->count);
+	check(rc == 0, "Failed to get compact node info");
+    }
+    else
+    {
+	sentinel("Missing values or nodes");
+    }
+
+    return 0;
+error:
+    free(data->token);
+    data->token = NULL;
+
+    free(data->values);
+    data->values = NULL;
+
+    if (data->nodes != NULL)
+	DhtNode_DestroyBlock(data->nodes, data->count);
+    data->nodes = NULL;
+
+    data->count = 0;
+
+    return -1;
+}
+
+#define COMPACTPEER_BYTES (sizeof(uint32_t) + sizeof(uint16_t))
+
+int GetCompactPeerInfo(BNode *string, Peer **peers, size_t *count)
+{
+    assert(string != NULL && "NULL BNode string pointer");
+    assert(peers != NULL && "NULL pointer to Peer pointer");
+    assert(count != NULL && "NULL pointer to size_t count");
+
+    check(string->type == BString, "Not a BString");
+    check(string->count % COMPACTPEER_BYTES == 0, "Bad compact peer info length");
+
+    *count = string->count / COMPACTPEER_BYTES;
+    *peers = calloc(*count, sizeof(Peer));
+    check_mem(*peers);
+
+    Peer *peer = *peers;
+    uint8_t *data = string->value.string;
+
+    while (peer < *peers + *count)
+    {
+	peer->addr = ntohl(*(uint32_t *)data);
+	peer->port = ntohs(*(uint16_t *)(data + sizeof(uint32_t)));
+
+	data += COMPACTPEER_BYTES;
+	peer++;
+    }
+
+    return 0;
+error:
+    return -1;
 }
 
 Message *DecodeError(BNode *dict)
