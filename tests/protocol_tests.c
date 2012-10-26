@@ -88,7 +88,7 @@ char *test_Decode_RPing()
 
     Message *message = Decode((uint8_t *)data,
 			      strlen(data),
-			      Test_GetRPingResponseType);
+			      GetRPingResponseType);
 
     mu_assert(check_Message(message, RPing) == NULL, "Bad decoded message");
 
@@ -115,7 +115,7 @@ char *test_Decode_QFindNode()
     return NULL;
 }
 
-char *test_Decode_QGetPeersData()
+char *test_Decode_QGetPeers()
 {
     char *data = "d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe";
     char *info_hash = "mnopqrstuvwxyz123456";
@@ -133,7 +133,7 @@ char *test_Decode_QGetPeersData()
     return NULL;
 }
 
-char *test_Decode_QAnnouncePeerData()
+char *test_Decode_QAnnouncePeer()
 {
     char *data = "d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe";
     char *info_hash = "mnopqrstuvwxyz123456", *token = "aoeusnth";
@@ -165,8 +165,8 @@ char *all_tests()
     mu_run_test(test_Decode_QPing);
     mu_run_test(test_Decode_RPing);
     mu_run_test(test_Decode_QFindNode);
-    mu_run_test(test_Decode_QGetPeersData);
-    mu_run_test(test_Decode_QAnnouncePeerData);
+    mu_run_test(test_Decode_QGetPeers);
+    mu_run_test(test_Decode_QAnnouncePeer);
 
     return NULL;
 }
