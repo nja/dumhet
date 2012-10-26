@@ -1,6 +1,7 @@
 #include "minunit.h"
 #include <message.h>
 #include <protocol.h>
+#include <arpa/inet.h>
 
 int same_bytes(char *expected, uint8_t *data)
 {
@@ -16,6 +17,14 @@ int same_bytes(char *expected, uint8_t *data)
     return 1;
 }
 
+int same_bytes_len(char *expected, uint8_t *data, size_t len)
+{
+    if (strlen(expected) != len)
+	return 0;
+
+    return same_bytes(expected, data);
+}
+
 char *check_Message(Message *message, MessageType type)
 {
     char *tid = "aa",
@@ -25,8 +34,7 @@ char *check_Message(Message *message, MessageType type)
     mu_assert(message != NULL, "Decode failed");
     mu_assert(message->type == type, "Wrong message type");
     mu_assert(message->t != NULL, "No transaction id");
-    mu_assert(message->t_len == strlen(tid), "Unexpected transaction id length");
-    mu_assert(same_bytes(tid, message->t), "Wrong transaction id");
+    mu_assert(same_bytes_len(tid, message->t, message->t_len), "Wrong transaction id");
     mu_assert(message->id != NULL, "No id hash");
 
     switch (type)
@@ -64,17 +72,11 @@ char *test_Decode_QPing()
     return NULL;
 }
 
-int Test_GetRPingResponseType(uint8_t *tid, size_t len, MessageType *type)
+int GetRPingResponseType(uint8_t *tid, size_t len, MessageType *type)
 {
-    if (len != 2)
+    if (!same_bytes_len("aa", tid, len))
     {
-	log_err("Bad len");
-	return -1;
-    }
-
-    if (!same_bytes("aa", tid))
-    {
-	log_err("Wrong transaction id");
+	log_err("Bad transaction id");
 	return -1;
     }
 
@@ -115,6 +117,53 @@ char *test_Decode_QFindNode()
     return NULL;
 }
 
+int GetRFindNodeResponseType(uint8_t *tid, size_t len, MessageType *type)
+{
+    if (!same_bytes_len("aa", tid, len))
+    {
+	log_err("Bad transaction id");
+	return -1;
+    }
+
+    *type = RFindNode;
+    return 0;
+}
+
+char *test_Decode_RFindNode()
+{
+    char *data = "d1:rd2:id20:mnopqrstuvwxyz1234565:nodes52:"
+	"01234567890123456789ABCDEF"
+	"????????????????????xxxxyy"
+	"e1:t2:aa1:y1:re";
+
+    Message *message = Decode((uint8_t *)data, strlen(data), GetRFindNodeResponseType);
+
+    mu_assert(check_Message(message, RFindNode) == NULL, "Bad decoded message");
+
+    mu_assert(message->data.rfindnode.nodes != NULL, "NULL nodes");
+    mu_assert(message->data.rfindnode.count == 2, "Wrong node count");
+
+    mu_assert(same_bytes("01234567890123456789",
+			 message->data.rfindnode.nodes[0].id.value),
+	      "Wrong nodes[0] id");
+    mu_assert(message->data.rfindnode.nodes[0].addr == ntohl(*(uint32_t *)"ABCD"),
+	      "Wrong nodes[0] addr");
+    mu_assert(message->data.rfindnode.nodes[0].port == ntohs(*(uint16_t *)"EF"),
+    	      "Wrong nodes[0] port");
+
+    mu_assert(same_bytes("????????????????????",
+			 message->data.rfindnode.nodes[1].id.value),
+	      "Wrong nodes[1] id");
+    mu_assert(message->data.rfindnode.nodes[1].addr == ntohl(*(uint32_t *)"xxxx"),
+	      "Wrong nodes[1] addr");
+    mu_assert(message->data.rfindnode.nodes[1].port == ntohs(*(uint16_t *)"yy"),
+	      "Wrong nodes[1] port");
+
+    Message_Destroy(message);
+
+    return NULL;
+}
+
 char *test_Decode_QGetPeers()
 {
     char *data = "d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe";
@@ -133,6 +182,18 @@ char *test_Decode_QGetPeers()
     return NULL;
 }
 
+int GetRGetPeersResponseType(uint8_t *tid, size_t len, MessageType *type)
+{
+    if (!same_bytes_len("aa", tid, len))
+    {
+	log_err("Bad transaction id");
+	return -1;
+    }
+
+    *type = RGetPeers;
+    return 0;
+}
+    
 char *test_Decode_QAnnouncePeer()
 {
     char *data = "d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe";
@@ -165,6 +226,7 @@ char *all_tests()
     mu_run_test(test_Decode_QPing);
     mu_run_test(test_Decode_RPing);
     mu_run_test(test_Decode_QFindNode);
+    mu_run_test(test_Decode_RFindNode);
     mu_run_test(test_Decode_QGetPeers);
     mu_run_test(test_Decode_QAnnouncePeer);
 
