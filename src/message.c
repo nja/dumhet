@@ -10,8 +10,6 @@ void Message_Destroy(Message *message)
 
     DhtHash_Destroy(message->id);
 
-    size_t i = 0;
-
     switch (message->type)
     {
     case QPing:
