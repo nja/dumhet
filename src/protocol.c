@@ -476,7 +476,7 @@ error:
     return -1;
 }
 
-int GetCompactPeerInfo(BNode *string, Peer **values, size_t *count);
+int GetCompactPeerInfo(BNode *list, Peer **values, size_t *count);
 
 int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
 {
@@ -503,8 +503,6 @@ int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
     }
     else if (values != NULL)
     {
-	check(values->type == BString, "Bad values type");
-
 	rc = GetCompactPeerInfo(values,
 				&data->values,
 				&data->count);
@@ -541,33 +539,41 @@ error:
 
 #define COMPACTPEER_BYTES (sizeof(uint32_t) + sizeof(uint16_t))
 
-int GetCompactPeerInfo(BNode *string, Peer **peers, size_t *count)
+int GetCompactPeerInfo(BNode *list, Peer **peers, size_t *count)
 {
-    assert(string != NULL && "NULL BNode string pointer");
+    assert(list != NULL && "NULL BNode string pointer");
     assert(peers != NULL && "NULL pointer to Peer pointer");
     assert(count != NULL && "NULL pointer to size_t count");
 
-    check(string->type == BString, "Not a BString");
-    check(string->count % COMPACTPEER_BYTES == 0, "Bad compact peer info length");
+    *peers = NULL;
 
-    *count = string->count / COMPACTPEER_BYTES;
+    check(list->type == BList, "Not a BList");
+
+    *count = list->count;
     *peers = calloc(*count, sizeof(Peer));
     check_mem(*peers);
 
     Peer *peer = *peers;
-    uint8_t *data = string->value.string;
+    size_t i = 0;
 
-    while (peer < *peers + *count)
+    for (i = 0; i < *count; i++)
     {
-	peer->addr = ntohl(*(uint32_t *)data);
-	peer->port = ntohs(*(uint16_t *)(data + sizeof(uint32_t)));
+	BNode *string = list->value.nodes[i];
 
-	data += COMPACTPEER_BYTES;
+	check(string->type == BString, "Wrong peer type");
+	check(string->count == COMPACTPEER_BYTES, "Bad compact peer info length");
+	peer->addr = ntohl(*(uint32_t *)string->value.string);
+	peer->port = ntohs(*(uint16_t *)(string->value.string + sizeof(uint32_t)));
+
 	peer++;
     }
 
     return 0;
 error:
+    free(*peers);
+    *peers = NULL;
+    *count = 0;
+
     return -1;
 }
 
