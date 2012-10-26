@@ -572,5 +572,6 @@ error:
 Message *DecodeError(BNode *dict)
 {
     assert(dict == (BNode *)"TODO");
+    dict = dict;		/* Unused */
     return NULL;
 }
