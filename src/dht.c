@@ -499,3 +499,9 @@ void DhtNode_Destroy(DhtNode *node)
 {
     free(node);
 }
+
+void DhtNode_DestroyBlock(DhtNode *node, size_t count)
+{
+    assert((node != NULL || count == 0) && "Bad count for block");
+    free(node);
+}

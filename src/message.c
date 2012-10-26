@@ -35,10 +35,8 @@ void Message_Destroy(Message *message)
 	free(message->data.rgetpeers.token);
 	free(message->data.rgetpeers.values); /* TODO: destroy? */
 
-	for (i = 0; i < message->data.rgetpeers.count; i++)
-	    DhtNode_Destroy(message->data.rgetpeers.nodes[i]);
-
-	free(message->data.rgetpeers.nodes);
+	DhtNode_DestroyBlock(message->data.rgetpeers.nodes,
+			     message->data.rgetpeers.count);
 	break;
     case RAnnouncePeer:
 	break;

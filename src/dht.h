@@ -37,6 +37,7 @@ typedef struct DhtNode {
 void DhtNode_Destroy(DhtNode *node);
 
 #define BUCKET_K 8
+void DhtNode_DestroyBlock(DhtNode *node, size_t count);
 
 typedef struct DhtBucket {
     int index;
