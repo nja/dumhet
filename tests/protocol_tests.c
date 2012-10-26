@@ -193,6 +193,85 @@ int GetRGetPeersResponseType(uint8_t *tid, size_t len, MessageType *type)
     *type = RGetPeers;
     return 0;
 }
+
+char *test_Decode_RGetPeers_nodes()
+{
+    char *input = "d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:"
+	"012345678901234567890xxxy0"
+	"112345678901234567891xxxy1"
+	"212345678901234567892xxxy2"
+	"312345678901234567893xxxy3"
+	"412345678901234567894xxxy4"
+	"512345678901234567895xxxy5"
+	"612345678901234567896xxxy6"
+	"712345678901234567897xxxy7"
+	"5:token8:aoeusnthe1:t2:aa1:y1:re";
+
+    Message *message = Decode((uint8_t *)input, strlen(input), GetRGetPeersResponseType);
+
+    mu_assert(check_Message(message, RGetPeers) == NULL, "Bad decoded message");
+
+    RGetPeersData *data = &message->data.rgetpeers;
+
+    mu_assert(same_bytes_len("aoeusnth", data->token, data->token_len), "Bad token");
+    mu_assert(data->values == NULL, "Bad values");
+    mu_assert(data->count == BUCKET_K, "Wrong nodes count");
+
+    char id[] = "_1234567890123456789",
+    	addr[] = "_xxx",
+    	port[] = "y_";
+
+    int i = 0;
+    for (i = 0; i < BUCKET_K; i++)
+    {
+	id[0] = '0' + i;
+	addr[0] = '0' + i;
+	port[1] = '0' + i;
+
+	mu_assert(same_bytes(id, data->nodes[i].id.value), "Bad id");
+	mu_assert(data->nodes[i].addr == ntohl(*(uint32_t *)addr), "Bad addr");
+	mu_assert(data->nodes[i].port == ntohs(*(uint16_t *)port), "Bad port");
+    }
+
+    Message_Destroy(message);
+
+    return NULL;
+}
+
+char *test_Decode_RGetPeers_values()
+{
+    char *input = "d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valuesl"
+	"6:" "0xxxy0"
+	"6:" "1xxxy1"
+	"6:" "2xxxy2"
+	"ee1:t2:aa1:y1:re";
+
+    Message *message = Decode((uint8_t *)input, strlen(input), GetRGetPeersResponseType);
+
+    mu_assert(check_Message(message, RGetPeers) == NULL, "Bad decoded message");
+
+    RGetPeersData *data = &message->data.rgetpeers;
+
+    mu_assert(same_bytes_len("aoeusnth", data->token, data->token_len), "Bad token");
+    mu_assert(data->nodes == NULL, "Bad nodes");
+    mu_assert(data->count == 3, "Wrong values count");
+
+    char addr[] = "_xxx",
+    	port[] = "y_";
+
+    int i = 0;
+    for (i = 0; i < 3; i++)
+    {
+	addr[0] = '0' + i;
+	port[1] = '0' + i;
+	mu_assert(data->values[i].addr == ntohl(*(uint32_t *)addr), "Bad addr");
+	mu_assert(data->values[i].port == ntohs(*(uint16_t *)port), "Bad port");
+    }
+
+    Message_Destroy(message);
+
+    return NULL;
+}
     
 char *test_Decode_QAnnouncePeer()
 {
@@ -219,6 +298,33 @@ char *test_Decode_QAnnouncePeer()
     return NULL;
 }
 
+int GetRAnnouncePeerResponseType(uint8_t *tid, size_t len, MessageType *type)
+{
+    if (!same_bytes_len("aa", tid, len))
+    {
+	log_err("Bad transaction id");
+	return -1;
+    }
+
+    *type = RAnnouncePeer;
+    return 0;
+}
+
+char *test_Decode_RAnnouncePeer()
+{
+    char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
+
+    Message *message = Decode((uint8_t *)data,
+			      strlen(data),
+			      GetRAnnouncePeerResponseType);
+
+    mu_assert(check_Message(message, RAnnouncePeer) == NULL, "Bad decoded message");
+
+    Message_Destroy(message);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -228,7 +334,10 @@ char *all_tests()
     mu_run_test(test_Decode_QFindNode);
     mu_run_test(test_Decode_RFindNode);
     mu_run_test(test_Decode_QGetPeers);
+    mu_run_test(test_Decode_RGetPeers_nodes);
+    mu_run_test(test_Decode_RGetPeers_values);
     mu_run_test(test_Decode_QAnnouncePeer);
+    mu_run_test(test_Decode_RAnnouncePeer);
 
     return NULL;
 }
