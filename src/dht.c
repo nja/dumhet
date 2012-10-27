@@ -26,7 +26,6 @@ error:
 
 void DhtHash_Destroy(DhtHash *hash)
 {
-    assert(hash != NULL && "NULL DhtHash pointer");
     free(hash);
 }
 
@@ -187,7 +186,6 @@ error:
 
 void DhtBucket_Destroy(DhtBucket *bucket)
 {
-    assert(bucket != NULL && "NULL DhtBucket pointer");
     free(bucket);
 }
 
@@ -295,7 +293,8 @@ error:
 
 void DhtTable_Destroy(DhtTable *table)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    if (table == NULL)
+	return;
 
     int i = 0;
     for (i = 0; i < table->end; i++)
