@@ -310,7 +310,8 @@ int GetQueryAnnouncePeerData(BNode *arguments, QAnnouncePeerData *data)
 
     check(port != NULL
 	  && port->type == BInteger
-	  && port->value.integer > 0,
+	  && port->value.integer >= 0
+	  && port->value.integer <= 0xffff,
 	  "Missing or bad port");
 
     BNode *token = BNode_GetValue(arguments, (uint8_t *)"token", 5);
