@@ -129,6 +129,20 @@ int GetRFindNodeResponseType(uint8_t *tid, size_t len, MessageType *type)
     return 0;
 }
 
+uint32_t chntohl(char *ch)
+{
+    return ch[0] << 24
+	| ch[1] << 16
+	| ch[2] << 8
+	| ch[3];
+}
+
+uint16_t chntohs(char *ch)
+{
+    return ch[0] << 8
+	| ch[1];
+}
+
 char *test_Decode_RFindNode()
 {
     char *data = "d1:rd2:id20:mnopqrstuvwxyz1234565:nodes52:"
@@ -146,17 +160,17 @@ char *test_Decode_RFindNode()
     mu_assert(same_bytes("01234567890123456789",
 			 message->data.rfindnode.nodes[0].id.value),
 	      "Wrong nodes[0] id");
-    mu_assert(message->data.rfindnode.nodes[0].addr == ntohl(*(uint32_t *)"ABCD"),
+    mu_assert(message->data.rfindnode.nodes[0].addr == chntohl("ABCD"),
 	      "Wrong nodes[0] addr");
-    mu_assert(message->data.rfindnode.nodes[0].port == ntohs(*(uint16_t *)"EF"),
+    mu_assert(message->data.rfindnode.nodes[0].port == chntohs("EF"),
     	      "Wrong nodes[0] port");
 
     mu_assert(same_bytes("????????????????????",
 			 message->data.rfindnode.nodes[1].id.value),
 	      "Wrong nodes[1] id");
-    mu_assert(message->data.rfindnode.nodes[1].addr == ntohl(*(uint32_t *)"xxxx"),
+    mu_assert(message->data.rfindnode.nodes[1].addr == chntohl("xxxx"),
 	      "Wrong nodes[1] addr");
-    mu_assert(message->data.rfindnode.nodes[1].port == ntohs(*(uint16_t *)"yy"),
+    mu_assert(message->data.rfindnode.nodes[1].port == chntohs("yy"),
 	      "Wrong nodes[1] port");
 
     Message_Destroy(message);
@@ -229,8 +243,8 @@ char *test_Decode_RGetPeers_nodes()
 	port[1] = '0' + i;
 
 	mu_assert(same_bytes(id, data->nodes[i].id.value), "Bad id");
-	mu_assert(data->nodes[i].addr == ntohl(*(uint32_t *)addr), "Bad addr");
-	mu_assert(data->nodes[i].port == ntohs(*(uint16_t *)port), "Bad port");
+	mu_assert(data->nodes[i].addr == chntohl(addr), "Bad addr");
+	mu_assert(data->nodes[i].port == chntohs(port), "Bad port");
     }
 
     Message_Destroy(message);
@@ -264,8 +278,8 @@ char *test_Decode_RGetPeers_values()
     {
 	addr[0] = '0' + i;
 	port[1] = '0' + i;
-	mu_assert(data->values[i].addr == ntohl(*(uint32_t *)addr), "Bad addr");
-	mu_assert(data->values[i].port == ntohs(*(uint16_t *)port), "Bad port");
+	mu_assert(data->values[i].addr == chntohl(addr), "Bad addr");
+	mu_assert(data->values[i].port == chntohs(port), "Bad port");
     }
 
     Message_Destroy(message);
