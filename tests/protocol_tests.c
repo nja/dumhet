@@ -339,6 +339,162 @@ char *test_Decode_RAnnouncePeer()
     return NULL;
 }
 
+char *test_Decode_JunkQuery()
+{
+    char *ok[] = {
+	"d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567896:target20:mnopqrstuvwxyz123456e1:q9:find_node1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+    };
+    ok[1]=ok[1];
+
+    char *junk[] = {
+	/* Wrong bencode */
+	"foo",
+	"i0e",
+	"le",
+	"1:x",
+	/* No 'y' */
+	"d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aae"
+	/* No 'q' */
+	"d1:ad2:id20:abcdefghij0123456789e1:t2:aa1:y1:qe",
+	/* Unknown 'q' value */
+	"d1:ad2:id20:abcdefghij0123456789e1:q3:foo:t2:aa1:y1:qe",
+	/* No 't' */
+	"d1:ad2:id20:abcdefghij01234567896:target20:mnopqrstuvwxyz123456e1:q9:find_node1:y1:qe",
+	/* No arguments */
+	"d1:q4:ping1:t2:aa1:y1:qe",
+	"d1:q9:find_node1:t2:aa1:y1:qe",
+	"d1:q9:get_peers1:t2:aa1:y1:qe",
+	"d1:q13:announce_peer1:t2:aa1:y1:qe",
+	/* Bad id */
+	"d1:ad2:id19:bcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe",
+	"d1:ad2:id21:+abcdefghij01234567896:target20:mnopqrstuvwxyz123456e1:q9:find_node1:t2:aa1:y1:qe",
+	"d1:ad2:id0:9:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe",
+	"d1:ad2:idi0e9:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	/* find_node target */
+	"d1:ad2:id20:abcdefghij0123456789e1:q9:find_node1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567896:target19:nopqrstuvwxyz123456e1:q9:find_node1:t2:aa1:y1:qe",
+	/* get_peers info_hash */
+	"d1:ad2:id20:abcdefghij01234567899:info_h___20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash0:e1:q9:get_peers1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hashi0ee1:q9:get_peers1:t2:aa1:y1:qe",
+	/* announce_peer info_hash */
+	"d1:ad2:id20:abcdefghij01234567899:info_h___0:mnopqrstuvwxyz1234564:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash1:x4:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hashi0e4:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	/* announce_peer port */
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:po__i6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:port4:68815:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti65536e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti18446744073709551616e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti-1e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	/* announce_peer token */
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:to___8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:tokeni0ee1:q13:announce_peer1:t2:aa1:y1:qe",
+	NULL
+    };
+
+    int i = 0;
+    while (junk[i])
+    {
+	Message *result = Decode((uint8_t *)junk[i], strlen(junk[i]), NULL);
+	mu_assert(result == NULL, "Decoded junk without error");
+	i++;
+    }
+
+    return NULL;
+}
+
+int AlwaysGetRFindNodeResponseType(uint8_t *a, size_t b, MessageType *c)
+{
+    a = a; b = b; c = c;
+    return RFindNode;
+}
+
+int AlwaysGetRPingResponseType(uint8_t *a, size_t b, MessageType *c)
+{
+    a = a; b = b; c = c;
+    return RPing;
+}
+
+int AlwaysGetRGetPeersResponseType(uint8_t *a, size_t b, MessageType *c)
+{
+    a = a; b = b; c = c;
+    return RGetPeers;
+}
+
+int AlwaysGetRAnnouncePeerResponseType(uint8_t *a, size_t b, MessageType *c)
+{
+    a = a; b = b; c = c;
+    return RAnnouncePeer;
+}
+
+char *test_Decode_JunkResponse()
+{
+    GetResponseType_fp gettype[] = {
+	AlwaysGetRPingResponseType,
+	AlwaysGetRFindNodeResponseType,
+	AlwaysGetRGetPeersResponseType,
+	AlwaysGetRAnnouncePeerResponseType,
+	NULL
+    };
+
+    char *junk[] = {
+	/* y */
+	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aae",
+	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:_e",
+	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:yi0ee",
+	/* t */
+	"d1:rd2:id20:mnopqrstuvwxyz123456e1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz123456e1:ti0e1:y1:re",
+	/* id */
+	"d1:rd2:ix20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re",
+	"d1:rd2:id0:5:nodes52:01234567890123456789ABCDEF????????????????????xxxxyye1:t2:aa1:y1:re",
+	"d1:rd2:id21:+mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:aa1:y1:re",
+	"d1:rd2:idi0e5:token8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
+	"d1:rde1:t2:aa1:y1:re"
+	/* r */
+	"d1:t2:aa1:y1:re",
+	"d1:rle1:t2:aa1:y1:re",
+	/* find_node nodes */
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes53:+01234567890123456789ABCDEF????????????????????xxxxyye1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nod__52:01234567890123456789ABCDEF????????????????????xxxxyye1:t2:aa1:y1:re",
+	/* get_peers values */
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valu__l6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valuesl6:0xxxy07:+1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:values6:0xxxy0e1:t2:aa1:y1:re",
+	/* get_peers nodes */
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes209:+012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nod__208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodesi0e5:token8:aoeusnthe1:t2:aa1:y1:re",
+	/* get_peers token */
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:tok__8:aoeusnthe1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:tok__8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:tokeni0ee1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:tokeni0e6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
+	NULL
+    };
+
+    int i = 0;
+    while (junk[i])
+    {
+	int j = 0,
+	    len = strlen(junk[i]);
+
+	while (gettype[j])
+	{
+	    Message *result = Decode((uint8_t *)junk[i], len, gettype[j]);
+	    mu_assert(result == NULL, "Decoded junk without error");
+	    j++;
+	}
+	i++;
+    }
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -352,6 +508,9 @@ char *all_tests()
     mu_run_test(test_Decode_RGetPeers_values);
     mu_run_test(test_Decode_QAnnouncePeer);
     mu_run_test(test_Decode_RAnnouncePeer);
+
+    mu_run_test(test_Decode_JunkQuery);
+    mu_run_test(test_Decode_JunkResponse);
 
     return NULL;
 }
