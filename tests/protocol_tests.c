@@ -11,7 +11,10 @@ int same_bytes(char *expected, uint8_t *data)
     for (i = 0; i < len; i++)
     {
 	if (expected[i] != data[i])
+	{
+	    debug("i=%d expected %x got %x", i, expected[i], data[i]);
 	    return 0;
+	}
     }
 
     return 1;
@@ -20,7 +23,11 @@ int same_bytes(char *expected, uint8_t *data)
 int same_bytes_len(char *expected, uint8_t *data, size_t len)
 {
     if (strlen(expected) != len)
+    {
+	debug("expected: %s", expected);
+	debug("expected %ld bytes got %ld", strlen(expected), len);
 	return 0;
+    }
 
     return same_bytes(expected, data);
 }
@@ -495,6 +502,80 @@ char *test_Decode_JunkResponse()
     return NULL;
 }
 
+int GetRoundtripResponseMessageType(uint8_t *t, size_t len, MessageType *mt)
+{
+    if (same_bytes_len("rping", t, len))
+    {
+	*mt = RPing;
+	return 0;
+    }
+
+    if (same_bytes_len("rfind_node", t, len))
+    {
+	*mt = RFindNode;
+	return 0;
+    }
+
+    if (same_bytes_len("rget_peers", t, len))
+    {
+	*mt = RGetPeers;
+	return 0;
+    }
+
+    if (same_bytes_len("rannounce_peer", t, len))
+    {
+	*mt = RAnnouncePeer;
+	return 0;
+    }
+
+    return -1;
+}
+
+char *test_Roundtrip()
+{
+    char *input[] = {
+	"d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567896:target20:mnopqrstuvwxyz123456e1:q9:find_node1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe",
+	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
+	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t5:rping1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes52:01234567890123456789ABCDEF????????????????????xxxxyye1:t10:rfind_node1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t10:rget_peers1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t10:rget_peers1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t14:rannounce_peer1:y1:re",
+	NULL
+    };
+
+    int i = 0;
+    while (input[i])
+    {
+	int len = strlen(input[i]);
+
+	Message *message = Decode((uint8_t *)input[i], len, GetRoundtripResponseMessageType);
+
+	mu_assert(message != NULL, "Decode failed");
+
+	uint8_t *dest = calloc(1, len);
+	mu_assert(dest != NULL, "malloc failed");
+
+	int rc = Message_Encode(message, dest, len - 1);
+	mu_assert(rc == -1, "Encoded to too small dest");
+
+	rc = Message_Encode(message, dest, len);
+	mu_assert(rc >= 0, "Encode failed");
+
+	mu_assert(rc == len, "Encoded too little");
+	mu_assert(same_bytes_len(input[i], dest, len), "Roundtrip failed");
+
+	Message_Destroy(message);
+	free(dest);
+
+	i++;
+    }
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -511,6 +592,7 @@ char *all_tests()
 
     mu_run_test(test_Decode_JunkQuery);
     mu_run_test(test_Decode_JunkResponse);
+    mu_run_test(test_Roundtrip);
 
     return NULL;
 }
