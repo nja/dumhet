@@ -13,7 +13,7 @@ Message *DecodeQuery(BNode *dict);
 Message *DecodeResponse(BNode *dict, GetResponseType_fp getResponseType);
 Message *DecodeError(BNode *dict);
 
-Message *Decode(uint8_t *data, size_t len, GetResponseType_fp getResponseType)
+Message *Message_Decode(uint8_t *data, size_t len, GetResponseType_fp getResponseType)
 {
     assert(data != NULL && "NULL data pointer");
 

@@ -70,7 +70,7 @@ char *test_Decode_QPing()
 {
     char *data = "d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe";
 
-    Message *message = Decode((uint8_t *)data, strlen(data), NULL);
+    Message *message = Message_Decode((uint8_t *)data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QPing) == NULL, "Bad decoded message");
 
@@ -95,7 +95,7 @@ char *test_Decode_RPing()
 {
     char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
 
-    Message *message = Decode((uint8_t *)data,
+    Message *message = Message_Decode((uint8_t *)data,
 			      strlen(data),
 			      GetRPingResponseType);
 
@@ -110,7 +110,7 @@ char *test_Decode_QFindNode()
 {
     char *data = "d1:ad2:id20:abcdefghij01234567896:target20:mnopqrstuvwxyz123456e1:q9:find_node1:t2:aa1:y1:qe";
 
-    Message *message = Decode((uint8_t *)data, strlen(data), NULL);
+    Message *message = Message_Decode((uint8_t *)data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QFindNode) == NULL, "Bad decoded message");
 
@@ -157,7 +157,7 @@ char *test_Decode_RFindNode()
 	"????????????????????xxxxyy"
 	"e1:t2:aa1:y1:re";
 
-    Message *message = Decode((uint8_t *)data, strlen(data), GetRFindNodeResponseType);
+    Message *message = Message_Decode((uint8_t *)data, strlen(data), GetRFindNodeResponseType);
 
     mu_assert(check_Message(message, RFindNode) == NULL, "Bad decoded message");
 
@@ -190,7 +190,7 @@ char *test_Decode_QGetPeers()
     char *data = "d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe";
     char *info_hash = "mnopqrstuvwxyz123456";
 
-    Message *message = Decode((uint8_t *)data, strlen(data), NULL);
+    Message *message = Message_Decode((uint8_t *)data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QGetPeers) == NULL, "Bad decoded message");
 
@@ -228,7 +228,7 @@ char *test_Decode_RGetPeers_nodes()
 	"712345678901234567897xxxy7"
 	"5:token8:aoeusnthe1:t2:aa1:y1:re";
 
-    Message *message = Decode((uint8_t *)input, strlen(input), GetRGetPeersResponseType);
+    Message *message = Message_Decode((uint8_t *)input, strlen(input), GetRGetPeersResponseType);
 
     mu_assert(check_Message(message, RGetPeers) == NULL, "Bad decoded message");
 
@@ -267,7 +267,7 @@ char *test_Decode_RGetPeers_values()
 	"6:" "2xxxy2"
 	"ee1:t2:aa1:y1:re";
 
-    Message *message = Decode((uint8_t *)input, strlen(input), GetRGetPeersResponseType);
+    Message *message = Message_Decode((uint8_t *)input, strlen(input), GetRGetPeersResponseType);
 
     mu_assert(check_Message(message, RGetPeers) == NULL, "Bad decoded message");
 
@@ -300,7 +300,7 @@ char *test_Decode_QAnnouncePeer()
     char *info_hash = "mnopqrstuvwxyz123456", *token = "aoeusnth";
     const int port = 6881;
 
-    Message *message = Decode((uint8_t *)data, strlen(data), NULL);
+    Message *message = Message_Decode((uint8_t *)data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QAnnouncePeer) == NULL, "Bad decoded message");
 
@@ -335,7 +335,7 @@ char *test_Decode_RAnnouncePeer()
 {
     char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
 
-    Message *message = Decode((uint8_t *)data,
+    Message *message = Message_Decode((uint8_t *)data,
 			      strlen(data),
 			      GetRAnnouncePeerResponseType);
 
@@ -406,7 +406,7 @@ char *test_Decode_JunkQuery()
     int i = 0;
     while (junk[i])
     {
-	Message *result = Decode((uint8_t *)junk[i], strlen(junk[i]), NULL);
+	Message *result = Message_Decode((uint8_t *)junk[i], strlen(junk[i]), NULL);
 	mu_assert(result == NULL, "Decoded junk without error");
 	i++;
     }
@@ -492,7 +492,7 @@ char *test_Decode_JunkResponse()
 
 	while (gettype[j])
 	{
-	    Message *result = Decode((uint8_t *)junk[i], len, gettype[j]);
+	    Message *result = Message_Decode((uint8_t *)junk[i], len, gettype[j]);
 	    mu_assert(result == NULL, "Decoded junk without error");
 	    j++;
 	}
@@ -551,7 +551,7 @@ char *test_Roundtrip()
     {
 	int len = strlen(input[i]);
 
-	Message *message = Decode((uint8_t *)input[i], len, GetRoundtripResponseMessageType);
+	Message *message = Message_Decode((uint8_t *)input[i], len, GetRoundtripResponseMessageType);
 
 	mu_assert(message != NULL, "Decode failed");
 
