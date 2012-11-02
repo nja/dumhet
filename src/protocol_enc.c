@@ -13,6 +13,7 @@ int EncodeResponsePing(Message *message, uint8_t *dest, size_t len);
 int EncodeResponseFindNode(Message *message, uint8_t *dest, size_t len);
 int EncodeResponseGetPeers(Message *message, uint8_t *dest, size_t len);
 int EncodeResponseAnnouncePeer(Message *message, uint8_t *dest, size_t len);
+int EncodeResponseError(Message *message, uint8_t *dest, size_t len);
 
 int Message_Encode(Message *message, uint8_t *dest, size_t len)
 {
@@ -29,6 +30,7 @@ int Message_Encode(Message *message, uint8_t *dest, size_t len)
     case RFindNode: return EncodeResponseFindNode(message, dest, len);
     case RGetPeers: return EncodeResponseGetPeers(message, dest, len);
     case RAnnouncePeer: return EncodeResponseAnnouncePeer(message, dest, len);
+    case RError: return EncodeResponseError(message, dest, len);
     default: log_err("Can't encode unknown message type");
 	return -1;
     }
@@ -539,9 +541,35 @@ error:
     return -1;
 }
 
-Message *DecodeError(BNode *dict)
+int EncodeResponseError(Message *message, uint8_t *dest, size_t len)
 {
-    assert(dict == (BNode *)"TODO");
-    dict = dict;		/* Unused */
-    return NULL;
+    assert(message != NULL && "NULL Message pointer");
+    assert(dest != NULL && "NULL uint8_t dest pointer");
+
+    check(message->type == RError, "Not an error response");
+
+    uint8_t *orig_dest = dest;
+    RErrorData *data = &message->data.rerror;
+
+    check(SLen("d1:el")
+	  + ILen(data->code)
+	  + BStringLen(blength(data->message))
+	  + SLen("e")
+	  + TLen(message)
+	  + SLen("1:y1:ee")
+	  <= len,
+	  "error response would overflow dest");
+
+    SCpy(dest, "d1:el");
+    ICpy(&dest, data->code);
+    BStringCpy(&dest, (uint8_t *)bdata(data->message), blength(data->message));
+    SCpy(dest, "e");
+    TCpy(&dest, message);
+    SCpy(dest, "1:y1:ee");
+
+    assert(dest - orig_dest <= (ssize_t)len && "Overflow");
+
+    return dest - orig_dest;
+error:
+    return -1;
 }

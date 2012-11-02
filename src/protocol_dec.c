@@ -577,3 +577,38 @@ error:
 
     return -1;
 }
+
+Message *DecodeError(BNode *dict)
+{
+    assert(dict != NULL && "NULL BNode dict pointer");
+
+    Message *message = calloc(1, sizeof(Message));
+    check_mem(message);
+
+    message->type = RError;
+
+    check(dict->type == BDictionary, "Not a dictionary");
+
+    int rc = GetTransactionId(dict, &message->t, &message->t_len);
+    check(rc == 0, "Bad transaction id");
+
+    BNode *eVal = BNode_GetValue(dict, (uint8_t *)"e", 1);
+    check(eVal != NULL, "No 'e' value");
+    check(eVal->type == BList, "Value not a BList");
+
+    check(eVal->count == 2, "Wrong size 'e' list");
+
+    BNode *code = eVal->value.nodes[0], *error_msg = eVal->value.nodes[1];
+
+    check(code->type == BInteger, "Wrong type in error code position");
+    message->data.rerror.code = code->value.integer;
+
+    check(error_msg->type == BString, "Wrong type in error message position");
+    message->data.rerror.message = BNode_bstring(error_msg);
+    check(message->data.rerror.message != NULL, "Failed to create bstring");
+
+    return message;
+error:
+    Message_Destroy(message);
+    return NULL;
+}

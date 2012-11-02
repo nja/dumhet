@@ -2,6 +2,7 @@
 #include <message.h>
 #include <protocol.h>
 #include <arpa/inet.h>
+#include <bstrlib.h>
 
 int same_bytes(char *expected, uint8_t *data)
 {
@@ -346,6 +347,46 @@ char *test_Decode_RAnnouncePeer()
     return NULL;
 }
 
+char *test_Decode_RError()
+{
+    char *data[] = {
+	"d1:eli201e7:Generice1:t2:aa1:y1:ee",
+	"d1:eli202e6:Servere1:t2:aa1:y1:ee",
+	"d1:eli203e8:Protocole1:t2:aa1:y1:ee",
+	"d1:eli204e6:Methode1:t2:aa1:y1:ee",
+	NULL
+    };
+
+    int expected_code[] = { 201, 202, 203, 204 };
+    struct tagbstring expected_msg[] = {
+	bsStatic("Generic"),
+	bsStatic("Server"),
+	bsStatic("Protocol"),
+	bsStatic("Method")
+    };
+
+    int i = 0;
+    while (data[i])
+    {
+	Message *message = Message_Decode((uint8_t *)data[i], strlen(data[i]), NULL);
+
+	mu_assert(message->type == RError, "Wrong message type");
+	mu_assert(same_bytes_len("aa", message->t, message->t_len), "Wrong transaction id");
+	mu_assert(message->id == NULL, "Unexpected id");
+
+	RErrorData *data = &message->data.rerror;
+
+	mu_assert(data->code == expected_code[i], "Wrong error code");
+	mu_assert(bstrcmp(&expected_msg[i], data->message) == 0, "Wrong message");
+
+	Message_Destroy(message);
+
+	i++;
+    }
+
+    return NULL;
+}
+
 char *test_Decode_JunkQuery()
 {
     char *ok[] = {
@@ -543,12 +584,15 @@ char *test_Roundtrip()
 	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t10:rget_peers1:y1:re",
 	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t10:rget_peers1:y1:re",
 	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t14:rannounce_peer1:y1:re",
+	"d1:eli201e23:A Generic Error Ocurrede1:t2:aa1:y1:ee",
 	NULL
     };
 
     int i = 0;
     while (input[i])
     {
+	debug("%s", input[i]);
+
 	int len = strlen(input[i]);
 
 	Message *message = Message_Decode((uint8_t *)input[i], len, GetRoundtripResponseMessageType);
@@ -589,6 +633,7 @@ char *all_tests()
     mu_run_test(test_Decode_RGetPeers_values);
     mu_run_test(test_Decode_QAnnouncePeer);
     mu_run_test(test_Decode_RAnnouncePeer);
+    mu_run_test(test_Decode_RError);
 
     mu_run_test(test_Decode_JunkQuery);
     mu_run_test(test_Decode_JunkResponse);
