@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <bstrlib.h>
 
 typedef enum BType { BString, BInteger, BList, BDictionary } BType;
 
@@ -33,5 +34,7 @@ void BNode_Destroy(BNode *node);
 
 uint8_t *BNode_CopyString(BNode *string);
 int BNode_StringEquals(char *string, BNode *bstring);
+
+bstring BNode_bstring(BNode *string);
 
 #endif

@@ -429,3 +429,14 @@ int BNode_StringEquals(char *string, BNode *bstring)
 
     return strncmp(string, (char *)bstring->value.string, len) == 0;
 }
+
+bstring BNode_bstring(BNode *string)
+{
+    assert(string != NULL && "NULL BNode string pointer");
+
+    check(string->type == BString, "Not a BString");
+
+    return blk2bstr(string->value.string, string->count);
+error:
+    return NULL;
+}
