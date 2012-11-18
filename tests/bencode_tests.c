@@ -11,7 +11,7 @@ static const int values_len = 10;
 char *test_decode_integer()
 {
     const int buffer_size = 128;
-    uint8_t string[buffer_size];
+    char string[buffer_size];
     int i = 0;
 
     for (i = 0; i < values_len; i++)
@@ -136,7 +136,7 @@ char *test_decode_list()
 	mu_assert(node != NULL, "BDecode failed");
 	mu_assert(node->type == BList, "Wrong BType");
 	mu_assert(node->count == i, "Wrong count");
-	mu_assert(node->data == (uint8_t *)lists[i], "Wrong data pointer");
+	mu_assert(node->data == lists[i], "Wrong data pointer");
 	mu_assert(node->data_len == len, "Wrong len");
 
 	BNode_Destroy(node);
@@ -181,7 +181,7 @@ char *test_decode_string()
 	mu_assert(node->type == BString, "Wrong type");
 	mu_assert(strncmp(strings[i], (char *)node->value.string, len) == 0, "Wrong string");
 	mu_assert(node->count == len, "Wrong count");
-	mu_assert(node->data == (uint8_t *)buffer, "Wrong data pointer");
+	mu_assert(node->data == buffer, "Wrong data pointer");
 	mu_assert(node->data_len == strlen(buffer), "Wrong data len");
 
 	BNode_Destroy(node);
@@ -222,7 +222,7 @@ char *test_decode_dictionary()
 	mu_assert(node != NULL, "BDecode failed");
 	mu_assert(node->type == BDictionary, "Wrong BType");
 	mu_assert(node->count == i * 2, "Wrong count");
-	mu_assert(node->data == (uint8_t *)dicts[i], "Wrong data pointer");
+	mu_assert(node->data == dicts[i], "Wrong data pointer");
 	mu_assert(node->data_len = strlen(dicts[i]), "Wrong data_len");
 
 	BNode_Destroy(node);
@@ -289,7 +289,7 @@ char *test_BNode_GetValue()
 
 	debug("b");
 
-	BNode *value = BNode_GetValue(dict, (uint8_t *)keys[i], strlen(keys[i]));
+	BNode *value = BNode_GetValue(dict, keys[i], strlen(keys[i]));
 
 	debug("c");
 

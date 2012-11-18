@@ -29,7 +29,7 @@ typedef struct QGetPeersData {
 typedef struct QAnnouncePeerData {
     DhtHash *info_hash;
     int port;
-    uint8_t *token;
+    char *token;
     size_t token_len;
 } QAnnouncePeerData;
 
@@ -42,7 +42,7 @@ typedef struct RFindNodeData {
 } RFindNodeData;
 
 typedef struct RGetPeersData {
-    uint8_t *token;
+    char *token;
     size_t token_len;
     Peer *values;
     DhtNode *nodes;
@@ -59,7 +59,7 @@ typedef struct RErrorData {
 
 typedef struct Message {
     MessageType type;
-    uint8_t *t;
+    char *t;
     size_t t_len;
     DhtHash *id;
     union {

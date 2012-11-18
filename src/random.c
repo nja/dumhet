@@ -44,7 +44,7 @@ void RandomState_Destroy(RandomState *randomState)
     free(randomState);
 }
 
-int Random_Fill(RandomState *randomState, uint8_t *buf, size_t len)
+int Random_Fill(RandomState *randomState, char *buf, size_t len)
 {
     size_t i = 0;
     int rc = 0;

@@ -91,8 +91,10 @@ char *test_DhtHash_Distance()
 
     mu_assert(DhtDistance_Compare(&zero_d, daa) == 0, "Wrong distance");
 
-    hb.value[0] = 0x80;
-    hc.value[0] = 0xC0;
+    hb.value[0] = 0xE0;
+    hc.value[0] = 0xF0;
+
+    debug("zoo %d %d", (unsigned char)0xFF, (char)0xFD);
 
     DhtDistance *dab = DhtHash_Distance(&ha, &hb);
     DhtDistance *dac = DhtHash_Distance(&ha, &hc);

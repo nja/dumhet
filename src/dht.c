@@ -36,7 +36,7 @@ DhtHash *DhtHash_Random(RandomState *rs)
     DhtHash *hash = malloc(sizeof(DhtHash));
     check_mem(hash);
 
-    int rc = Random_Fill(rs, hash->value, HASH_BYTES);
+    int rc = Random_Fill(rs, (char *)hash->value, HASH_BYTES);
     check(rc == 0, "Random_Fill failed");
 
     return hash;
@@ -160,10 +160,10 @@ int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
 
     for (i = 0; i < HASH_BYTES; i++)
     {
-	if (a->value[i] < b->value[i])
+	if ((unsigned char)a->value[i] < (unsigned char)b->value[i])
 	    return -1;
 
-	if (b->value[i] < a->value[i])
+	if ((unsigned char)b->value[i] < (unsigned char)a->value[i])
 	    return 1;
     }
 

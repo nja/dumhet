@@ -29,7 +29,7 @@ error:
     return NULL;
 }
 
-uint8_t *find_integer_end(uint8_t *data, size_t len)
+char *find_integer_end(char *data, size_t len)
 {
     size_t i = 0;
 
@@ -53,12 +53,12 @@ uint8_t *find_integer_end(uint8_t *data, size_t len)
     return NULL;
 }
 
-BNode *BDecode_integer(uint8_t *data, size_t len)
+BNode *BDecode_integer(char *data, size_t len)
 {
-    uint8_t *expected_end = find_integer_end(data, len);
+    char *expected_end = find_integer_end(data, len);
     check(expected_end != NULL, "Integer not properly delimited");
 
-    uint8_t *end = NULL;
+    char *end = NULL;
     long integer = strtol((char *)data + 1, (char **)&end, 10);
 
     check(end == expected_end, "Bad integer");
@@ -119,7 +119,7 @@ error:
     return NULL;
 }
 
-BNode *BDecode_list_or_dict(uint8_t *data, size_t len, char head_ch, BType type)
+BNode *BDecode_list_or_dict(char *data, size_t len, char head_ch, BType type)
 {
     BNode *node = NULL;
     BNode **nodes = NULL;
@@ -128,7 +128,7 @@ BNode *BDecode_list_or_dict(uint8_t *data, size_t len, char head_ch, BType type)
     check(len > 0, "Not enough data for a list");
     check(*data == head_ch, "Bad list start");
 
-    uint8_t *next = data + 1;
+    char *next = data + 1;
     size_t next_len = len - 1;
 
     while (next_len > 0 && *next != 'e')
@@ -172,12 +172,12 @@ error:
     return NULL;
 }
 
-BNode *BDecode_list(uint8_t *data, size_t len)
+BNode *BDecode_list(char *data, size_t len)
 {
     return BDecode_list_or_dict(data, len, 'l', BList);
 }
 
-uint8_t *find_string_length_end(uint8_t *data, size_t len)
+char *find_string_length_end(char *data, size_t len)
 {
     size_t i = 0;
 
@@ -198,14 +198,14 @@ uint8_t *find_string_length_end(uint8_t *data, size_t len)
     return NULL;
 }
 
-BNode *BDecode_string(uint8_t *data, size_t len)
+BNode *BDecode_string(char *data, size_t len)
 {
-    uint8_t *expected_length_end = find_string_length_end(data, len);
+    char *expected_length_end = find_string_length_end(data, len);
     check(expected_length_end != NULL, "Bad string length");
 
-    uint8_t *length_end = NULL;
+    char *length_end = NULL;
     long string_len = strtol((char *)data, (char **)&length_end, 10);
-    uint8_t *string = length_end + 1,
+    char *string = length_end + 1,
 	*string_end = string + string_len;
 
     check(length_end == expected_length_end, "Bad string length");
@@ -229,7 +229,7 @@ error:
     return NULL;
 }
 
-int compare_keys(uint8_t *a, const size_t a_len, uint8_t *b, const size_t b_len)
+int compare_keys(char *a, const size_t a_len, char *b, const size_t b_len)
 {
     size_t i = 0, min_len = a_len < b_len ? a_len : b_len;
 
@@ -251,7 +251,7 @@ int compare_keys(uint8_t *a, const size_t a_len, uint8_t *b, const size_t b_len)
     return 0;
 }    
 
-int is_less_than(uint8_t *a, const size_t a_len, uint8_t *b, const size_t b_len)
+int is_less_than(char *a, const size_t a_len, char *b, const size_t b_len)
 {
     return compare_keys(a, a_len, b, b_len) == -1;
 }
@@ -269,7 +269,7 @@ int all_string_keys(BNode *nodes, size_t count)
     return 1;
 }
 
-BNode *BDecode_dictionary(uint8_t *data, size_t len)
+BNode *BDecode_dictionary(char *data, size_t len)
 {
     BNode *node = BDecode_list_or_dict(data, len, 'd', BDictionary);
     check(node != NULL, "List decoding for dictionary failed");
@@ -299,7 +299,7 @@ error:
     return NULL;
 }
 
-BNode *BDecode(uint8_t *data, size_t len)
+BNode *BDecode(char *data, size_t len)
 {
     BNode *node = NULL;
 
@@ -363,7 +363,7 @@ void BNode_Destroy(BNode *node)
     free(node);
 }
 
-BNode *BNode_GetValue(BNode *dict, uint8_t *key, size_t key_len)
+BNode *BNode_GetValue(BNode *dict, char *key, size_t key_len)
 {
     check(dict->count % 2 == 0, "Odd number of dict list nodes");
 
@@ -398,13 +398,13 @@ error:
     return NULL;
 }
 
-uint8_t *BNode_CopyString(BNode *string)
+char *BNode_CopyString(BNode *string)
 {
     assert(string != NULL && "NULL BNode pointer");
 
     check(string->type == BString, "Not a BString");
 
-    uint8_t *data = malloc(string->count);
+    char *data = malloc(string->count);
     check_mem(data);
 
     memcpy(data, string->value.string, string->count);

@@ -4,9 +4,9 @@
 #include <bencode.h>
 #include <message.h>
 
-typedef int (*GetResponseType_fp)(uint8_t *transaction_id, size_t tid_len, MessageType *type);
-Message *Message_Decode(uint8_t *data, size_t len, GetResponseType_fp getResponseType);
+typedef int (*GetResponseType_fp)(char *transaction_id, size_t tid_len, MessageType *type);
+Message *Message_Decode(char *data, size_t len, GetResponseType_fp getResponseType);
 
-int Message_Encode(Message *message, uint8_t *buf, size_t len);
+int Message_Encode(Message *message, char *buf, size_t len);
 
 #endif

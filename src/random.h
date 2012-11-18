@@ -13,7 +13,7 @@ typedef struct RandomState {
 RandomState *RandomState_Create(int seed);
 void RandomState_Destroy(RandomState *randomState);
 
-int Random_Fill(RandomState *randomState, uint8_t *buf, size_t len);
+int Random_Fill(RandomState *randomState, char *buf, size_t len);
 
 #endif
 

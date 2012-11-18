@@ -13,7 +13,7 @@ Message *DecodeQuery(BNode *dict);
 Message *DecodeResponse(BNode *dict, GetResponseType_fp getResponseType);
 Message *DecodeError(BNode *dict);
 
-Message *Message_Decode(uint8_t *data, size_t len, GetResponseType_fp getResponseType)
+Message *Message_Decode(char *data, size_t len, GetResponseType_fp getResponseType)
 {
     assert(data != NULL && "NULL data pointer");
 
@@ -55,7 +55,7 @@ char GetMessageType(BNode *dict)
 
     check(dict->type == BDictionary, "Not a dictionary");
 
-    yVal = BNode_GetValue(dict, (uint8_t *)"y", 1);
+    yVal = BNode_GetValue(dict, "y", 1);
 
     check(yVal != NULL, "No 'y' key");
     check(yVal->type == BString, "Wrong 'y' value type");
@@ -72,7 +72,7 @@ int HasTransactionId(BNode *dict)
     assert(dict != NULL && "NULL BNode pointer");
     assert(dict->type == BDictionary && "Wrong BNode type");
 
-    BNode *tValue = BNode_GetValue(dict, (uint8_t *)"t", 1);
+    BNode *tValue = BNode_GetValue(dict, "t", 1);
 
     return tValue != NULL
 	&& tValue->type == BString
@@ -84,12 +84,12 @@ int HasNodeId(BNode *dict)
     assert(dict != NULL && "NULL BNode pointer");
     assert(dict->type == BDictionary && "Wrong BNode type");
 
-    BNode *arguments = BNode_GetValue(dict, (uint8_t *)"a", 1);
+    BNode *arguments = BNode_GetValue(dict, "a", 1);
 
     if (arguments == NULL || arguments->type != BDictionary)
 	return 0;
 
-    BNode *id = BNode_GetValue(arguments, (uint8_t *)"id", 2);
+    BNode *id = BNode_GetValue(arguments, "id", 2);
 
     return id != NULL
 	&& id->type == BString
@@ -97,7 +97,7 @@ int HasNodeId(BNode *dict)
 }
 
 int GetQueryType(BNode *dict, MessageType *type);
-int GetTransactionId(BNode *dict, uint8_t **t, size_t *t_len);
+int GetTransactionId(BNode *dict, char **t, size_t *t_len);
 int GetQueryId(BNode *dict, DhtHash **id);
 int GetQueryData(MessageType type, BNode *dict, Message *message);
 
@@ -137,7 +137,7 @@ int GetQueryType(BNode *dict, MessageType *type)
 
     check(dict->type == BDictionary, "Not a dictionary");
 
-    BNode *qVal = BNode_GetValue(dict, (uint8_t *)"q", 1);
+    BNode *qVal = BNode_GetValue(dict, "q", 1);
     check(qVal != NULL, "No 'q' value");
     check(qVal->type == BString, "Value not a BString");
 
@@ -169,7 +169,7 @@ error:
     return -1;
 }    
 
-int GetTransactionId(BNode *dict, uint8_t **t, size_t *t_len)
+int GetTransactionId(BNode *dict, char **t, size_t *t_len)
 {
     assert(dict != NULL && "NULL BNode dictionary pointer");
     assert(t != NULL && "NULL pointer to transaction id pointer");
@@ -177,10 +177,10 @@ int GetTransactionId(BNode *dict, uint8_t **t, size_t *t_len)
 
     check(dict->type == BDictionary, "Not a dictionary");
 
-    BNode *tVal = BNode_GetValue(dict, (uint8_t *)"t", 1);
+    BNode *tVal = BNode_GetValue(dict, "t", 1);
     check(tVal != NULL, "No 't' value");
 
-    uint8_t *tmp = BNode_CopyString(tVal);
+    char *tmp = BNode_CopyString(tVal);
     check(tmp != NULL, "BString copy failed");
 
     *t = tmp;
@@ -198,11 +198,11 @@ int GetQueryId(BNode *dict, DhtHash **id)
 
     check(dict->type == BDictionary, "Not a dictionary");
 
-    BNode *arguments = BNode_GetValue(dict, (uint8_t *)"a", 1);
+    BNode *arguments = BNode_GetValue(dict, "a", 1);
     check(arguments != NULL, "No arguments");
     check(arguments->type == BDictionary, "Arguments not a dictionary");
 
-    BNode *idVal = BNode_GetValue(arguments, (uint8_t *)"id", 2);
+    BNode *idVal = BNode_GetValue(arguments, "id", 2);
     check(idVal != NULL, "No id argument");
     check(idVal->type == BString, "Wrong id type");
     check(idVal->count == HASH_BYTES, "Wrong id length");
@@ -229,7 +229,7 @@ int GetQueryData(MessageType type, BNode *dict, Message *message)
     if (type == QPing)
 	return 0;
 
-    BNode *arguments = BNode_GetValue(dict, (uint8_t *)"a", 1);
+    BNode *arguments = BNode_GetValue(dict, "a", 1);
 
     if (arguments == NULL || arguments->type != BDictionary)
 	return -1;
@@ -253,7 +253,7 @@ int GetQueryFindNodeData(BNode *arguments, QFindNodeData *data)
     assert(arguments != NULL && "NULL BNode dictionary pointer");
     assert(data != NULL && "NULL QFindNodeData pointer");
 
-    BNode *target = BNode_GetValue(arguments, (uint8_t *)"target", 6);
+    BNode *target = BNode_GetValue(arguments, "target", 6);
 
     check(target != NULL
 	  && target->type == BString
@@ -275,7 +275,7 @@ int GetQueryGetPeersData(BNode *arguments, QGetPeersData *data)
     assert(arguments != NULL && "NULL BNode dictionary pointer");
     assert(data != NULL && "NULL QGetPeersData pointer");
 
-    BNode *info_hash = BNode_GetValue(arguments, (uint8_t *)"info_hash", 9);
+    BNode *info_hash = BNode_GetValue(arguments, "info_hash", 9);
 
     check(info_hash != NULL
 	  && info_hash->type == BString
@@ -299,14 +299,14 @@ int GetQueryAnnouncePeerData(BNode *arguments, QAnnouncePeerData *data)
 
     data->info_hash = NULL;
 
-    BNode *info_hash = BNode_GetValue(arguments, (uint8_t *)"info_hash", 9);
+    BNode *info_hash = BNode_GetValue(arguments, "info_hash", 9);
 
     check(info_hash != NULL
 	  && info_hash->type == BString
 	  && info_hash->count == HASH_BYTES,
 	  "Missing or bad info_hash id");
 
-    BNode *port = BNode_GetValue(arguments, (uint8_t *)"port", 4);
+    BNode *port = BNode_GetValue(arguments, "port", 4);
 
     check(port != NULL
 	  && port->type == BInteger
@@ -314,7 +314,7 @@ int GetQueryAnnouncePeerData(BNode *arguments, QAnnouncePeerData *data)
 	  && port->value.integer <= 0xffff,
 	  "Missing or bad port");
 
-    BNode *token = BNode_GetValue(arguments, (uint8_t *)"token", 5);
+    BNode *token = BNode_GetValue(arguments, "token", 5);
 
     check(token != NULL
 	  && token->type == BString,
@@ -378,11 +378,11 @@ int GetResponseId(BNode *dict, DhtHash **id)
 
     check(dict->type == BDictionary, "Not a dictionary");
 
-    BNode *arguments = BNode_GetValue(dict, (uint8_t *)"r", 1);
+    BNode *arguments = BNode_GetValue(dict, "r", 1);
     check(arguments != NULL, "No response arguments");
     check(arguments->type == BDictionary, "Arguments not a dictionary");
 
-    BNode *idVal = BNode_GetValue(arguments, (uint8_t *)"id", 2);
+    BNode *idVal = BNode_GetValue(arguments, "id", 2);
     check(idVal != NULL, "No id argument");
     check(idVal->type == BString, "Wrong id type");
     check(idVal->count == HASH_BYTES, "Wrong id length");
@@ -408,7 +408,7 @@ int GetResponseData(MessageType type, BNode *dict, Message *message)
     if (type == RPing || type == RAnnouncePeer)
 	return 0;
 
-    BNode *arguments = BNode_GetValue(dict, (uint8_t *)"r", 1);
+    BNode *arguments = BNode_GetValue(dict, "r", 1);
 
     if (arguments == NULL || arguments->type != BDictionary)
 	return -1;
@@ -430,7 +430,7 @@ int GetResponseFindNodeData(BNode *arguments, RFindNodeData *data)
     assert(arguments != NULL && "NULL BNode dictionary pointer");
     assert(data != NULL && "NULL RFindNodeData pointer");
 
-    BNode *nodes = BNode_GetValue(arguments, (uint8_t *)"nodes", 5);
+    BNode *nodes = BNode_GetValue(arguments, "nodes", 5);
 
     check(nodes != NULL, "Missing nodes");
 
@@ -460,7 +460,7 @@ int GetCompactNodeInfo(BNode *string, DhtNode **nodes, size_t *count)
     check_mem(*nodes);
     
     DhtNode *node = *nodes;
-    uint8_t *data = string->value.string;
+    char *data = string->value.string;
 
     while (node < *nodes + *count)
     {
@@ -484,7 +484,7 @@ int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
     assert(arguments != NULL && "NULL BNode dictionary pointer");
     assert(data != NULL && "NULL RGetPeersData pointer");
 
-    BNode *token = BNode_GetValue(arguments, (uint8_t *)"token", 5);
+    BNode *token = BNode_GetValue(arguments, "token", 5);
     check(token != NULL, "Missing token");
     check(token->type == BString, "Bad token type");
 
@@ -495,8 +495,8 @@ int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
 
     int rc = 0;
 
-    BNode *values = BNode_GetValue(arguments, (uint8_t *)"values", 6);
-    BNode *nodes = BNode_GetValue(arguments, (uint8_t *)"nodes", 5);
+    BNode *values = BNode_GetValue(arguments, "values", 6);
+    BNode *nodes = BNode_GetValue(arguments, "nodes", 5);
 
     if (values != NULL && nodes != NULL)
     {
@@ -592,7 +592,7 @@ Message *DecodeError(BNode *dict)
     int rc = GetTransactionId(dict, &message->t, &message->t_len);
     check(rc == 0, "Bad transaction id");
 
-    BNode *eVal = BNode_GetValue(dict, (uint8_t *)"e", 1);
+    BNode *eVal = BNode_GetValue(dict, "e", 1);
     check(eVal != NULL, "No 'e' value");
     check(eVal->type == BList, "Value not a BList");
 

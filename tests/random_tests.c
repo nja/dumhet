@@ -15,10 +15,10 @@ char *test_RandomFill()
 
     while (count-- > 0)
     {
-	rc = Random_Fill(rsa, (uint8_t *)&ia, 8);
+	rc = Random_Fill(rsa, (char *)&ia, 8);
 	mu_assert(rc == 0, "RandomFill failed");
 
-	rc = Random_Fill(rsb, (uint8_t *)&ib, 8);
+	rc = Random_Fill(rsb, (char *)&ib, 8);
 
 	debug("a: %ld b: %ld", ia, ib);
 
@@ -28,7 +28,7 @@ char *test_RandomFill()
     int i = 0;
     for (i = 0; i < 10; i++)
     {
-	uint8_t *buf = malloc(i);
+	char *buf = malloc(i);
 	Random_Fill(rsa, buf, i);
 	free(buf);
     }

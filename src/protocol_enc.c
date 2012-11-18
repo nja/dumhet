@@ -4,21 +4,21 @@
 #include <bencode.h>
 #include <message.h>
 
-int EncodeQueryPing(Message *message, uint8_t *dest, size_t len);
-int EncodeQueryFindNode(Message *message, uint8_t *dest, size_t len);
-int EncodeQueryGetPeers(Message *message, uint8_t *dest, size_t len);
-int EncodeQueryAnnouncePeer(Message *message, uint8_t *dest, size_t len);
+int EncodeQueryPing(Message *message, char *dest, size_t len);
+int EncodeQueryFindNode(Message *message, char *dest, size_t len);
+int EncodeQueryGetPeers(Message *message, char *dest, size_t len);
+int EncodeQueryAnnouncePeer(Message *message, char *dest, size_t len);
 
-int EncodeResponsePing(Message *message, uint8_t *dest, size_t len);
-int EncodeResponseFindNode(Message *message, uint8_t *dest, size_t len);
-int EncodeResponseGetPeers(Message *message, uint8_t *dest, size_t len);
-int EncodeResponseAnnouncePeer(Message *message, uint8_t *dest, size_t len);
-int EncodeResponseError(Message *message, uint8_t *dest, size_t len);
+int EncodeResponsePing(Message *message, char *dest, size_t len);
+int EncodeResponseFindNode(Message *message, char *dest, size_t len);
+int EncodeResponseGetPeers(Message *message, char *dest, size_t len);
+int EncodeResponseAnnouncePeer(Message *message, char *dest, size_t len);
+int EncodeResponseError(Message *message, char *dest, size_t len);
 
-int Message_Encode(Message *message, uint8_t *dest, size_t len)
+int Message_Encode(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     switch (message->type)
     {
@@ -73,7 +73,7 @@ int TLen(Message *message)
 
 #define SCpy(D, S) memcpy(D, S, SLen(S)); D += SLen(S)
 
-void StringHeaderCpy(uint8_t **dest, size_t string_len)
+void StringHeaderCpy(char **dest, size_t string_len)
 {
     int len_digits = digits(string_len);
     snprintf((char *)*dest, len_digits + 1, "%ld", string_len);
@@ -81,14 +81,14 @@ void StringHeaderCpy(uint8_t **dest, size_t string_len)
     *dest += len_digits + 1;
 }
 
-void BStringCpy(uint8_t **dest, uint8_t *string, size_t len)
+void BStringCpy(char **dest, char *string, size_t len)
 {
     StringHeaderCpy(dest, len);
     memcpy(*dest, string, len);
     *dest += len;
 }
 
-void TCpy(uint8_t **dest, Message *message)
+void TCpy(char **dest, Message *message)
 {
     SCpy(*dest, "1:t");
     BStringCpy(dest, message->t, message->t_len);
@@ -101,14 +101,14 @@ void TCpy(uint8_t **dest, Message *message)
 #define QPINGB "e1:q4:ping"
 #define QPINGC "1:y1:qe"
 
-int EncodeQueryPing(Message *message, uint8_t *dest, size_t len)
+int EncodeQueryPing(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == QPing, "Not a ping query");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
 
     check(SLen(QPINGA)
 	  + HASHLEN
@@ -136,14 +136,14 @@ error:
 #define QFINDNODEC "e1:q9:find_node"
 #define QFINDNODED "1:y1:qe"
 
-int EncodeQueryFindNode(Message *message, uint8_t *dest, size_t len)
+int EncodeQueryFindNode(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == QFindNode, "Not a find_node query");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
 
     check(SLen(QFINDNODEA)
 	  + HASHLEN
@@ -175,14 +175,14 @@ error:
 #define QGETPEERSC "e1:q9:get_peers"
 #define QGETPEERSD "1:y1:qe"
 
-int EncodeQueryGetPeers(Message *message, uint8_t *dest, size_t len)
+int EncodeQueryGetPeers(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == QGetPeers, "Not a get_peers query");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
 
     check(SLen(QGETPEERSA)
 	  + HASHLEN
@@ -214,7 +214,7 @@ int ILen(int i)
     return digits(i) + 2;
 }
 
-void ICpy(uint8_t **dest, int i)
+void ICpy(char **dest, int i)
 {
     int len = ILen(i);
     snprintf((char *)*dest, len, "i%d", i);
@@ -229,14 +229,14 @@ void ICpy(uint8_t **dest, int i)
 #define QANNOUNCEPEERE "e1:q13:announce_peer"
 #define QANNOUNCEPEERF "1:y1:qe"
 
-int EncodeQueryAnnouncePeer(Message *message, uint8_t *dest, size_t len)
+int EncodeQueryAnnouncePeer(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == QAnnouncePeer, "Not a announce_peer query");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
     QAnnouncePeerData *data = &message->data.qannouncepeer;
 
     check(SLen(QANNOUNCEPEERA)
@@ -276,14 +276,14 @@ error:
 #define RPINGB "e"
 #define RPINGC "1:y1:re"
 
-int EncodeResponsePing(Message *message, uint8_t *dest, size_t len)
+int EncodeResponsePing(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == RPing, "Not a ping response");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
 
     check(SLen(RPINGA)
 	  + HASHLEN
@@ -313,7 +313,7 @@ int NodesLen(size_t nodes_count)
     return SLen("5:nodes") + BStringLen(nodes_count * COMPACTNODEBYTES);
 }
 
-void NodesCpy(uint8_t **dest, DhtNode *nodes, size_t count)
+void NodesCpy(char **dest, DhtNode *nodes, size_t count)
 {
     SCpy(*dest, "5:nodes");
 
@@ -343,14 +343,14 @@ void NodesCpy(uint8_t **dest, DhtNode *nodes, size_t count)
 #define RFINDNODEB "e"
 #define RFINDNODEC "1:y1:re"
 
-int EncodeResponseFindNode(Message *message, uint8_t *dest, size_t len)
+int EncodeResponseFindNode(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == RFindNode, "Not a find_node response");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
     RFindNodeData *data = &message->data.rfindnode;
 
     check(SLen(RFINDNODEA)
@@ -382,9 +382,9 @@ int ValuesLen(int count)
     return count * 8 + 2;
 }
 
-void ValuesCpy(uint8_t **dest, Peer *values, int count)
+void ValuesCpy(char **dest, Peer *values, int count)
 {
-    assert(dest != NULL && "NULL pointer to uint8_t dest pointer");
+    assert(dest != NULL && "NULL pointer to char dest pointer");
     assert(values != NULL && "NULL Peer values pointer");
 
     *(*dest)++ = 'l';
@@ -412,14 +412,14 @@ void ValuesCpy(uint8_t **dest, Peer *values, int count)
 #define RGETPEERSB "5:token"
 #define RGETPEERSC "1:y1:re"
 
-int EncodeResponseGetPeers_values(Message *message, uint8_t *dest, size_t len)
+int EncodeResponseGetPeers_values(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == RGetPeers, "Not a get_peers response");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
     RGetPeersData *data = &message->data.rgetpeers;
 
     assert(data->values != NULL && "NULL Peer values pointer");
@@ -453,14 +453,14 @@ error:
     return -1;
 }
 
-int EncodeResponseGetPeers_nodes(Message *message, uint8_t *dest, size_t len)
+int EncodeResponseGetPeers_nodes(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == RGetPeers, "Not a get_peers response");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
     RGetPeersData *data = &message->data.rgetpeers;
 
     assert(data->nodes != NULL && "NULL Peer values pointer");
@@ -492,10 +492,10 @@ error:
     return -1;
 }
 
-int EncodeResponseGetPeers(Message *message, uint8_t *dest, size_t len)
+int EncodeResponseGetPeers(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     if (message->data.rgetpeers.values != NULL)
 	return EncodeResponseGetPeers_values(message, dest, len);
@@ -511,14 +511,14 @@ error:
 #define RANNOUNCEPEERB "e"
 #define RANNOUNCEPEERC "1:y1:re"
 
-int EncodeResponseAnnouncePeer(Message *message, uint8_t *dest, size_t len)
+int EncodeResponseAnnouncePeer(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == RAnnouncePeer, "Not a announce_peer response");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
 
     check(SLen(RANNOUNCEPEERA)
 	  + HASHLEN
@@ -541,14 +541,14 @@ error:
     return -1;
 }
 
-int EncodeResponseError(Message *message, uint8_t *dest, size_t len)
+int EncodeResponseError(Message *message, char *dest, size_t len)
 {
     assert(message != NULL && "NULL Message pointer");
-    assert(dest != NULL && "NULL uint8_t dest pointer");
+    assert(dest != NULL && "NULL char dest pointer");
 
     check(message->type == RError, "Not an error response");
 
-    uint8_t *orig_dest = dest;
+    char *orig_dest = dest;
     RErrorData *data = &message->data.rerror;
 
     check(SLen("d1:el")
@@ -562,7 +562,7 @@ int EncodeResponseError(Message *message, uint8_t *dest, size_t len)
 
     SCpy(dest, "d1:el");
     ICpy(&dest, data->code);
-    BStringCpy(&dest, (uint8_t *)bdata(data->message), blength(data->message));
+    BStringCpy(&dest, bdata(data->message), blength(data->message));
     SCpy(dest, "e");
     TCpy(&dest, message);
     SCpy(dest, "1:y1:ee");

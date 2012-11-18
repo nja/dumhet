@@ -9,7 +9,7 @@
 #define HASH_BITS (HASH_BYTES * 8)
 
 typedef struct DhtHash {
-    uint8_t value[HASH_BYTES];	/* Network byte order */
+    char value[HASH_BYTES];	/* Network byte order */
 } DhtHash;
 
 void DhtHash_Destroy(DhtHash *hash);

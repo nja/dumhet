@@ -12,27 +12,27 @@ char *BType_Name(BType type);
 typedef struct BNode {
     enum BType type;
     union {
-	uint8_t *string;
+	char *string;
 	long integer;
 	struct BNode **nodes;
     } value;
     size_t count;
-    uint8_t *data;
+    char *data;
     size_t data_len;
 } BNode;
 
-BNode *BDecode(uint8_t *data, size_t len);
+BNode *BDecode(char *data, size_t len);
 BNode *BDecode_str(char *data, size_t len);
 BNode *BDecode_strlen(char *data);
 
-BNode *BNode_GetValue(BNode *dict, uint8_t *key, size_t key_len);
+BNode *BNode_GetValue(BNode *dict, char *key, size_t key_len);
 
-#define BDecode_str(D, L) BDecode((uint8_t *)(D), (L))
+#define BDecode_str(D, L) BDecode((D), (L))
 #define BDecode_strlen(D) BDecode_str((D), strlen((D)))
 
 void BNode_Destroy(BNode *node);
 
-uint8_t *BNode_CopyString(BNode *string);
+char *BNode_CopyString(BNode *string);
 int BNode_StringEquals(char *string, BNode *bstring);
 
 bstring BNode_bstring(BNode *string);

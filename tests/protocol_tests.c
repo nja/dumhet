@@ -4,7 +4,7 @@
 #include <arpa/inet.h>
 #include <bstrlib.h>
 
-int same_bytes(char *expected, uint8_t *data)
+int same_bytes(char *expected, char *data)
 {
     int len = strlen(expected);
     int i = 0;
@@ -21,7 +21,7 @@ int same_bytes(char *expected, uint8_t *data)
     return 1;
 }
 
-int same_bytes_len(char *expected, uint8_t *data, size_t len)
+int same_bytes_len(char *expected, char *data, size_t len)
 {
     if (strlen(expected) != len)
     {
@@ -71,7 +71,7 @@ char *test_Decode_QPing()
 {
     char *data = "d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe";
 
-    Message *message = Message_Decode((uint8_t *)data, strlen(data), NULL);
+    Message *message = Message_Decode(data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QPing) == NULL, "Bad decoded message");
 
@@ -80,7 +80,7 @@ char *test_Decode_QPing()
     return NULL;
 }
 
-int GetRPingResponseType(uint8_t *tid, size_t len, MessageType *type)
+int GetRPingResponseType(char *tid, size_t len, MessageType *type)
 {
     if (!same_bytes_len("aa", tid, len))
     {
@@ -96,7 +96,7 @@ char *test_Decode_RPing()
 {
     char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
 
-    Message *message = Message_Decode((uint8_t *)data,
+    Message *message = Message_Decode(data,
 			      strlen(data),
 			      GetRPingResponseType);
 
@@ -111,13 +111,13 @@ char *test_Decode_QFindNode()
 {
     char *data = "d1:ad2:id20:abcdefghij01234567896:target20:mnopqrstuvwxyz123456e1:q9:find_node1:t2:aa1:y1:qe";
 
-    Message *message = Message_Decode((uint8_t *)data, strlen(data), NULL);
+    Message *message = Message_Decode(data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QFindNode) == NULL, "Bad decoded message");
 
     mu_assert(message->data.qfindnode.target != NULL, "No target");
     mu_assert(same_bytes("mnopqrstuvwxyz123456",
-			 (uint8_t *)&message->data.qfindnode.target->value),
+			 message->data.qfindnode.target->value),
 	      "Wrong target");
 
     Message_Destroy(message);
@@ -125,7 +125,7 @@ char *test_Decode_QFindNode()
     return NULL;
 }
 
-int GetRFindNodeResponseType(uint8_t *tid, size_t len, MessageType *type)
+int GetRFindNodeResponseType(char *tid, size_t len, MessageType *type)
 {
     if (!same_bytes_len("aa", tid, len))
     {
@@ -158,7 +158,7 @@ char *test_Decode_RFindNode()
 	"????????????????????xxxxyy"
 	"e1:t2:aa1:y1:re";
 
-    Message *message = Message_Decode((uint8_t *)data, strlen(data), GetRFindNodeResponseType);
+    Message *message = Message_Decode(data, strlen(data), GetRFindNodeResponseType);
 
     mu_assert(check_Message(message, RFindNode) == NULL, "Bad decoded message");
 
@@ -191,7 +191,7 @@ char *test_Decode_QGetPeers()
     char *data = "d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe";
     char *info_hash = "mnopqrstuvwxyz123456";
 
-    Message *message = Message_Decode((uint8_t *)data, strlen(data), NULL);
+    Message *message = Message_Decode(data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QGetPeers) == NULL, "Bad decoded message");
 
@@ -204,7 +204,7 @@ char *test_Decode_QGetPeers()
     return NULL;
 }
 
-int GetRGetPeersResponseType(uint8_t *tid, size_t len, MessageType *type)
+int GetRGetPeersResponseType(char *tid, size_t len, MessageType *type)
 {
     if (!same_bytes_len("aa", tid, len))
     {
@@ -229,7 +229,7 @@ char *test_Decode_RGetPeers_nodes()
 	"712345678901234567897xxxy7"
 	"5:token8:aoeusnthe1:t2:aa1:y1:re";
 
-    Message *message = Message_Decode((uint8_t *)input, strlen(input), GetRGetPeersResponseType);
+    Message *message = Message_Decode(input, strlen(input), GetRGetPeersResponseType);
 
     mu_assert(check_Message(message, RGetPeers) == NULL, "Bad decoded message");
 
@@ -268,7 +268,7 @@ char *test_Decode_RGetPeers_values()
 	"6:" "2xxxy2"
 	"ee1:t2:aa1:y1:re";
 
-    Message *message = Message_Decode((uint8_t *)input, strlen(input), GetRGetPeersResponseType);
+    Message *message = Message_Decode(input, strlen(input), GetRGetPeersResponseType);
 
     mu_assert(check_Message(message, RGetPeers) == NULL, "Bad decoded message");
 
@@ -301,7 +301,7 @@ char *test_Decode_QAnnouncePeer()
     char *info_hash = "mnopqrstuvwxyz123456", *token = "aoeusnth";
     const int port = 6881;
 
-    Message *message = Message_Decode((uint8_t *)data, strlen(data), NULL);
+    Message *message = Message_Decode(data, strlen(data), NULL);
 
     mu_assert(check_Message(message, QAnnouncePeer) == NULL, "Bad decoded message");
 
@@ -320,7 +320,7 @@ char *test_Decode_QAnnouncePeer()
     return NULL;
 }
 
-int GetRAnnouncePeerResponseType(uint8_t *tid, size_t len, MessageType *type)
+int GetRAnnouncePeerResponseType(char *tid, size_t len, MessageType *type)
 {
     if (!same_bytes_len("aa", tid, len))
     {
@@ -336,7 +336,7 @@ char *test_Decode_RAnnouncePeer()
 {
     char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
 
-    Message *message = Message_Decode((uint8_t *)data,
+    Message *message = Message_Decode(data,
 			      strlen(data),
 			      GetRAnnouncePeerResponseType);
 
@@ -368,7 +368,7 @@ char *test_Decode_RError()
     int i = 0;
     while (data[i])
     {
-	Message *message = Message_Decode((uint8_t *)data[i], strlen(data[i]), NULL);
+	Message *message = Message_Decode(data[i], strlen(data[i]), NULL);
 
 	mu_assert(message->type == RError, "Wrong message type");
 	mu_assert(same_bytes_len("aa", message->t, message->t_len), "Wrong transaction id");
@@ -447,7 +447,7 @@ char *test_Decode_JunkQuery()
     int i = 0;
     while (junk[i])
     {
-	Message *result = Message_Decode((uint8_t *)junk[i], strlen(junk[i]), NULL);
+	Message *result = Message_Decode(junk[i], strlen(junk[i]), NULL);
 	mu_assert(result == NULL, "Decoded junk without error");
 	i++;
     }
@@ -455,25 +455,25 @@ char *test_Decode_JunkQuery()
     return NULL;
 }
 
-int AlwaysGetRFindNodeResponseType(uint8_t *a, size_t b, MessageType *c)
+int AlwaysGetRFindNodeResponseType(char *a, size_t b, MessageType *c)
 {
     a = a; b = b; c = c;
     return RFindNode;
 }
 
-int AlwaysGetRPingResponseType(uint8_t *a, size_t b, MessageType *c)
+int AlwaysGetRPingResponseType(char *a, size_t b, MessageType *c)
 {
     a = a; b = b; c = c;
     return RPing;
 }
 
-int AlwaysGetRGetPeersResponseType(uint8_t *a, size_t b, MessageType *c)
+int AlwaysGetRGetPeersResponseType(char *a, size_t b, MessageType *c)
 {
     a = a; b = b; c = c;
     return RGetPeers;
 }
 
-int AlwaysGetRAnnouncePeerResponseType(uint8_t *a, size_t b, MessageType *c)
+int AlwaysGetRAnnouncePeerResponseType(char *a, size_t b, MessageType *c)
 {
     a = a; b = b; c = c;
     return RAnnouncePeer;
@@ -533,7 +533,7 @@ char *test_Decode_JunkResponse()
 
 	while (gettype[j])
 	{
-	    Message *result = Message_Decode((uint8_t *)junk[i], len, gettype[j]);
+	    Message *result = Message_Decode(junk[i], len, gettype[j]);
 	    mu_assert(result == NULL, "Decoded junk without error");
 	    j++;
 	}
@@ -543,7 +543,7 @@ char *test_Decode_JunkResponse()
     return NULL;
 }
 
-int GetRoundtripResponseMessageType(uint8_t *t, size_t len, MessageType *mt)
+int GetRoundtripResponseMessageType(char *t, size_t len, MessageType *mt)
 {
     if (same_bytes_len("rping", t, len))
     {
@@ -595,11 +595,11 @@ char *test_Roundtrip()
 
 	int len = strlen(input[i]);
 
-	Message *message = Message_Decode((uint8_t *)input[i], len, GetRoundtripResponseMessageType);
+	Message *message = Message_Decode(input[i], len, GetRoundtripResponseMessageType);
 
 	mu_assert(message != NULL, "Decode failed");
 
-	uint8_t *dest = calloc(1, len);
+	char *dest = calloc(1, len);
 	mu_assert(dest != NULL, "malloc failed");
 
 	int rc = Message_Encode(message, dest, len - 1);
