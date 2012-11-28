@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <dht.h>
-#include <dbg.h>
+#include <lcthw/dbg.h>
 #include <assert.h>
 #include <time.h>
 

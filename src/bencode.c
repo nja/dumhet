@@ -1,4 +1,4 @@
-#include <dbg.h>
+#include <lcthw/dbg.h>
 #include <bencode.h>
 #include <ctype.h>
 #include <assert.h>

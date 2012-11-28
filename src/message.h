@@ -2,7 +2,7 @@
 #define _message_h
 
 #include <dht.h>
-#include <bstrlib.h>
+#include <lcthw/bstrlib.h>
 
 typedef struct Peer {
     uint32_t addr;

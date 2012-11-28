@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <dbg.h>
+#include <lcthw/dbg.h>
 #include <protocol.h>
 #include <bencode.h>
 #include <message.h>

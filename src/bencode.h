@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <bstrlib.h>
+#include <lcthw/bstrlib.h>
 
 typedef enum BType { BString, BInteger, BList, BDictionary } BType;
 

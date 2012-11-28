@@ -2,7 +2,7 @@
 #include <message.h>
 #include <protocol.h>
 #include <arpa/inet.h>
-#include <bstrlib.h>
+#include <lcthw/bstrlib.h>
 
 int same_bytes(char *expected, char *data)
 {

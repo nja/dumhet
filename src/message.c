@@ -1,5 +1,5 @@
 #include <message.h>
-#include <dbg.h>
+#include <lcthw/dbg.h>
 
 void Message_Destroy(Message *message)
 {
