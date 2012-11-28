@@ -80,29 +80,55 @@ char *test_Decode_QPing()
     return NULL;
 }
 
-int GetRPingResponseType(char *tid, size_t len, MessageType *type)
+struct MockResponses {
+    GetResponseType_fp getReponseType;
+    char *tid;
+    MessageType type;
+    int check_tid;
+};
+
+int GetMockResponseType(void *responses, char *tid, size_t len, MessageType *type)
 {
-    if (!same_bytes_len("aa", tid, len))
+    struct MockResponses *mock = (struct MockResponses *)responses;
+
+    if (mock->check_tid && !same_bytes_len(mock->tid, tid, len))
     {
 	log_err("Bad transaction id");
 	return -1;
     }
 
-    *type = RPing;
+    *type = mock->type;
     return 0;
+}
+
+struct MockResponses *GetMockResponses(char *tid, MessageType type, int check_tid)
+{
+    struct MockResponses *responses = malloc(sizeof(struct MockResponses));
+    check_mem(responses);
+
+    responses->getReponseType = GetMockResponseType;
+    responses->tid = tid;
+    responses->type = type;
+    responses->check_tid = check_tid;
+
+    return responses;
+error:
+    return NULL;
 }
 
 char *test_Decode_RPing()
 {
     char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
+    void *responses = GetMockResponses("aa", RPing, 1);
 
     Message *message = Message_Decode(data,
-			      strlen(data),
-			      GetRPingResponseType);
+				      strlen(data),
+				      responses);
 
     mu_assert(check_Message(message, RPing) == NULL, "Bad decoded message");
 
     Message_Destroy(message);
+    free(responses);
 
     return NULL;
 }
@@ -125,18 +151,6 @@ char *test_Decode_QFindNode()
     return NULL;
 }
 
-int GetRFindNodeResponseType(char *tid, size_t len, MessageType *type)
-{
-    if (!same_bytes_len("aa", tid, len))
-    {
-	log_err("Bad transaction id");
-	return -1;
-    }
-
-    *type = RFindNode;
-    return 0;
-}
-
 uint32_t chntohl(char *ch)
 {
     return ch[0] << 24
@@ -157,8 +171,9 @@ char *test_Decode_RFindNode()
 	"01234567890123456789ABCDEF"
 	"????????????????????xxxxyy"
 	"e1:t2:aa1:y1:re";
+    void *responses = GetMockResponses("aa", RFindNode, 1);
 
-    Message *message = Message_Decode(data, strlen(data), GetRFindNodeResponseType);
+    Message *message = Message_Decode(data, strlen(data), responses);
 
     mu_assert(check_Message(message, RFindNode) == NULL, "Bad decoded message");
 
@@ -182,6 +197,7 @@ char *test_Decode_RFindNode()
 	      "Wrong nodes[1] port");
 
     Message_Destroy(message);
+    free(responses);
 
     return NULL;
 }
@@ -204,18 +220,6 @@ char *test_Decode_QGetPeers()
     return NULL;
 }
 
-int GetRGetPeersResponseType(char *tid, size_t len, MessageType *type)
-{
-    if (!same_bytes_len("aa", tid, len))
-    {
-	log_err("Bad transaction id");
-	return -1;
-    }
-
-    *type = RGetPeers;
-    return 0;
-}
-
 char *test_Decode_RGetPeers_nodes()
 {
     char *input = "d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:"
@@ -228,8 +232,9 @@ char *test_Decode_RGetPeers_nodes()
 	"612345678901234567896xxxy6"
 	"712345678901234567897xxxy7"
 	"5:token8:aoeusnthe1:t2:aa1:y1:re";
+    void *responses = GetMockResponses("aa", RGetPeers, 1);
 
-    Message *message = Message_Decode(input, strlen(input), GetRGetPeersResponseType);
+    Message *message = Message_Decode(input, strlen(input), responses);
 
     mu_assert(check_Message(message, RGetPeers) == NULL, "Bad decoded message");
 
@@ -256,7 +261,8 @@ char *test_Decode_RGetPeers_nodes()
     }
 
     Message_Destroy(message);
-
+    free(responses);
+    
     return NULL;
 }
 
@@ -267,8 +273,9 @@ char *test_Decode_RGetPeers_values()
 	"6:" "1xxxy1"
 	"6:" "2xxxy2"
 	"ee1:t2:aa1:y1:re";
+    void *responses = GetMockResponses("aa", RGetPeers, 1);
 
-    Message *message = Message_Decode(input, strlen(input), GetRGetPeersResponseType);
+    Message *message = Message_Decode(input, strlen(input), responses);
 
     mu_assert(check_Message(message, RGetPeers) == NULL, "Bad decoded message");
 
@@ -291,6 +298,7 @@ char *test_Decode_RGetPeers_values()
     }
 
     Message_Destroy(message);
+    free(responses);
 
     return NULL;
 }
@@ -320,29 +328,19 @@ char *test_Decode_QAnnouncePeer()
     return NULL;
 }
 
-int GetRAnnouncePeerResponseType(char *tid, size_t len, MessageType *type)
-{
-    if (!same_bytes_len("aa", tid, len))
-    {
-	log_err("Bad transaction id");
-	return -1;
-    }
-
-    *type = RAnnouncePeer;
-    return 0;
-}
-
 char *test_Decode_RAnnouncePeer()
 {
     char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
+    void *responses = GetMockResponses("aa", RAnnouncePeer, 1);
 
     Message *message = Message_Decode(data,
 			      strlen(data),
-			      GetRAnnouncePeerResponseType);
+			      responses);
 
     mu_assert(check_Message(message, RAnnouncePeer) == NULL, "Bad decoded message");
 
     Message_Destroy(message);
+    free(responses);
 
     return NULL;
 }
@@ -455,37 +453,83 @@ char *test_Decode_JunkQuery()
     return NULL;
 }
 
-int AlwaysGetRFindNodeResponseType(char *a, size_t b, MessageType *c)
+char *test_junk_response(char **junk, void **gettype)
 {
-    a = a; b = b; c = c;
-    return RFindNode;
+    int i = 0;
+    while (junk[i])
+    {
+	int j = 0,
+	    len = strlen(junk[i]);
+
+	while (gettype[j])
+	{
+	    debug("%d,%d: %s", i, j, junk[i]);
+	    Message *result = Message_Decode(junk[i], len, gettype[j]);
+	    mu_assert(result == NULL, "Decoded junk without error");
+
+	    j++;
+	}
+	i++;
+    }
+
+    i = 0;
+    while (gettype[i])
+	free(gettype[i++]);
+
+    return NULL;
+}    
+
+char *test_Decode_JunkResponse_find_node()
+{
+    char *junk[] = {
+	/* find_node nodes */
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes53:+01234567890123456789ABCDEF????????????????????xxxxyye1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nod__52:01234567890123456789ABCDEF????????????????????xxxxyye1:t2:aa1:y1:re",
+	NULL
+    };
+
+    void *gettype[] = {
+	GetMockResponses(NULL, RFindNode, 0),
+	NULL
+    };
+
+    return test_junk_response(junk, gettype);
 }
 
-int AlwaysGetRPingResponseType(char *a, size_t b, MessageType *c)
+char *test_Decode_JunkResponse_get_peers()
 {
-    a = a; b = b; c = c;
-    return RPing;
-}
+    char *junk[] = {
+	/* get_peers values */
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valu__l6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valuesl6:0xxxy07:+1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:values6:0xxxy0e1:t2:aa1:y1:re",
+	/* get_peers nodes */
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes209:+012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nod__208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodesi0e5:token8:aoeusnthe1:t2:aa1:y1:re",
+	/* get_peers token */
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:tok__8:aoeusnthe1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:tok__8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:tokeni0ee1:t2:aa1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:tokeni0e6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
+	NULL
+    };
 
-int AlwaysGetRGetPeersResponseType(char *a, size_t b, MessageType *c)
-{
-    a = a; b = b; c = c;
-    return RGetPeers;
-}
+    void *gettype[] = {
+	GetMockResponses(NULL, RGetPeers, 0),
+	NULL
+    };
 
-int AlwaysGetRAnnouncePeerResponseType(char *a, size_t b, MessageType *c)
-{
-    a = a; b = b; c = c;
-    return RAnnouncePeer;
+    return test_junk_response(junk, gettype);
 }
 
 char *test_Decode_JunkResponse()
 {
-    GetResponseType_fp gettype[] = {
-	AlwaysGetRPingResponseType,
-	AlwaysGetRFindNodeResponseType,
-	AlwaysGetRGetPeersResponseType,
-	AlwaysGetRAnnouncePeerResponseType,
+    void *gettype[] = {
+	GetMockResponses(NULL, RPing, 0),
+	GetMockResponses(NULL, RFindNode, 0),
+	GetMockResponses(NULL, RGetPeers, 0),
+	GetMockResponses(NULL, RAnnouncePeer, 0),
 	NULL
     };
 
@@ -506,45 +550,16 @@ char *test_Decode_JunkResponse()
 	/* r */
 	"d1:t2:aa1:y1:re",
 	"d1:rle1:t2:aa1:y1:re",
-	/* find_node nodes */
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes53:+01234567890123456789ABCDEF????????????????????xxxxyye1:t2:aa1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nod__52:01234567890123456789ABCDEF????????????????????xxxxyye1:t2:aa1:y1:re",
-	/* get_peers values */
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valu__l6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valuesl6:0xxxy07:+1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:values6:0xxxy0e1:t2:aa1:y1:re",
-	/* get_peers nodes */
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes209:+012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:aa1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nod__208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:aa1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodesi0e5:token8:aoeusnthe1:t2:aa1:y1:re",
-	/* get_peers token */
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:tok__8:aoeusnthe1:t2:aa1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:tok__8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:tokeni0ee1:t2:aa1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:tokeni0e6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:aa1:y1:re",
 	NULL
     };
 
-    int i = 0;
-    while (junk[i])
-    {
-	int j = 0,
-	    len = strlen(junk[i]);
-
-	while (gettype[j])
-	{
-	    Message *result = Message_Decode(junk[i], len, gettype[j]);
-	    mu_assert(result == NULL, "Decoded junk without error");
-	    j++;
-	}
-	i++;
-    }
-
-    return NULL;
+    return test_junk_response(junk, gettype);
 }
 
-int GetRoundtripResponseMessageType(char *t, size_t len, MessageType *mt)
+int GetRoundtripResponseMessageType(void *responses, char *t, size_t len, MessageType *mt)
 {
+    responses = responses;
+
     if (same_bytes_len("rping", t, len))
     {
 	*mt = RPing;
@@ -588,6 +603,8 @@ char *test_Roundtrip()
 	NULL
     };
 
+    struct PendingResponses responses = { .getResponseType = GetRoundtripResponseMessageType };
+
     int i = 0;
     while (input[i])
     {
@@ -595,7 +612,7 @@ char *test_Roundtrip()
 
 	int len = strlen(input[i]);
 
-	Message *message = Message_Decode(input[i], len, GetRoundtripResponseMessageType);
+	Message *message = Message_Decode(input[i], len, &responses);
 
 	mu_assert(message != NULL, "Decode failed");
 
@@ -637,6 +654,8 @@ char *all_tests()
 
     mu_run_test(test_Decode_JunkQuery);
     mu_run_test(test_Decode_JunkResponse);
+    mu_run_test(test_Decode_JunkResponse_find_node);
+    mu_run_test(test_Decode_JunkResponse_get_peers);
     mu_run_test(test_Roundtrip);
 
     return NULL;

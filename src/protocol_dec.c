@@ -10,10 +10,10 @@ int HasNodeId(BNode *dict);
 char GetMessageType(BNode *dict);
 
 Message *DecodeQuery(BNode *dict);
-Message *DecodeResponse(BNode *dict, GetResponseType_fp getResponseType);
+Message *DecodeResponse(BNode *dict, struct PendingResponses *pending);
 Message *DecodeError(BNode *dict);
 
-Message *Message_Decode(char *data, size_t len, GetResponseType_fp getResponseType)
+Message *Message_Decode(char *data, size_t len, struct PendingResponses *pending)
 {
     assert(data != NULL && "NULL data pointer");
 
@@ -31,7 +31,7 @@ Message *Message_Decode(char *data, size_t len, GetResponseType_fp getResponseTy
     {
     case 'q': message = DecodeQuery(dict);
 	break;
-    case 'r': message = DecodeResponse(dict, getResponseType);
+    case 'r': message = DecodeResponse(dict, pending);
 	break;
     case 'e': message = DecodeError(dict);
 	break;
@@ -342,7 +342,7 @@ error:
 int GetResponseData(MessageType type, BNode *dict, Message *message);
 int GetResponseId(BNode *dict, DhtHash **id);
 
-Message *DecodeResponse(BNode *dict, GetResponseType_fp getResponseType)
+Message *DecodeResponse(BNode *dict, struct PendingResponses *pending)
 {
     assert(dict != NULL && "NULL BNode pointer");
 
@@ -359,7 +359,7 @@ Message *DecodeResponse(BNode *dict, GetResponseType_fp getResponseType)
     rc = GetResponseId(dict, &message->id);
     check(rc == 0, "Bad response node id");
 
-    rc = getResponseType(message->t, message->t_len, &message->type);
+    rc = pending->getResponseType(pending, message->t, message->t_len, &message->type);
     check(rc == 0, "Bad response type");
 
     rc = GetResponseData(message->type, dict, message);
