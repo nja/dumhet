@@ -87,11 +87,11 @@ struct MockResponses {
     int check_tid;
 };
 
-int GetMockResponseType(void *responses, char *tid, size_t len, MessageType *type)
+int GetMockResponseType(void *responses, char *tid, MessageType *type)
 {
     struct MockResponses *mock = (struct MockResponses *)responses;
 
-    if (mock->check_tid && !same_bytes_len(mock->tid, tid, len))
+    if (mock->check_tid && !same_bytes_len(mock->tid, tid, OWN_TID_LEN))
     {
 	log_err("Bad transaction id");
 	return -1;
@@ -556,29 +556,29 @@ char *test_Decode_JunkResponse()
     return test_junk_response(junk, gettype);
 }
 
-int GetRoundtripResponseMessageType(void *responses, char *t, size_t len, MessageType *mt)
+int GetRoundtripResponseMessageType(void *responses, char *t, MessageType *mt)
 {
     responses = responses;
 
-    if (same_bytes_len("rping", t, len))
+    if (same_bytes_len("pi", t, OWN_TID_LEN))
     {
 	*mt = RPing;
 	return 0;
     }
 
-    if (same_bytes_len("rfind_node", t, len))
+    if (same_bytes_len("fn", t, OWN_TID_LEN))
     {
 	*mt = RFindNode;
 	return 0;
     }
 
-    if (same_bytes_len("rget_peers", t, len))
+    if (same_bytes_len("gp", t, OWN_TID_LEN))
     {
 	*mt = RGetPeers;
 	return 0;
     }
 
-    if (same_bytes_len("rannounce_peer", t, len))
+    if (same_bytes_len("ap", t, OWN_TID_LEN))
     {
 	*mt = RAnnouncePeer;
 	return 0;
@@ -594,12 +594,12 @@ char *test_Roundtrip()
 	"d1:ad2:id20:abcdefghij01234567896:target20:mnopqrstuvwxyz123456e1:q9:find_node1:t2:aa1:y1:qe",
 	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe",
 	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
-	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t5:rping1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes52:01234567890123456789ABCDEF????????????????????xxxxyye1:t10:rfind_node1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t10:rget_peers1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t10:rget_peers1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t14:rannounce_peer1:y1:re",
-	"d1:eli201e23:A Generic Error Ocurrede1:t2:aa1:y1:ee",
+	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:pi1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes52:01234567890123456789ABCDEF????????????????????xxxxyye1:t2:fn1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:gp1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:gp1:y1:re",
+	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:ap1:y1:re",
+	"d1:eli201e23:A Generic Error Ocurrede1:t2:ee1:y1:ee",
 	NULL
     };
 

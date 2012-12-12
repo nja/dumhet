@@ -4,9 +4,10 @@
 #include <bencode.h>
 #include <message.h>
 
+#define OWN_TID_LEN 2
+
 typedef int (*GetResponseType_fp)(void *responses,
 				  char *transaction_id,
-				  size_t tid_len,
 				  MessageType *type);
 
 struct PendingResponses {
