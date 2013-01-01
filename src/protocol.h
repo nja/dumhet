@@ -4,7 +4,7 @@
 #include <bencode.h>
 #include <message.h>
 
-#define OWN_TID_LEN 2
+typedef uint16_t tid_t;
 
 typedef int (*GetResponseType_fp)(void *responses,
 				  char *transaction_id,

@@ -355,7 +355,7 @@ Message *DecodeResponse(BNode *dict, struct PendingResponses *pending)
 
     rc = GetTransactionId(dict, &message->t, &message->t_len);
     check(rc == 0, "Bad transaction id");
-    check(message->t_len == OWN_TID_LEN, "Bad response transaction id length");
+    check(message->t_len == sizeof(tid_t), "Bad response transaction id length");
 
     rc = GetResponseId(dict, &message->id);
     check(rc == 0, "Bad response node id");

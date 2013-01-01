@@ -91,7 +91,7 @@ int GetMockResponseType(void *responses, char *tid, MessageType *type)
 {
     struct MockResponses *mock = (struct MockResponses *)responses;
 
-    if (mock->check_tid && !same_bytes_len(mock->tid, tid, OWN_TID_LEN))
+    if (mock->check_tid && !same_bytes_len(mock->tid, tid, sizeof(tid_t)))
     {
 	log_err("Bad transaction id");
 	return -1;
@@ -560,25 +560,25 @@ int GetRoundtripResponseMessageType(void *responses, char *t, MessageType *mt)
 {
     responses = responses;
 
-    if (same_bytes_len("pi", t, OWN_TID_LEN))
+    if (same_bytes_len("pi", t, sizeof(tid_t)))
     {
 	*mt = RPing;
 	return 0;
     }
 
-    if (same_bytes_len("fn", t, OWN_TID_LEN))
+    if (same_bytes_len("fn", t, sizeof(tid_t)))
     {
 	*mt = RFindNode;
 	return 0;
     }
 
-    if (same_bytes_len("gp", t, OWN_TID_LEN))
+    if (same_bytes_len("gp", t, sizeof(tid_t)))
     {
 	*mt = RGetPeers;
 	return 0;
     }
 
-    if (same_bytes_len("ap", t, OWN_TID_LEN))
+    if (same_bytes_len("ap", t, sizeof(tid_t)))
     {
 	*mt = RAnnouncePeer;
 	return 0;
