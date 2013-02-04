@@ -54,7 +54,7 @@ char *test_undelimited_integers()
 
 char *test_integer_overflow()
 {
-    long overflows[] = { LONG_MAX, LLONG_MIN };
+    long long overflows[] = { LONG_MAX, LLONG_MIN };
     const int overflows_len = 2;
     int i = 0;
 
@@ -62,7 +62,7 @@ char *test_integer_overflow()
     {
 	const int string_max_len = 32;
 	char string[string_max_len];
-	snprintf(string, string_max_len, "i%ld0e", overflows[i]);
+	snprintf(string, string_max_len, "i%lld0e", overflows[i]);
 
 	debug("Overflow integer: '%s'", string);
 
@@ -172,7 +172,7 @@ char *test_decode_string()
     for (i = 0; i < strings_len; i++)
     {
 	size_t len = strlen(strings[i]);
-	snprintf(buffer, buffer_size, "%lu:%s", len, strings[i]);
+	snprintf(buffer, buffer_size, "%zu:%s", len, strings[i]);
 
 	debug("String: '%s'", buffer);
 

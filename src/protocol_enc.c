@@ -76,7 +76,7 @@ int TLen(Message *message)
 void StringHeaderCpy(char **dest, size_t string_len)
 {
     int len_digits = digits(string_len);
-    snprintf((char *)*dest, len_digits + 1, "%ld", string_len);
+    snprintf((char *)*dest, len_digits + 1, "%zd", string_len);
     (*dest)[len_digits] = ':';
     *dest += len_digits + 1;
 }

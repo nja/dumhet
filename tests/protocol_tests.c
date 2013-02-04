@@ -26,7 +26,7 @@ int same_bytes_len(char *expected, char *data, size_t len)
     if (strlen(expected) != len)
     {
 	debug("expected: %s", expected);
-	debug("expected %ld bytes got %ld", strlen(expected), len);
+	debug("expected %zd bytes got %zd", strlen(expected), len);
 	return 0;
     }
 

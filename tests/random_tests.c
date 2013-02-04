@@ -1,5 +1,6 @@
 #include "minunit.h"
 #include <random.h>
+#include <inttypes.h>
 
 char *test_RandomFill()
 {
@@ -20,7 +21,7 @@ char *test_RandomFill()
 
 	rc = Random_Fill(rsb, (char *)&ib, 8);
 
-	debug("a: %ld b: %ld", ia, ib);
+	debug("a: %"PRId64" b: %"PRId64, ia, ib);
 
 	mu_assert(ia == ib, "Random values not equal");
     }
