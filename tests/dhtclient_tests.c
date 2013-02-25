@@ -3,11 +3,15 @@
 
 char *test_DhtClient_CreateDestroy()
 {
-  DhtHash id;
+  DhtHash id = { "abcdeABCDEabcdeABCD" };
+  uint32_t addr = 0x10203040;
+  uint16_t port = 0x5060;
 
-  DhtClient *client = DhtClient_Create(id, 0, 0);
+  DhtClient *client = DhtClient_Create(id, addr, port);
   mu_assert(client != NULL, "DhtClient_Create failed");
-  
+  mu_assert(client->node.addr.s_addr == addr, "Address not copied");
+  mu_assert(client->node.port == port, "Port not copied");
+
   DhtClient_Destroy(client);
   
   return NULL;
