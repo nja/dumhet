@@ -13,7 +13,6 @@ char *test_DhtClient_CreateDestroy()
   return NULL;
 }
 
-
 char *all_tests()
 {
     mu_suite_start();

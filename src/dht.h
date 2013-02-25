@@ -29,8 +29,8 @@ int DhtDistance_Compare(DhtDistance *a, DhtDistance *b);
 
 typedef struct DhtNode {
     DhtHash id;
-    uint32_t addr;
-    uint16_t port;
+    uint32_t addr;              /* network byte order */
+    uint16_t port;              /* network byte order */
     time_t reply_time;
     time_t query_time;
     int pending_queries;
