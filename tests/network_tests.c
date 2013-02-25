@@ -1,5 +1,6 @@
 #include "minunit.h"
 #include <network.h>
+#include <arpa/inet.h>
 
 #define TESTPORT 51271
 
@@ -23,7 +24,7 @@ char *test_NetworkUpDown()
 char *test_NetworkSendReceive()
 {
   DhtHash id;
-  DhtClient *client = DhtClient_Create(id, 0, TESTPORT);
+  DhtClient *client = DhtClient_Create(id, htonl(INADDR_LOOPBACK), TESTPORT);
   
   int rc = NetworkUp(client);
   mu_assert(rc == 0, "NetworkUp failed");  
@@ -40,6 +41,8 @@ char *test_NetworkSendReceive()
   mu_assert(rc == (int)len, "Receive failed");
 
   mu_assert(strncmp(send, recv, len) == 0, "Received wrong data");
+  mu_assert(client->node.addr.s_addr == recvnode.addr.s_addr, "Wrong recv addr");
+  mu_assert(client->node.port == recvnode.port, "Wrong recv port");
 
   rc = NetworkDown(client);
   mu_assert(rc == 0, "NetworkDown failed");
