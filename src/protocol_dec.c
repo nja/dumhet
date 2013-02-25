@@ -466,7 +466,7 @@ int GetCompactNodeInfo(BNode *string, DhtNode **nodes, size_t *count)
     while (node < *nodes + *count)
     {
 	memcpy(node->id.value, data, HASH_BYTES);
-	node->addr = ntohl(*(uint32_t *)(data + HASH_BYTES));
+	node->addr.s_addr = ntohl(*(uint32_t *)(data + HASH_BYTES));
 	node->port = ntohs(*(uint16_t *)(data + HASH_BYTES + sizeof(uint32_t)));
 
 	data += COMPACTNODE_BYTES;

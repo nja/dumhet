@@ -7,6 +7,7 @@
 #include <network.h>
 #include <dhtclient.h>
 #include <lcthw/dbg.h>
+#include <arpa/inet.h>
 
 int NetworkUp(DhtClient *client)
 {
@@ -17,7 +18,7 @@ int NetworkUp(DhtClient *client)
 
   sockaddr.sin_family = AF_INET;
   sockaddr.sin_port = client->node.port;
-  sockaddr.sin_addr.s_addr = client->node.addr;
+  sockaddr.sin_addr = client->node.addr;
 
   int rc = bind(client->socket,
                 (struct sockaddr *) &sockaddr,
@@ -61,7 +62,7 @@ int Send(DhtClient *client, DhtNode *node, char *buf, size_t len)
 
   //memset((char *) &addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = node->addr;
+  addr.sin_addr = node->addr;
   addr.sin_port = node->port;
 
   int rc = sendto(client->socket,
@@ -97,7 +98,7 @@ int Receive(DhtClient *client, DhtNode *node, char *buf, size_t len)
 
   check(rc >= 0, "Receive failed");
 
-  node->addr = srcaddr.sin_addr.s_addr;
+  node->addr = srcaddr.sin_addr;
   node->port = srcaddr.sin_port;
 
   return rc;

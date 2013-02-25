@@ -113,7 +113,7 @@ char *test_DhtTable_AddBucket()
 {
     int i = 0;
     DhtTable table = {.id = {{0}}, .buckets = {0}, .end = 0};
-    DhtNode node = {.id = {{0}}, 0};
+    DhtNode node = {.id = {{0}}, {0}};
 
     for (i = 0; i < HASH_BYTES; i++)
     {

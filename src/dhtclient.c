@@ -12,7 +12,7 @@ DhtClient *DhtClient_Create(DhtHash id, uint32_t addr, uint16_t port)
   check_mem(client);
 
   client->node.id = id;
-  client->node.addr = addr;
+  client->node.addr.s_addr = addr;
   client->node.port = port;
 
   client->table = DhtTable_Create(&client->node.id);

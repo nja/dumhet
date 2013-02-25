@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <random.h>
+#include <netinet/in.h>
 
 #define HASH_BYTES 20
 #define HASH_BITS (HASH_BYTES * 8)
@@ -29,7 +30,7 @@ int DhtDistance_Compare(DhtDistance *a, DhtDistance *b);
 
 typedef struct DhtNode {
     DhtHash id;
-    uint32_t addr;              /* network byte order */
+    struct in_addr addr;
     uint16_t port;              /* network byte order */
     time_t reply_time;
     time_t query_time;

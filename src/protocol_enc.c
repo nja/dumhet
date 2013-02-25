@@ -327,10 +327,10 @@ void NodesCpy(char **dest, DhtNode *nodes, size_t count)
 	memcpy(*dest, nodes[i].id.value, HASH_BYTES);
 	*dest += HASH_BYTES;
 
-	(*dest)[0] = nodes[i].addr >> 24;
-	(*dest)[1] = nodes[i].addr >> 16;
-	(*dest)[2] = nodes[i].addr >> 8;
-	(*dest)[3] = nodes[i].addr;
+	(*dest)[0] = nodes[i].addr.s_addr >> 24;
+	(*dest)[1] = nodes[i].addr.s_addr >> 16;
+	(*dest)[2] = nodes[i].addr.s_addr >> 8;
+	(*dest)[3] = nodes[i].addr.s_addr;
 
 	(*dest)[4] = nodes[i].port >> 8;
 	(*dest)[5] = nodes[i].port;
