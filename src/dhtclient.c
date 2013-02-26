@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <dhtclient.h>
+#include <pendingresponses.h>
 #include <lcthw/dbg.h>
 
 int CreateSocket();
@@ -18,6 +19,9 @@ DhtClient *DhtClient_Create(DhtHash id, uint32_t addr, uint16_t port)
   client->table = DhtTable_Create(&client->node.id);
   check_mem(client->table);
 
+  client->pending = HashmapPendingResponses_Create();
+  check_mem(client->pending);
+
   client->socket = CreateSocket();
   check(client->socket != -1, "CreateSocket failed");
 
@@ -32,6 +36,7 @@ void DhtClient_Destroy(DhtClient *client)
     return;
 
   DhtTable_Destroy(client->table);
+  HashmapPendingResponses_Destroy(client->pending);
   
   if (client->socket != -1)
     close(client->socket);
