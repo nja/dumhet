@@ -61,7 +61,6 @@ int Send(DhtClient *client, DhtNode *node, char *buf, size_t len)
 
   struct sockaddr_in addr = { 0 };
 
-  //memset((char *) &addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_addr = node->addr;
   addr.sin_port = node->port;
