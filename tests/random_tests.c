@@ -21,8 +21,6 @@ char *test_RandomFill()
 
 	rc = Random_Fill(rsb, (char *)&ib, 8);
 
-	debug("a: %"PRId64" b: %"PRId64, ia, ib);
-
 	mu_assert(ia == ib, "Random values not equal");
     }
 

@@ -14,7 +14,7 @@ struct tagbstring expect3 = bsStatic("THE VALUE 3");
 
 static int traverse_good_cb(HashmapNode *node)
 {
-    debug("KEY: %s", bdata((bstring)node->key));
+    (void)(node);
     traverse_called++;
     return 0;
 }
@@ -22,7 +22,7 @@ static int traverse_good_cb(HashmapNode *node)
 
 static int traverse_fail_cb(HashmapNode *node)
 {
-    debug("KEY: %s", bdata((bstring)node->key));
+    (void)(node);
     traverse_called++;
 
     if(traverse_called == 2) {

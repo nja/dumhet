@@ -13,7 +13,6 @@ int same_bytes(char *expected, char *data)
     {
 	if (expected[i] != data[i])
 	{
-	    debug("i=%d expected %x got %x", i, expected[i], data[i]);
 	    return 0;
 	}
     }
@@ -25,8 +24,6 @@ int same_bytes_len(char *expected, char *data, size_t len)
 {
     if (strlen(expected) != len)
     {
-	debug("expected: %s", expected);
-	debug("expected %zd bytes got %zd", strlen(expected), len);
 	return 0;
     }
 
@@ -463,7 +460,6 @@ char *test_junk_response(char **junk, void **gettype)
 
 	while (gettype[j])
 	{
-	    debug("%d,%d: %s", i, j, junk[i]);
 	    Message *result = Message_Decode(junk[i], len, gettype[j]);
 	    mu_assert(result == NULL, "Decoded junk without error");
 
@@ -608,8 +604,6 @@ char *test_Roundtrip()
     int i = 0;
     while (input[i])
     {
-	debug("%s", input[i]);
-
 	int len = strlen(input[i]);
 
 	Message *message = Message_Decode(input[i], len, &responses);

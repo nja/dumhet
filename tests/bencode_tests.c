@@ -19,8 +19,6 @@ char *test_decode_integer()
 	snprintf((char *)string, buffer_size, "'i%lde'", values[i]);
 	size_t len = strlen((char *)string) - 2;
 
-	debug("Integer: %s", string);
-
 	BNode *node = BDecode(string + 1, buffer_size - 1);
 	mu_assert(node != NULL, "BDecode failed");
 	mu_assert(node->type == BInteger, "Wrong BType");
@@ -43,8 +41,6 @@ char *test_undelimited_integers()
     
     for (i = 0; i < strings_len; i++)
     {
-	debug("Undelimited integer: '%s'", strings[i]);
-
 	BNode *node = BDecode_strlen(strings[i]);
 	mu_assert(node == NULL, "Decoded undelimited integer without error");
     }
@@ -63,8 +59,6 @@ char *test_integer_overflow()
 	const int string_max_len = 32;
 	char string[string_max_len];
 	snprintf(string, string_max_len, "i%lld0e", overflows[i]);
-
-	debug("Overflow integer: '%s'", string);
 
 	BNode *node = BDecode_str(string, string_max_len);
 	mu_assert(node == NULL, "Decoded overflowing integer without error");
@@ -104,8 +98,6 @@ char *test_zero_padded_integers()
 	    snprintf(string, buffer_size, "'i-0%lde'", labs(val));
 	}
 	
-	debug("Integer: %s", string);
-
 	BNode *node = BDecode_str(string + 1, buffer_size - 1);
 	mu_assert(node == NULL, "Decoded zero padded integer without error");
     }
@@ -129,8 +121,6 @@ char *test_decode_list()
 
     for (i = 0; i < lists_len; i++)
     {
-	debug("List: '%s'", lists[i]);
-
 	size_t len = strlen(lists[i]);
 	BNode *node = BDecode_str(lists[i], len);
 	mu_assert(node != NULL, "BDecode failed");
@@ -153,8 +143,6 @@ char *test_bad_lists()
 
     for (i = 0; i < lists_len; i++)
     {
-	debug("Bad list: '%s'", lists[i]);
-
 	BNode *node = BDecode_strlen(lists[i]);
 	mu_assert(node == NULL, "Decoded bad list without error");
     }
@@ -173,8 +161,6 @@ char *test_decode_string()
     {
 	size_t len = strlen(strings[i]);
 	snprintf(buffer, buffer_size, "%zu:%s", len, strings[i]);
-
-	debug("String: '%s'", buffer);
 
 	BNode *node = BDecode_str(buffer, buffer_size);
 	mu_assert(node != NULL, "BDecode failed");
@@ -198,8 +184,6 @@ char *test_bad_strings()
     
     for (i = 0; i < strings_len; i++)
     {
-	debug("Bad string: '%s'", strings[i]);
-
 	BNode *node = BDecode_strlen(strings[i]);
 	mu_assert(node == NULL, "Decoded bad string without error");
     }
@@ -216,8 +200,6 @@ char *test_decode_dictionary()
 
     for (i = 0; i < dicts_len; i++)
     {
-	debug("Dictionary: '%s'", dicts[i]);
-
 	BNode *node = BDecode_strlen(dicts[i]);
 	mu_assert(node != NULL, "BDecode failed");
 	mu_assert(node->type == BDictionary, "Wrong BType");
@@ -239,8 +221,6 @@ char *test_bad_dictionaries()
 
     for (i = 0; i < dicts_len; i++)
     {
-	debug("Bad dictioniary: '%s'", dicts[i]);
-
 	BNode *node = BDecode_strlen(dicts[i]);
 	mu_assert(node == NULL, "Decoded bad dictionary without error");
     }
@@ -281,24 +261,15 @@ char *test_BNode_GetValue()
     int i = 0;
     for (i = 0; i < len; i++)
     {
-	debug("Dict %d key %s: %s", i, keys[i], dicts[i]);
-	
 	BNode *dict = BDecode_strlen(dicts[i]);
 	mu_assert(dict != NULL, "BDecode failed");
 	mu_assert(dict->type == BDictionary, "Not dict");
 
-	debug("b");
-
 	BNode *value = BNode_GetValue(dict, keys[i], strlen(keys[i]));
-
-	debug("c");
 
 	if (values[i] >= 0)
 	{
 	    mu_assert(value != NULL, "BNode_GetValue failed");
-
-	    debug("Value type %s", BType_Name(value->type));
-	    debug("Value %ld (wanted %d)", value->value.integer, values[i]);
 
 	    mu_assert(value->type == BInteger, "Value not an int");
 	    mu_assert(value->value.integer == values[i], "Wrong value");
@@ -308,8 +279,6 @@ char *test_BNode_GetValue()
 	    mu_assert(value == NULL, "BNode_GetValue should have failed");
 	}
 	
-	debug("d");
-
 	BNode_Destroy(dict);
     }
 

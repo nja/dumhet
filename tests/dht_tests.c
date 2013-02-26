@@ -94,8 +94,6 @@ char *test_DhtHash_Distance()
     hb.value[0] = 0xE0;
     hc.value[0] = 0xF0;
 
-    debug("zoo %d %d", (unsigned char)0xFF, (char)0xFD);
-
     DhtDistance *dab = DhtHash_Distance(&ha, &hb);
     DhtDistance *dac = DhtHash_Distance(&ha, &hc);
 
