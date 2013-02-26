@@ -113,9 +113,10 @@ int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)
 	}
 
 	uint8_t mask = 1 << 7;
+        uint8_t xor = a->value[hi] ^ b->value[hi];
 	while (mask)
 	{
-	    if ((a->value[hi] & mask) == (b->value[hi] & mask))
+            if (!(mask & xor))
 	    {
 		bi++;
 		mask = mask >> 1;
