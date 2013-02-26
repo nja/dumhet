@@ -178,8 +178,8 @@ char *test_decode_string()
 
 char *test_bad_strings()
 {
-    char *strings[] = {"1:", "2:a", "3abcd", "03:abc"};
-    const size_t strings_len = 4;
+    char *strings[] = {"1:", "2:a", "3abcd", "03:abc", "9223372036854775808:"};
+    const size_t strings_len = 5;
     size_t i = 0;
     
     for (i = 0; i < strings_len; i++)

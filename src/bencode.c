@@ -60,10 +60,11 @@ BNode *BDecode_integer(char *data, size_t len)
     check(expected_end != NULL, "Integer not properly delimited");
 
     char *end = NULL;
+    errno = 0;
     long integer = strtol((char *)data + 1, (char **)&end, 10);
 
-    check(end == expected_end, "Bad integer");
-    check(errno == 0, "Bad integer");
+    check(end == expected_end, "Unexpected integer end");
+    check(errno != ERANGE, "Integer overflow");
 
     if (integer == 0)
     {
@@ -202,15 +203,16 @@ char *find_string_length_end(char *data, size_t len)
 BNode *BDecode_string(char *data, size_t len)
 {
     char *expected_length_end = find_string_length_end(data, len);
-    check(expected_length_end != NULL, "Bad string length");
+    check(expected_length_end != NULL, "Missing string length end");
 
     char *length_end = NULL;
+    errno = 0;
     long string_len = strtol((char *)data, (char **)&length_end, 10);
     char *string = length_end + 1,
 	*string_end = string + string_len;
 
-    check(length_end == expected_length_end, "Bad string length");
-    check(errno == 0, "Bad string length");
+    check(length_end == expected_length_end, "Unexpected string length");
+    check(errno != ERANGE, "String length overflow");
     check(string_len >= 0, "Bad string length");
     check(string_end <= data + len, "String overflows data len");
 
