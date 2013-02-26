@@ -1,6 +1,7 @@
-#include "minunit.h"
-#include <dht.h>
 #include <time.h>
+
+#include "minunit.h"
+#include <dht/dht.h>
 
 char *test_DhtHash_Clone()
 {

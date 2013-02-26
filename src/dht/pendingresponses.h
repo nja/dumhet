@@ -1,7 +1,7 @@
 #ifndef _pendingresponses_h
 #define _pendingresponses_h
 
-#include <protocol.h>
+#include <dht/protocol.h>
 #include <lcthw/hashmap.h>
 
 typedef struct HashmapPendingResponses {

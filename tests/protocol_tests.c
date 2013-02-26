@@ -1,7 +1,8 @@
-#include "minunit.h"
-#include <message.h>
-#include <protocol.h>
 #include <arpa/inet.h>
+
+#include "minunit.h"
+#include <dht/message.h>
+#include <dht/protocol.h>
 #include <lcthw/bstrlib.h>
 
 int same_bytes(char *expected, char *data)

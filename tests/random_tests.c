@@ -1,6 +1,7 @@
-#include "minunit.h"
-#include <random.h>
 #include <inttypes.h>
+
+#include "minunit.h"
+#include <dht/random.h>
 
 char *test_RandomFill()
 {

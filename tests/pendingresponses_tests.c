@@ -1,5 +1,5 @@
 #include "minunit.h"
-#include <pendingresponses.h>
+#include <dht/pendingresponses.h>
 
 char *test_create_destroy()
 {

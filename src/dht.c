@@ -1,8 +1,9 @@
-#include <stdlib.h>
-#include <dht.h>
-#include <lcthw/dbg.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <time.h>
+
+#include <dht/dht.h>
+#include <lcthw/dbg.h>
 
 /* DhtHash */
 

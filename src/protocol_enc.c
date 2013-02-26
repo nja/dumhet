@@ -1,8 +1,9 @@
 #include <assert.h>
+
+#include <dht/bencode.h>
+#include <dht/message.h>
+#include <dht/protocol.h>
 #include <lcthw/dbg.h>
-#include <protocol.h>
-#include <bencode.h>
-#include <message.h>
 
 int EncodeQueryPing(Message *message, char *dest, size_t len);
 int EncodeQueryFindNode(Message *message, char *dest, size_t len);

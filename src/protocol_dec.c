@@ -1,9 +1,10 @@
-#include <assert.h>
-#include <lcthw/dbg.h>
-#include <protocol.h>
-#include <bencode.h>
-#include <message.h>
 #include <arpa/inet.h>
+#include <assert.h>
+
+#include <dht/bencode.h>
+#include <dht/message.h>
+#include <dht/protocol.h>
+#include <lcthw/dbg.h>
 
 int HasTransactionId(BNode *dict);
 int HasNodeId(BNode *dict);

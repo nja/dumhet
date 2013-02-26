@@ -1,8 +1,9 @@
 #ifndef _bencode_h
 #define _bencode_h
 
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
+
 #include <lcthw/bstrlib.h>
 
 typedef enum BType { BString, BInteger, BList, BDictionary } BType;

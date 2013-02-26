@@ -1,4 +1,4 @@
-#include <message.h>
+#include <dht/message.h>
 #include <lcthw/dbg.h>
 
 void Message_Destroy(Message *message)

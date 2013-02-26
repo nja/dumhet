@@ -1,10 +1,11 @@
 #ifndef _dht_h
 #define _dht_h
 
+#include <netinet/in.h>
 #include <stdint.h>
 #include <time.h>
-#include <random.h>
-#include <netinet/in.h>
+
+#include <dht/random.h>
 
 #define HASH_BYTES 20
 #define HASH_BITS (HASH_BYTES * 8)

@@ -2,7 +2,7 @@ CFLAGS=-g -O2 -Wall -Wextra -Werror -Isrc -rdynamic -Wno-missing-field-initializ
 LIBS=-ldl $(OPTLIBS)
 PREFIX?=/usr/local
 
-HEADERS=$(wildcard src/*.h)
+HEADERS=$(wildcard src/**/*.h)
 
 SOURCES=$(wildcard src/**/*.c src/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))

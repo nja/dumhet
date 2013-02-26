@@ -1,7 +1,8 @@
-#include <lcthw/dbg.h>
-#include <bencode.h>
-#include <ctype.h>
 #include <assert.h>
+#include <ctype.h>
+
+#include <dht/bencode.h>
+#include <lcthw/dbg.h>
 
 char *BType_Name(BType type)
 {

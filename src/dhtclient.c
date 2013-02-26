@@ -1,10 +1,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <dhtclient.h>
-#include <pendingresponses.h>
+
 #include <lcthw/dbg.h>
-#include <network.h>
+#include <dht/dhtclient.h>
+#include <dht/pendingresponses.h>
+#include <dht/network.h>
 
 int CreateSocket();
 

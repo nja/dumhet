@@ -1,8 +1,8 @@
 #ifndef _protocol_h
 #define _protocol_h
 
-#include <bencode.h>
-#include <message.h>
+#include <dht/bencode.h>
+#include <dht/message.h>
 
 typedef uint16_t tid_t;
 

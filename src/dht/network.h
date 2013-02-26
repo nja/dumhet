@@ -1,7 +1,7 @@
 #ifndef _network_h
 #define _network_h
 
-#include <dhtclient.h>
+#include <dht/dhtclient.h>
 
 #define UDPBUFLEN (0xFFFF -8 -20)
 

@@ -1,5 +1,5 @@
 #include "minunit.h"
-#include <dhtclient.h>
+#include <dht/dhtclient.h>
 
 char *test_DhtClient_CreateDestroy()
 {

@@ -1,8 +1,8 @@
 #ifndef _dhtclient_h
 #define _dhtclient_h
 
-#include <dht.h>
-#include <pendingresponses.h>
+#include <dht/dht.h>
+#include <dht/pendingresponses.h>
 
 typedef struct DhtClient {
   DhtNode node;

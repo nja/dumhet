@@ -1,6 +1,7 @@
 #include <stdint.h>
-#include <random.h>
 #include <stdlib.h>
+
+#include <dht/random.h>
 #include <lcthw/dbg.h>
 
 #define RANDOM_STATE_LEN 256

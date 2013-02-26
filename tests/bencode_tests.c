@@ -1,5 +1,5 @@
 #include "minunit.h"
-#include <bencode.h>
+#include <dht/bencode.h>
 #include <limits.h>
 
 static long values[] = {0, 1, -1, 23,

@@ -1,13 +1,14 @@
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <assert.h>
 #include <netinet/ip.h>
 #include <string.h>
-#include <assert.h>
-#include <network.h>
-#include <dhtclient.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <dht/dhtclient.h>
+#include <dht/network.h>
 #include <lcthw/dbg.h>
-#include <arpa/inet.h>
 
 int NetworkUp(DhtClient *client)
 {
