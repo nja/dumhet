@@ -11,6 +11,7 @@ char *test_DhtClient_CreateDestroy()
   mu_assert(client != NULL, "DhtClient_Create failed");
   mu_assert(client->table != NULL, "No DhtTable created");
   mu_assert(client->pending != NULL, "No pending responses");
+  mu_assert(client->buf != NULL, "No buffer allocated");
   mu_assert(client->node.addr.s_addr == addr, "Address not copied");
   mu_assert(client->node.port == port, "Port not copied");
 
