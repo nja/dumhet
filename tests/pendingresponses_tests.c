@@ -10,6 +10,18 @@ char *test_create_destroy()
     return NULL;
 }
 
+char *test_destroy_with_entries()
+{
+    HashmapPendingResponses *responses = HashmapPendingResponses_Create();
+    mu_assert(responses != NULL, "HashmapPendingResponses_Create failed");
+
+    HashmapPendingResponses_Add(responses, QFindNode, 0);
+
+    HashmapPendingResponses_Destroy(responses);
+
+    return NULL;
+}
+
 char *test_compare()
 {
     tid_t a = 0, b = 1;
@@ -66,6 +78,7 @@ char *all_tests()
     mu_suite_start();
 
     mu_run_test(test_create_destroy);
+    mu_run_test(test_destroy_with_entries);
     mu_run_test(test_compare);
     mu_run_test(test_addremove);
 
