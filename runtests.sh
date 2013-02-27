@@ -1,10 +1,10 @@
-TESTS_LOG=tests/tests.log
+TESTS_LOG=tests.log
 
 echo "Running unit tests:"
 
 echo -n > ${TESTS_LOG}
 
-for i in tests/*_tests
+for i in bin/tests/*_tests
 do
     if test -f $i
     then

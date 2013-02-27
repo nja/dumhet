@@ -8,7 +8,7 @@ SOURCES=$(wildcard src/**/*.c src/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 
 TEST_SRC=$(wildcard tests/*_tests.c)
-TESTS=$(patsubst %.c,%,$(TEST_SRC))
+TESTS=$(patsubst tests/%.c,%,$(TEST_SRC))
 
 PROGRAMS_SRC=$(wildcard src/bin/*.c)
 PROGRAMS=$(patsubst src/bin/%.c,bin/%,$(PROGRAMS_SRC))
@@ -32,17 +32,17 @@ $(SO_TARGET): $(TARGET) $(OBJECTS)
 
 build:
 	@mkdir -p build
-	@mkdir -p bin
+	@mkdir -p bin/tests
 
 # The Unit Tests
 .PHONY: tests
 tests: $(TESTS)
-	sh ./tests/runtests.sh
+	sh ./runtests.sh
 
 $(OBJECTS): %: $(HEADERS)
 
-$(TESTS): %: $(TARGET) %.c
-	$(CC) $(LIBS) $(CFLAGS) $@.c $< -o $@
+$(TESTS): %: $(TARGET) tests/%.c
+	$(CC) $(LIBS) $(CFLAGS) tests/$@.c $< -o bin/tests/$@
 
 $(PROGRAMS): %: $(TARGET) src/%.c
 	$(CC) $(LIBS) $(CFLAGS) src/$@.c $< -o $@
@@ -55,8 +55,8 @@ TAGS: $(SOURCES) $(PROGRAMS_SRC) $(TEST_SRC) $(HEADERS)
 
 # The Cleaner
 clean:
-	rm -rf build bin $(OBJECTS) $(TESTS) $(PROGRAMS)
-	rm -f TAGS tests/tests.log 
+	rm -rf build bin $(OBJECTS) $(PROGRAMS)
+	rm -f TAGS tests.log
 
 # The Install
 install: all
