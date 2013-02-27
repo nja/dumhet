@@ -105,3 +105,47 @@ int Receive(DhtClient *client, DhtNode *node, char *buf, size_t len)
  error:
   return -1;
 }
+
+int SendMessage(DhtClient *client, Message *msg, DhtNode *node)
+{
+  assert(client != NULL && "NULL DhtClient pointer");
+  assert(msg != NULL && "NULL Message pointer");
+  assert(node != NULL && "NULL DhtNode pointer");
+  assert(msg->t_len == sizeof(tid_t) && "Wrong outgoing t");
+
+  int len = Message_Encode(msg, client->buf, UDPBUFLEN);
+  check(len > 0, "Message_Encode failed");
+
+  int rc = Send(client, node, client->buf, len);
+  check(rc == 0, "Send failed");
+
+  if (MessageType_IsQuery(msg->type))
+  {
+      rc = HashmapPendingResponses_Add(client->pending,
+                                       msg->type,
+                                       *(tid_t *)msg->t);
+      check(rc == 0, "HashmapPendingResponses_Add failed");
+  }
+
+  return 0;
+ error:
+  return -1;
+}
+
+Message *ReceiveMessage(DhtClient *client, DhtNode *node)
+{
+  assert(client != NULL && "NULL DhtClient pointer");
+  assert(node != NULL && "NULL DhtNode pointer");
+
+  int len = Receive(client, node, client->buf, UDPBUFLEN);
+  check(len > 0, "Receive failed");
+
+  Message *message = Message_Decode(client->buf,
+                                    len,
+                                    (struct PendingResponses *)client->pending);
+  check(message != NULL, "Message_Decode failed");
+
+  return message;
+ error:
+  return NULL;
+}

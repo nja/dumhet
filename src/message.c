@@ -50,3 +50,17 @@ void Message_Destroy(Message *message)
 
     free(message);
 }
+
+int MessageType_IsQuery(MessageType type)
+{
+  switch (type)
+  {
+  case QPing:
+  case QFindNode:
+  case QGetPeers:
+  case QAnnouncePeer:
+      return 1;
+  default:
+      return 0;
+  }
+}

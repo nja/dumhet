@@ -11,5 +11,7 @@ int NetworkDown(DhtClient *client);
 int Send(DhtClient *client, DhtNode *node, char *buf, size_t len);
 int Receive(DhtClient *client, DhtNode *node, char *buf, size_t len);
 
-#endif
+int SendMessage(DhtClient *client, Message *msg, DhtNode *node);
+Message *ReceiveMessage(DhtClient *client, DhtNode *node);
 
+#endif

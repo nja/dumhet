@@ -15,6 +15,8 @@ typedef enum MessageType {
     RError    
 } MessageType;
 
+int MessageType_IsQuery(MessageType type);
+
 typedef struct QPingData {
 } QPingData;
 
