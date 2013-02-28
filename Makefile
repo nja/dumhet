@@ -1,14 +1,16 @@
-CFLAGS=-g -O2 -Wall -Wextra -Werror -Isrc -rdynamic -Wno-missing-field-initializers -DNDEBUG $(OPTFLAGS)
+WFLAGS=-Wall -Wextra -Werror -Wno-missing-field-initializers
+CFLAGS=-g -O2 -Isrc -rdynamic -DNDEBUG $(WFLAGS) $(OPTFLAGS)
 LIBS=-ldl $(OPTLIBS)
 PREFIX?=/usr/local
 
-HEADERS=$(wildcard src/**/*.h)
+DHTHEADERS=$(wildcard src/dht/*.h)
+LCTHWHEADERS=$(wilcard src/lcthw/*.h)
 
 SOURCES=$(wildcard src/**/*.c src/*.c)
-OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
+OBJECTS=$(patsubst src/%.c,build/%.o,$(SOURCES))
 
 TEST_SRC=$(wildcard tests/*_tests.c)
-TESTS=$(patsubst tests/%.c,%,$(TEST_SRC))
+TESTS=$(patsubst tests/%.c,bin/tests/%,$(TEST_SRC))
 
 PROGRAMS_SRC=$(wildcard src/bin/*.c)
 PROGRAMS=$(patsubst src/bin/%.c,bin/%,$(PROGRAMS_SRC))
@@ -16,35 +18,37 @@ PROGRAMS=$(patsubst src/bin/%.c,bin/%,$(PROGRAMS_SRC))
 TARGET=build/libdumhet.a
 SO_TARGET=$(patsubst %.a,%.so,$(TARGET))
 
-# The Target Build
-all: $(TARGET) $(SO_TARGET) $(PROGRAMS) tests 
+all: $(TARGET) $(SO_TARGET) $(PROGRAMS) tests
 
-dev: CFLAGS=-g -Wall -Isrc -Wall -Wextra -Werror -Wno-missing-field-initializers $(OPTFLAGS)
+dev: CFLAGS=-g -Isrc $(WFLAGS) $(OPTFLAGS)
 dev: all
 
 $(TARGET): CFLAGS += -fPIC
-$(TARGET): build $(OBJECTS)
+$(TARGET): $(OBJECTS)
 	ar rcs $@ $(OBJECTS)
 	ranlib $@
 
 $(SO_TARGET): $(TARGET) $(OBJECTS)
 	$(CC) -shared -o $@ $(OBJECTS)
 
-build:
-	@mkdir -p build
-	@mkdir -p bin/tests
-
-# The Unit Tests
 .PHONY: tests
 tests: $(TESTS)
 	sh ./runtests.sh
 
-$(OBJECTS): %: $(HEADERS)
+build/lcthw/%.o: src/lcthw/%.c $(LCTHWHEADERS)
+	@mkdir -p build/lcthw
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(TESTS): %: $(TARGET) tests/%.c
-	$(CC) $(LIBS) $(CFLAGS) tests/$@.c $< -o bin/tests/$@
+build/%.o: src/%.c $(LCTHWHEADERS) $(DHTHEADERS)
+	@mkdir -p build
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+bin/tests/%: $(TARGET) tests/%.c tests/minunit.h
+	@mkdir -p bin/tests
+	$(CC) $(LIBS) $(CFLAGS) tests/$*.c $< -o $@
 
 $(PROGRAMS): %: $(TARGET) src/%.c
+	@mkdir -p bin
 	$(CC) $(LIBS) $(CFLAGS) src/$@.c $< -o $@
 
 valgrind:
@@ -53,7 +57,6 @@ valgrind:
 TAGS: $(SOURCES) $(PROGRAMS_SRC) $(TEST_SRC) $(HEADERS)
 	etags $^
 
-# The Cleaner
 clean:
 	rm -rf build bin $(OBJECTS) $(PROGRAMS)
 	rm -f TAGS tests.log
