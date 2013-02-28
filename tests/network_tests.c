@@ -65,13 +65,7 @@ char *test_NetworkSendReceiveMessage()
     rc = NetworkUp(recver);
     mu_assert(rc == 0, "NetworkUp failed");
 
-    Message *send = calloc(1, sizeof(Message));
-    send->type = QPing;
-    send->t = malloc(sizeof(tid_t));
-    send->t_len = sizeof(tid_t);
-
-    *(tid_t *)send->t = 123;
-    send->id = DhtHash_Clone(&ids);
+    Message *send = Ping_Create(sender);
 
     rc = SendMessage(sender, send, &recver->node);
     mu_assert(rc == 0, "SendMessage failed");
@@ -88,6 +82,7 @@ char *test_NetworkSendReceiveMessage()
     mu_assert(from.addr.s_addr == sender->node.addr.s_addr, "Wrong from addr");
     mu_assert(from.port == sender->node.port, "Wrong from port");
 
+    send->id = NULL;
     Message_Destroy(send);
     Message_Destroy(recv);
 
