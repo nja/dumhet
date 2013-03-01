@@ -41,7 +41,6 @@ char *check_Message(Message *message, MessageType type)
     mu_assert(message->type == type, "Wrong message type");
     mu_assert(message->t != NULL, "No transaction id");
     mu_assert(same_bytes_len(tid, message->t, message->t_len), "Wrong transaction id");
-    mu_assert(message->id != NULL, "No id hash");
 
     switch (type)
     {
@@ -49,13 +48,13 @@ char *check_Message(Message *message, MessageType type)
     case QFindNode:
     case QGetPeers:
     case QAnnouncePeer:
-	mu_assert(same_bytes(qid, message->id->value), "Wrong query id");
+	mu_assert(same_bytes(qid, message->id.value), "Wrong query id");
 	break;
     case RPing:
     case RFindNode:
     case RGetPeers:
     case RAnnouncePeer:
-	mu_assert(same_bytes(rid, message->id->value), "Wrong reply id");
+	mu_assert(same_bytes(rid, message->id.value), "Wrong reply id");
 	break;
     case RError:
 	mu_assert(0, "Bad type");
@@ -368,7 +367,6 @@ char *test_Decode_RError()
 
 	mu_assert(message->type == RError, "Wrong message type");
 	mu_assert(same_bytes_len("aa", message->t, message->t_len), "Wrong transaction id");
-	mu_assert(message->id == NULL, "Unexpected id");
 
 	RErrorData *data = &message->data.rerror;
 

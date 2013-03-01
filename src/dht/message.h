@@ -63,7 +63,7 @@ typedef struct Message {
     MessageType type;
     char *t;
     size_t t_len;
-    DhtHash *id;
+    DhtHash id;
     union {
 	QPingData qping;
 	QFindNodeData qfindnode;

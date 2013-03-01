@@ -120,7 +120,7 @@ int EncodeQueryPing(Message *message, char *dest, size_t len)
 	  "ping query would overflow dest");
 
     SCpy(dest, QPINGA);
-    HCpy(dest, message->id->value);
+    HCpy(dest, message->id.value);
     SCpy(dest, QPINGB);
     TCpy(&dest, message);
     SCpy(dest, QPINGC);
@@ -157,7 +157,7 @@ int EncodeQueryFindNode(Message *message, char *dest, size_t len)
 	  "find_node query would overflow dest");
 
     SCpy(dest, QFINDNODEA);
-    HCpy(dest, message->id->value);
+    HCpy(dest, message->id.value);
     SCpy(dest, QFINDNODEB);
     HCpy(dest, message->data.qfindnode.target->value);
     SCpy(dest, QFINDNODEC);
@@ -196,7 +196,7 @@ int EncodeQueryGetPeers(Message *message, char *dest, size_t len)
 	  "get_peers query would overflow dest");
 
     SCpy(dest, QGETPEERSA);
-    HCpy(dest, message->id->value);
+    HCpy(dest, message->id.value);
     SCpy(dest, QGETPEERSB);
     HCpy(dest, message->data.qgetpeers.info_hash->value);
     SCpy(dest, QGETPEERSC);
@@ -255,7 +255,7 @@ int EncodeQueryAnnouncePeer(Message *message, char *dest, size_t len)
 	  "announce_peer query would overflow dest");
 
     SCpy(dest, QANNOUNCEPEERA);
-    HCpy(dest, message->id->value);
+    HCpy(dest, message->id.value);
     SCpy(dest, QANNOUNCEPEERB);
     HCpy(dest, data->info_hash->value);
     SCpy(dest, QANNOUNCEPEERC);
@@ -295,7 +295,7 @@ int EncodeResponsePing(Message *message, char *dest, size_t len)
 	  "ping response would overflow dest");
 
     SCpy(dest, RPINGA);
-    HCpy(dest, message->id->value);
+    HCpy(dest, message->id.value);
     SCpy(dest, RPINGB);
     TCpy(&dest, message);
     SCpy(dest, RPINGC);
@@ -364,7 +364,7 @@ int EncodeResponseFindNode(Message *message, char *dest, size_t len)
 	  "find_node response would overflow dest");
 
     SCpy(dest, RFINDNODEA);
-    HCpy(dest, message->id->value);
+    HCpy(dest, message->id.value);
     NodesCpy(&dest, data->nodes, data->count);
     SCpy(dest, RFINDNODEB);
     TCpy(&dest, message);
@@ -438,7 +438,7 @@ int EncodeResponseGetPeers_values(Message *message, char *dest, size_t len)
 	  "get_peers response would overflow dest");
 
     SCpy(dest, RGETPEERSA);
-    HCpy(dest, message->id->value);
+    HCpy(dest, message->id.value);
     SCpy(dest, RGETPEERSB);
     BStringCpy(&dest, data->token, data->token_len);
     SCpy(dest, "6:values");
@@ -478,7 +478,7 @@ int EncodeResponseGetPeers_nodes(Message *message, char *dest, size_t len)
 	  "get_peers response would overflow dest");
 
     SCpy(dest, RGETPEERSA);
-    HCpy(dest, message->id->value);
+    HCpy(dest, message->id.value);
     NodesCpy(&dest, data->nodes, data->count);
     SCpy(dest, RGETPEERSB);
     BStringCpy(&dest, data->token, data->token_len);
@@ -530,7 +530,7 @@ int EncodeResponseAnnouncePeer(Message *message, char *dest, size_t len)
 	  "announce_peer response would overflow dest");
 
     SCpy(dest, RANNOUNCEPEERA);
-    HCpy(dest, message->id->value);
+    HCpy(dest, message->id.value);
     SCpy(dest, RANNOUNCEPEERB);
     TCpy(&dest, message);
     SCpy(dest, RANNOUNCEPEERC);

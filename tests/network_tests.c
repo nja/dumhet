@@ -77,12 +77,11 @@ char *test_NetworkSendReceiveMessage()
     mu_assert(recv->type == QPing, "Received wrong type");
     mu_assert(recv->t_len == sizeof(tid_t), "Received wrong t_len");
     mu_assert(*(tid_t *)recv->t == *(tid_t *)send->t, "Received wrong t");
-    mu_assert(DhtDistance_Compare(send->id, recv->id) == 0, "Received wrong id");
+    mu_assert(DhtDistance_Compare(&send->id, &recv->id) == 0, "Received wrong id");
 
     mu_assert(from.addr.s_addr == sender->node.addr.s_addr, "Wrong from addr");
     mu_assert(from.port == sender->node.port, "Wrong from port");
 
-    send->id = NULL;
     Message_Destroy(send);
     Message_Destroy(recv);
 

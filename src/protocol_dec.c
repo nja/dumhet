@@ -99,7 +99,7 @@ int HasNodeId(BNode *dict)
 
 int GetQueryType(BNode *dict, MessageType *type);
 int GetTransactionId(BNode *dict, char **t, size_t *t_len);
-int GetQueryId(BNode *dict, DhtHash **id);
+int GetQueryId(BNode *dict, DhtHash *id);
 int GetQueryData(MessageType type, BNode *dict, Message *message);
 
 Message *DecodeQuery(BNode *dict)
@@ -192,10 +192,10 @@ error:
     return -1;
 }
 
-int GetQueryId(BNode *dict, DhtHash **id)
+int GetQueryId(BNode *dict, DhtHash *id)
 {
     assert(dict != NULL && "NULL BNode dictionary pointer");
-    assert(id != NULL && "NULL pointer to DhtHash pointer");
+    assert(id != NULL && "NULL pointer to DhtHash");
 
     check(dict->type == BDictionary, "Not a dictionary");
 
@@ -208,10 +208,7 @@ int GetQueryId(BNode *dict, DhtHash **id)
     check(idVal->type == BString, "Wrong id type");
     check(idVal->count == HASH_BYTES, "Wrong id length");
 
-    *id = malloc(HASH_BYTES);
-    check_mem(id);
-
-    memcpy(&((*id)->value), idVal->value.string, HASH_BYTES);
+    memcpy(id->value, idVal->value.string, HASH_BYTES);
 
     return 0;
 error:
@@ -341,7 +338,7 @@ error:
 }
 
 int GetResponseData(MessageType type, BNode *dict, Message *message);
-int GetResponseId(BNode *dict, DhtHash **id);
+int GetResponseId(BNode *dict, DhtHash *id);
 
 Message *DecodeResponse(BNode *dict, struct PendingResponses *pending)
 {
@@ -373,10 +370,10 @@ error:
     return NULL;
 }
 
-int GetResponseId(BNode *dict, DhtHash **id)
+int GetResponseId(BNode *dict, DhtHash *id)
 {
     assert(dict != NULL && "NULL BNode dictionary pointer");
-    assert(id != NULL && "NULL pointer to DhtHash pointer");
+    assert(id != NULL && "NULL pointer to DhtHash");
 
     check(dict->type == BDictionary, "Not a dictionary");
 
@@ -389,10 +386,7 @@ int GetResponseId(BNode *dict, DhtHash **id)
     check(idVal->type == BString, "Wrong id type");
     check(idVal->count == HASH_BYTES, "Wrong id length");
 
-    *id = malloc(HASH_BYTES);
-    check_mem(id);
-
-    memcpy(&((*id)->value), idVal->value.string, HASH_BYTES);
+    memcpy(id->value, idVal->value.string, HASH_BYTES);
 
     return 0;
 error:

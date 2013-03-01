@@ -74,7 +74,7 @@ Message *Ping_Create(DhtClient *client)
     *(tid_t *)ping->t = client->next_t++;
     ping->t_len = sizeof(tid_t);
 
-    ping->id = &client->node.id;
+    ping->id = client->node.id;
 
     return ping;
 error:
