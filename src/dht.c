@@ -30,36 +30,31 @@ void DhtHash_Destroy(DhtHash *hash)
     free(hash);
 }
 
-DhtHash *DhtHash_Random(RandomState *rs)
+int DhtHash_Random(RandomState *rs, DhtHash *hash)
 {
     assert(rs != NULL && "NULL RandomState pointer");
-
-    DhtHash *hash = malloc(sizeof(DhtHash));
-    check_mem(hash);
+    assert(hash != NULL && "NULL DhtHash pointer");
 
     int rc = Random_Fill(rs, (char *)hash->value, HASH_BYTES);
     check(rc == 0, "Random_Fill failed");
 
-    return hash;
+    return 0;
 error:
-    return NULL;
+    return -1;
 }
 
-DhtHash *DhtHash_Prefixed(DhtHash *hash, DhtHash *prefix, int prefix_len)
+int DhtHash_Prefix(DhtHash *hash, DhtHash *prefix, int prefix_len)
 {
     assert(hash != NULL && "NULL DhtHash hash pointer");
     assert(prefix != NULL && "NULL DhtHash prefix pointer");
 
     check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
 
-    DhtHash *result = DhtHash_Clone(hash);
-    check(result != NULL, "DhtHash_Clone failed");
-
     int i = 0;
 
     while (prefix_len >= 8)
     {
-	result->value[i] = prefix->value[i];
+	hash->value[i] = prefix->value[i];
 
 	prefix_len -= 8;
 	i++;
@@ -68,37 +63,32 @@ DhtHash *DhtHash_Prefixed(DhtHash *hash, DhtHash *prefix, int prefix_len)
     if (i < HASH_BYTES)
     {
 	char mask = ((char)~0) << (8 - prefix_len);
-	result->value[i] &= ~mask;
-	result->value[i] |= mask & prefix->value[i];
+	hash->value[i] &= ~mask;
+	hash->value[i] |= mask & prefix->value[i];
     }
 
-    return result;
+    return 0;
 error:
-    return NULL;
+    return -1;
 }
 
-DhtHash *DhtHash_PrefixedRandom(RandomState *rs, DhtHash *prefix, int prefix_len)
+int DhtHash_PrefixedRandom(RandomState *rs, DhtHash *hash, DhtHash *prefix, int prefix_len)
 {
     assert(rs != NULL && "NULL RandomState pointer");
+    assert(hash != NULL && "NULL DhtHash hash pointer");
     assert(prefix != NULL && "NULL DhtHash prefix pointer");
-
-    DhtHash *random = NULL;
 
     check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
 
-    random = DhtHash_Random(rs);
-    check(random != NULL, "DhtHash_Random failed");
+    int rc = DhtHash_Random(rs, hash);
+    check(rc == 0, "DhtHash_Random failed");
 
-    DhtHash *prefixed = DhtHash_Prefixed(random, prefix, prefix_len);
-    check(prefixed != NULL, "DhtHash_Prefixed failed");
+    rc = DhtHash_Prefix(hash, prefix, prefix_len);
+    check(rc == 0, "DhtHash_Prefix failed");
 
-    DhtHash_Destroy(random);
-
-    return prefixed;
+    return 0;
 error:
-    DhtHash_Destroy(random);
-
-    return NULL;
+    return -1;
 }
 
 int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)

@@ -26,60 +26,57 @@ char *test_DhtHash_Clone()
     return NULL;
 }
 
-char *test_DhtHash_Prefixed()
+char *test_DhtHash_Prefix()
 {
-    DhtHash *prefix = malloc(sizeof(DhtHash)),
-	*inv = malloc(sizeof(DhtHash));
+    DhtHash prefix = {{ 0 }},
+	inv = {{ 0 }};
 
     int i = 0;
     for (i = 0; i < HASH_BYTES; i++)
     {
-	prefix->value[i] = i;
-	inv->value[i] = ~i;
+	prefix.value[i] = i;
+	inv.value[i] = ~i;
     }
 
     for (i = 0; i <= HASH_BITS; i++)
     {
-	DhtHash *result = DhtHash_Prefixed(inv, prefix, i);
-	int shared = DhtHash_SharedPrefix(result, prefix);
+	DhtHash result = inv;
+
+        int rc = DhtHash_Prefix(&result, &prefix, i);
+        mu_assert(rc == 0, "DhtHash_Prefix failed");
+
+	int shared = DhtHash_SharedPrefix(&result, &prefix);
 	mu_assert(shared == i, "Wrong prefix");
-
-	DhtHash_Destroy(result);
     }
-
-    DhtHash_Destroy(prefix);
-    DhtHash_Destroy(inv);
 
     return NULL;
 }
 
 char *test_DhtHash_PrefixedRandom()
 {
-    DhtHash *prefix = malloc(sizeof(DhtHash));
+    DhtHash prefix = {{ 0 }};
     
     int i = 0;
     for (i = 0; i < HASH_BYTES; i++)
     {
-	prefix->value[i] = i;
+	prefix.value[i] = i;
     }
 
     RandomState *rs = RandomState_Create(0);
 
     for (i = 0; i <= HASH_BITS; i++)
     {
-	DhtHash *random = DhtHash_PrefixedRandom(rs, prefix, i);
-	mu_assert(random != NULL, "DhtHash_PrefixedRandom failed");
+	DhtHash random = {{ 0 }};
 
-	int shared = DhtHash_SharedPrefix(prefix, random);
+        int rc = DhtHash_PrefixedRandom(rs, &random, &prefix, i);
+        mu_assert(rc == 0, "DhtHash_PrefixedRandom failed");
+
+	int shared = DhtHash_SharedPrefix(&prefix, &random);
 
 	mu_assert(shared >= i, "Wrong prefix");
-
-	DhtHash_Destroy(random);
     }
 
-    DhtHash_Destroy(prefix);
     RandomState_Destroy(rs);
-
     return NULL;
 }
 
@@ -286,7 +283,7 @@ char *all_tests()
     mu_suite_start();
 
     mu_run_test(test_DhtHash_Clone);
-    mu_run_test(test_DhtHash_Prefixed);
+    mu_run_test(test_DhtHash_Prefix);
     mu_run_test(test_DhtHash_PrefixedRandom);
     mu_run_test(test_DhtHash_Distance);
     mu_run_test(test_DhtTable_AddBucket);

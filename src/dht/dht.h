@@ -14,12 +14,14 @@ typedef struct DhtHash {
     char value[HASH_BYTES];	/* Network byte order */
 } DhtHash;
 
-void DhtHash_Destroy(DhtHash *hash);
-DhtHash *DhtHash_Prefixed(DhtHash *hash, DhtHash *prefix, int prefix_len);
 DhtHash *DhtHash_Clone(DhtHash *hash);
+void DhtHash_Destroy(DhtHash *hash);
+
+int DhtHash_Prefix(DhtHash *hash, DhtHash *prefix, int prefix_len);
+int DhtHash_Random(RandomState *rs, DhtHash *hash);
+int DhtHash_PrefixedRandom(RandomState *rs, DhtHash *hash, DhtHash *prefix, int prefix_len);
+
 int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b);
-DhtHash *DhtHash_Random(RandomState *rs);
-DhtHash *DhtHash_PrefixedRandom(RandomState *rs, DhtHash *prefix, int prefix_len);
 
 typedef DhtHash DhtDistance;
 
