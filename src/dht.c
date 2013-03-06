@@ -304,9 +304,6 @@ int DhtTable_HasShiftableNodes(DhtHash *id, DhtBucket *bucket, DhtNode *node)
     assert(node != NULL && "NULL DhtNode pointer");
     assert(bucket->index < HASH_BITS && "Bad bucket index");
 
-    if (bucket->index == HASH_BITS - 1)
-	return 0;
-
     if (bucket->index < DhtHash_SharedPrefix(id, &node->id))
     {
 	return 1;
@@ -331,6 +328,13 @@ int DhtTable_IsLastBucket(DhtTable *table, DhtBucket *bucket)
     assert(bucket != NULL && "NULL DhtBucket pointer");
 
     return table->end - 1 == bucket->index;
+}
+
+int DhtTable_CanAddBucket(DhtTable *table)
+{
+    assert(table != NULL && "NULL DhtTable pointer");
+
+    return table->end < HASH_BITS;
 }
 
 DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
@@ -361,6 +365,7 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 	}
 
 	if (DhtTable_IsLastBucket(table, bucket)
+            && DhtTable_CanAddBucket(table)
 	    && DhtTable_HasShiftableNodes(&table->id, bucket, node))
 	{
 	    DhtBucket *new_bucket = DhtTable_AddBucket(table);
@@ -368,8 +373,10 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 
 	    DhtTable_InsertNodeResult result = DhtTable_InsertNode(table, node);
 	    check(result.rc != ERROR, "Insert when growing failed");
-	    assert(result.bucket != NULL && "NULL bucket");
-	    assert(result.replaced == NULL && "Unexpected replaced node");
+
+            assert(result.rc == OKAdded && "Wrong rc");
+            assert(result.bucket != NULL && "NULL bucket");
+            assert(result.replaced == NULL && "Unexpected replaced node");
 
 	    return result;
 	}
@@ -484,6 +491,20 @@ DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)
 	return Unknown;
 
     return Bad;
+}
+
+DhtNode *DhtNode_Create(DhtHash *id)
+{
+    assert(id != NULL && "NULL DhtHash pointer");
+
+    DhtNode *node = calloc(1, sizeof(DhtNode));
+    check_mem(node);
+
+    node->id = *id;
+
+    return node;
+error:
+    return NULL;
 }
 
 void DhtNode_Destroy(DhtNode *node)

@@ -2,6 +2,7 @@
 
 #include "minunit.h"
 #include <dht/dht.h>
+#include <lcthw/darray.h>
 
 char *test_DhtHash_Clone()
 {
@@ -26,18 +27,23 @@ char *test_DhtHash_Clone()
     return NULL;
 }
 
-char *test_DhtHash_Prefix()
+void DhtHash_Invert(DhtHash *hash)
 {
-    DhtHash prefix = {{ 0 }},
-	inv = {{ 0 }};
-
     int i = 0;
     for (i = 0; i < HASH_BYTES; i++)
     {
-	prefix.value[i] = i;
-	inv.value[i] = ~i;
+	hash->value[i] = ~hash->value[i];
     }
+}
 
+char *test_DhtHash_Prefix()
+{
+    DhtHash prefix = {{ "1234567890qwertyuio" }};
+    DhtHash inv = prefix;
+
+    DhtHash_Invert(&inv);
+
+    int i = 0;
     for (i = 0; i <= HASH_BITS; i++)
     {
 	DhtHash result = inv;
@@ -150,8 +156,9 @@ char *test_DhtTable_AddBucket()
 char *test_DhtNode_Status()
 {
     time_t now = time(NULL);
+    DhtHash id = {{ 0 }};
 
-    DhtNode *node = calloc(1, sizeof(DhtNode));
+    DhtNode *node = DhtNode_Create(&id);
 
     for (node->pending_queries = 0; node->pending_queries < NODE_MAX_PENDING;
 	 node->pending_queries++) {
@@ -276,7 +283,66 @@ char *test_DhtTable_InsertNode()
     DhtTable_Destroy(table);
 
     return NULL;
-}    
+}
+
+char *test_DhtTable_InsertNode_FullTable()
+{
+    DhtHash id = {{0}};
+    DhtHash inv = {{0}};
+
+    DhtHash_Invert(&inv);
+
+    DhtTable *table = DhtTable_Create(&id);
+    mu_assert(table != NULL, "DhtTable_Create failed");
+    
+    DhtNode *node;
+    DArray *nodes = DArray_create(sizeof(DhtNode *), HASH_BITS * BUCKET_K);
+    mu_assert(nodes != NULL, "DArray_create failed");
+    
+    DhtTable_InsertNodeResult result;
+
+    int i = 0, rc = 0;
+
+    for (i = 0; i < HASH_BITS; i++)
+    {
+        int j = 0;
+        for (j = 0; j < BUCKET_K; j++)
+        {
+            node = DhtNode_Create(&inv);
+            rc = DArray_push(nodes, node);
+            mu_assert(rc == 0, "DArray_push failed");
+
+            DhtHash_Prefix(&node->id, &id, i);
+
+            result = DhtTable_InsertNode(table, node);
+            mu_assert(result.rc == OKAdded, "Error adding");
+        }
+    }
+
+    for (i = 0; i <= HASH_BITS; i++)
+    {
+        node = DhtNode_Create(&inv);
+        DhtHash_Prefix(&node->id, &id, i);
+
+        result = DhtTable_InsertNode(table, node);
+        mu_assert(result.rc == OKFull, "Should be full");
+
+        DhtNode_Destroy(node);
+    }
+
+    DhtTable_Destroy(table);
+
+    while (DArray_count(nodes) > 0)
+    {
+        node = DArray_pop(nodes);
+        mu_assert(node != NULL, "DArray_pop failed");
+        DhtNode_Destroy(node);
+    }
+
+    DArray_destroy(nodes);
+
+    return NULL;
+}
 
 char *all_tests()
 {
@@ -289,6 +355,7 @@ char *all_tests()
     mu_run_test(test_DhtTable_AddBucket);
     mu_run_test(test_DhtNode_Status);
     mu_run_test(test_DhtTable_InsertNode);
+    mu_run_test(test_DhtTable_InsertNode_FullTable);
 
     return NULL;
 }
