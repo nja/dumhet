@@ -58,8 +58,7 @@ TAGS: $(SOURCES) $(PROGRAMS_SRC) $(TEST_SRC) $(HEADERS)
 	etags $^
 
 clean:
-	rm -rf build bin $(OBJECTS) $(PROGRAMS)
-	rm -f TAGS tests.log
+	rm -rf build bin TAGS tests.log
 
 # The Install
 install: all
