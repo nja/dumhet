@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <dht/dhtclient.h>
+#include <dht/client.h>
 #include <dht/network.h>
 #include <lcthw/dbg.h>
 

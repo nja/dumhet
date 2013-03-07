@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 
 #include <lcthw/dbg.h>
-#include <dht/dhtclient.h>
+#include <dht/client.h>
 #include <dht/pendingresponses.h>
 #include <dht/network.h>
 
