@@ -312,8 +312,9 @@ int DhtTable_HasShiftableNodes(DhtHash *id, DhtBucket *bucket, DhtNode *node)
     int i = 0;
     for (i = 0; i < BUCKET_K; i++)
     {
-	if (bucket->nodes[i] != NULL
-	    && bucket->index < DhtHash_SharedPrefix(id, &bucket->nodes[i]->id))
+        DhtNode *current = bucket->nodes[i];
+	if (current != NULL
+	    && bucket->index < DhtHash_SharedPrefix(id, &current->id))
 	{
 	    return 1;
 	}
@@ -326,6 +327,8 @@ int DhtTable_IsLastBucket(DhtTable *table, DhtBucket *bucket)
 {
     assert(table != NULL && "NULL DhtTable pointer");
     assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(table->end <= HASH_BITS && "Too large table end");
+    assert(table->end >= 0 && "Negative table end");
 
     return table->end - 1 == bucket->index;
 }
@@ -335,6 +338,79 @@ int DhtTable_CanAddBucket(DhtTable *table)
     assert(table != NULL && "NULL DhtTable pointer");
 
     return table->end < HASH_BITS;
+}
+
+int DhtBucket_IsFull(DhtBucket *bucket)
+{
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(bucket->count >= 0 && "Negative DhtBucket count");
+    assert(bucket->count <= BUCKET_K && "Too large DhtBucket count");
+
+    return BUCKET_K == bucket->count;
+}
+
+int DhtBucket_AddNode(DhtBucket *bucket, DhtNode *node)
+{
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+    assert(bucket->count >= 0 && "Negative DhtBucket count");
+    assert(bucket->count <= BUCKET_K && "Too large DhtBucket count");
+
+    check(!DhtBucket_IsFull(bucket), "Bucket full");
+
+    int i = 0;
+    for (i = 0; i < BUCKET_K; i++)
+    {
+        if (bucket->nodes[i] == NULL)
+        {
+            bucket->nodes[i] = node;
+            bucket->count++;
+            bucket->change_time = time(NULL);
+
+            assert(bucket->count <= BUCKET_K && "Too large DhtBucket count");
+
+            return 0;
+        }
+    }
+
+    log_err("Bucket with count %d had no empty slots", bucket->count);
+error:
+    return -1;
+}
+
+int DhtTable_ShiftBucketNodes(DhtTable *table, DhtBucket *bucket)
+{
+    assert(table != NULL && "NULL DhtTable pointer");
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(bucket->index + 1 < table->end && "Shifting with too few buckets");
+
+    DhtBucket *next = table->buckets[bucket->index + 1];
+    assert(next != NULL && "NULL DhtBucket pointer");
+    assert(!DhtBucket_IsFull(next) && "Shifting to full bucket");
+
+    int i = 0;
+    for (i = 0; i < BUCKET_K && !DhtBucket_IsFull(next); i++)
+    {
+	DhtNode *node = bucket->nodes[i];
+
+	if (node == NULL)
+            continue;
+
+	if (DhtHash_SharedPrefix(&table->id, &node->id) <= bucket->index)
+            continue;
+
+        int rc = DhtBucket_AddNode(next, node);
+        check(rc == 0, "DhtBucket_AddNode failed");
+
+        bucket->nodes[i] = NULL;
+        bucket->count--;
+    }
+
+    assert(bucket->count >= 0 && "Negative DhtBucket count");
+
+    return 0;
+error:
+    return -1;
 }
 
 DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
@@ -350,7 +426,9 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 	{ .rc = OKAlreadyAdded, .bucket = bucket, .replaced = NULL};
     }
 
-    if (bucket->count == BUCKET_K)
+    int rc;
+
+    if (DhtBucket_IsFull(bucket))
     {
 	DhtNode *replaced = NULL;
 
@@ -371,67 +449,28 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 	    DhtBucket *new_bucket = DhtTable_AddBucket(table);
 	    check(new_bucket != NULL, "Error adding new bucket");
 
-	    DhtTable_InsertNodeResult result = DhtTable_InsertNode(table, node);
-	    check(result.rc != ERROR, "Insert when growing failed");
+            rc = DhtTable_ShiftBucketNodes(table, bucket);
+            check(rc == 0, "DhtTable_ShiftBucketNodes failed");
 
-            assert(result.rc == OKAdded && "Wrong rc");
-            assert(result.bucket != NULL && "NULL bucket");
-            assert(result.replaced == NULL && "Unexpected replaced node");
-
-	    return result;
+            bucket = DhtTable_FindBucket(table, node);
+            check(bucket != NULL, "Found no bucket after adding one");
 	}
-
-	return (DhtTable_InsertNodeResult)
-	{ .rc = OKFull, .bucket = NULL, replaced = NULL};
     }
 
-    int i = 0;
-    for (i = 0; i < BUCKET_K; i++)
+    if (DhtBucket_IsFull(bucket))
     {
-	if (bucket->nodes[i] == NULL)
-	{
-	    bucket->nodes[i] = node;
-	    bucket->count++;
-
-	    bucket->change_time = time(NULL);
-
-	    return (DhtTable_InsertNodeResult)
-	    { .rc = OKAdded, .bucket = bucket, .replaced = NULL};
-	}
+        return (DhtTable_InsertNodeResult)
+        { .rc = OKFull, .bucket = NULL, .replaced = NULL};
     }
 
-    sentinel("Bucket with full count but no empty slots");
+    rc = DhtBucket_AddNode(bucket, node);
+    check(rc == 0, "DhtBucket_AddNode failed");
 
+    return (DhtTable_InsertNodeResult)
+    { .rc = OKAdded, .bucket = bucket, .replaced = NULL};
 error:
     return (DhtTable_InsertNodeResult)
     { .rc = ERROR, .bucket = NULL, .replaced = NULL};
-}
-
-int DhtTable_ReaddBucketNodes(DhtTable *table, DhtBucket *bucket)
-{
-    assert(table != NULL && "NULL DhtTable pointer");
-    assert(bucket != NULL && "NULL DhtBucket pointer");
-
-    int i = 0;
-    for (i = 0; i < BUCKET_K; i++)
-    {
-	DhtNode *node = bucket->nodes[i];
-
-	if (node == NULL) continue;
-	
-	bucket->nodes[i] = NULL;
-	bucket->count--;
-
-	DhtTable_InsertNodeResult result = DhtTable_InsertNode(table, node);
-	check(result.rc == OKAdded, "Readd failed");
-
-	assert(result.bucket != NULL && "NULL bucket from insert");
-	assert(result.replaced == NULL && "Unexpected replaced");
-    }
-
-    return 1;
-error:
-    return 0;
 }
 
 DhtBucket *DhtTable_AddBucket(DhtTable *table)
@@ -443,13 +482,6 @@ DhtBucket *DhtTable_AddBucket(DhtTable *table)
     
     bucket->index = table->end;
     table->buckets[table->end++] = bucket;
-
-    if (bucket->index > 0)
-    {
-	DhtBucket *prev_bucket = table->buckets[bucket->index - 1];
-	int rc = DhtTable_ReaddBucketNodes(table, prev_bucket);
-	check(rc, "Readding nodes failed");
-    }
 
     return bucket;
 error:

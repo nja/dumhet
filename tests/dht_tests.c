@@ -344,6 +344,39 @@ char *test_DhtTable_InsertNode_FullTable()
     return NULL;
 }
 
+char *test_DhtTable_InsertNode_AddBucket()
+{
+    DhtHash id = {{ 0 }};
+    DhtTable *table = DhtTable_Create(&id);
+
+    DhtNode *node;
+    DhtTable_InsertNodeResult result;
+
+    int i = 0;
+    for (i = 0; i < BUCKET_K; i++)
+    {
+        node = DhtNode_Create(&id);
+        result = DhtTable_InsertNode(table, node);
+
+        mu_assert(result.rc == OKAdded, "Wrong rc");
+        mu_assert(table->end == 1, "Added unnecessary bucket");
+    }
+
+    node = DhtNode_Create(&id);
+    result = DhtTable_InsertNode(table, node);
+
+    mu_assert(result.rc == OKFull, "Wrong rc");
+    mu_assert(table->end == 2, "Added more than one bucket");
+
+    node->id.value[0] = ~0;
+
+    result = DhtTable_InsertNode(table, node);
+    mu_assert(result.rc == OKAdded, "Wrong rc");
+    mu_assert(table->end == 2, "Added bucket without reason");
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -356,6 +389,7 @@ char *all_tests()
     mu_run_test(test_DhtNode_Status);
     mu_run_test(test_DhtTable_InsertNode);
     mu_run_test(test_DhtTable_InsertNode_FullTable);
+    mu_run_test(test_DhtTable_InsertNode_AddBucket);
 
     return NULL;
 }
