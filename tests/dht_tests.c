@@ -151,12 +151,10 @@ char *test_DhtTable_InsertNode_FullTable()
     mu_assert(table != NULL, "DhtTable_Create failed");
     
     DhtNode *node;
-    DArray *nodes = DArray_create(sizeof(DhtNode *), HASH_BITS * BUCKET_K);
-    mu_assert(nodes != NULL, "DArray_create failed");
     
     DhtTable_InsertNodeResult result;
 
-    int i = 0, rc = 0;
+    int i = 0;
 
     for (i = 0; i < HASH_BITS; i++)
     {
@@ -164,8 +162,6 @@ char *test_DhtTable_InsertNode_FullTable()
         for (j = 0; j < BUCKET_K; j++)
         {
             node = DhtNode_Create(&inv);
-            rc = DArray_push(nodes, node);
-            mu_assert(rc == 0, "DArray_push failed");
 
             DhtHash_Prefix(&node->id, &id, i);
 
@@ -185,16 +181,8 @@ char *test_DhtTable_InsertNode_FullTable()
         DhtNode_Destroy(node);
     }
 
+    DhtTable_ForEachNode(table, DhtNode_Destroy);
     DhtTable_Destroy(table);
-
-    while (DArray_count(nodes) > 0)
-    {
-        node = DArray_pop(nodes);
-        mu_assert(node != NULL, "DArray_pop failed");
-        DhtNode_Destroy(node);
-    }
-
-    DArray_destroy(nodes);
 
     return NULL;
 }
@@ -228,6 +216,9 @@ char *test_DhtTable_InsertNode_AddBucket()
     result = DhtTable_InsertNode(table, node);
     mu_assert(result.rc == OKAdded, "Wrong rc");
     mu_assert(table->end == 2, "Added bucket without reason");
+
+    DhtTable_ForEachNode(table, DhtNode_Destroy);
+    DhtTable_Destroy(table);
 
     return NULL;
 }
