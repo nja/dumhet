@@ -341,3 +341,32 @@ DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtNode *node)
 
     return table->buckets[i];
 }
+
+int DhtTable_ForEachNode(DhtTable *table, int (*operate)(DhtNode *))
+{
+    assert(operate != NULL && "NULL function pointer");
+
+    DhtBucket **bucket = table->buckets;
+    while (bucket < &table->buckets[table->end])
+    {
+        DhtNode **node = (*bucket)->nodes;
+        while (node < &(*bucket)->nodes[BUCKET_K])
+        {
+            if (*node == NULL)
+            {
+                node++;
+                continue;
+            }
+
+            int rc = operate(*node);
+            check(rc == 0, "Operation on DhtNode failed");
+            node++;
+        }
+
+        bucket++;
+    }
+
+    return 0;
+error:
+    return -1;
+}

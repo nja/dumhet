@@ -43,9 +43,10 @@ error:
     return NULL;
 }
 
-void DhtNode_Destroy(DhtNode *node)
+int DhtNode_Destroy(DhtNode *node)
 {
     free(node);
+    return 0;
 }
 
 void DhtNode_DestroyBlock(DhtNode *node, size_t count)

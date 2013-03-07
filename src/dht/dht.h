@@ -27,6 +27,8 @@ typedef struct DhtTable {
 DhtTable *DhtTable_Create(DhtHash *id);
 void DhtTable_Destroy(DhtTable *dht);
 
+int DhtTable_ForEachNode(DhtTable *table, int (*NodeOperation)(DhtNode *node));
+
 DhtBucket *DhtTable_AddBucket(DhtTable *table);
 DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtNode *node);
 

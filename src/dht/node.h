@@ -15,7 +15,7 @@ typedef struct DhtNode {
 } DhtNode;
 
 DhtNode *DhtNode_Create(DhtHash *id);
-void DhtNode_Destroy(DhtNode *node);
+int DhtNode_Destroy(DhtNode *node);
 void DhtNode_DestroyBlock(DhtNode *node, size_t count);
 
 typedef enum DhtNodeStatus { Unknown, Good, Questionable, Bad } DhtNodeStatus;
