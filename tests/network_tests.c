@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
 
 #include "minunit.h"
-#include <dht/dht.h>
+#include <dht/table.h>
 #include <dht/network.h>
 
 #define TESTPORT 51271

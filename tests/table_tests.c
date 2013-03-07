@@ -1,7 +1,7 @@
 #include <time.h>
 
 #include "minunit.h"
-#include <dht/dht.h>
+#include <dht/table.h>
 #include <lcthw/darray.h>
 
 char *test_DhtTable_AddBucket()

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include <dht/dht.h>
+#include <dht/table.h>
 #include <lcthw/dbg.h>
 
 DhtTable *DhtTable_Create(DhtHash *id)

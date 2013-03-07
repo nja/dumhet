@@ -2,7 +2,7 @@
 #define _dhtclient_h
 
 #include <dht/message.h>
-#include <dht/dht.h>
+#include <dht/table.h>
 #include <dht/pendingresponses.h>
 
 typedef struct DhtClient {

@@ -1,7 +1,7 @@
 #ifndef _message_h
 #define _message_h
 
-#include <dht/dht.h>
+#include <dht/node.h>
 #include <lcthw/bstrlib.h>
 
 typedef struct Peer {

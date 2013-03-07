@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 
 #include "minunit.h"
+#include <dht/bucket.h>
 #include <dht/message.h>
 #include <dht/protocol.h>
 #include <lcthw/bstrlib.h>
