@@ -2,8 +2,7 @@
 *.o
 /build
 /bin
-/tests/tests.log
-/tests/*_tests
+/tests.log
 cachegrind.out.*
 callgrind.out.*
 /TAGS
