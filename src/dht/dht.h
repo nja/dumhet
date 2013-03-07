@@ -1,22 +1,9 @@
 #ifndef _dht_h
 #define _dht_h
 
-#include <stdint.h>
-
+#include <dht/bucket.h>
 #include <dht/hash.h>
 #include <dht/node.h>
-
-#define BUCKET_K 8
-
-typedef struct DhtBucket {
-    int index;
-    int count;
-    time_t change_time;
-    DhtNode *nodes[BUCKET_K];
-} DhtBucket;
-
-DhtBucket *DhtBucket_Create();
-void DhtBucket_Destroy(DhtBucket *bucket);
 
 typedef struct DhtTable {
     DhtHash id;
