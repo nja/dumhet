@@ -18,6 +18,7 @@ int DhtHash_Random(RandomState *rs, DhtHash *hash);
 int DhtHash_PrefixedRandom(RandomState *rs, DhtHash *hash, DhtHash *prefix, int prefix_len);
 void DhtHash_Invert(DhtHash *hash);
 
+int DhtHash_Equals(DhtHash *a, DhtHash *b);
 int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b);
 
 typedef DhtHash DhtDistance;

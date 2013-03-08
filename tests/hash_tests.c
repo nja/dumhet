@@ -24,6 +24,30 @@ char *test_DhtHash_Clone()
     return NULL;
 }
 
+char *test_DhtHash_Equals()
+{
+    DhtHash a = {{ 0 }};
+    DhtHash b = a;
+
+    mu_assert(DhtHash_Equals(&a, &a), "Should be equal");
+    mu_assert(DhtHash_Equals(&a, &b), "Should be equal");
+    mu_assert(DhtHash_Equals(&b, &a), "Should be equal");
+
+    DhtHash c = a;
+    c.value[0] = 1;
+
+    mu_assert(!DhtHash_Equals(&a, &c), "Should not be equal");
+    mu_assert(!DhtHash_Equals(&c, &a), "Should not be equal");
+
+    DhtHash d = a;
+    d.value[HASH_BYTES - 1] = 0x70;
+
+    mu_assert(!DhtHash_Equals(&a, &d), "Should not be equal");
+    mu_assert(!DhtHash_Equals(&d, &a), "Should not be equal");
+
+    return NULL;
+}
+
 char *test_DhtHash_Invert()
 {
     DhtHash hash = {{ 0 }};
@@ -119,6 +143,7 @@ char *all_tests()
     mu_suite_start();
 
     mu_run_test(test_DhtHash_Clone);
+    mu_run_test(test_DhtHash_Equals);
     mu_run_test(test_DhtHash_Invert);
     mu_run_test(test_DhtHash_Prefix);
     mu_run_test(test_DhtHash_PrefixedRandom);

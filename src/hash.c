@@ -89,6 +89,26 @@ error:
     return -1;
 }
 
+int DhtHash_Equals(DhtHash *a, DhtHash *b)
+{
+    assert(a != NULL && "NULL DhtHash pointer");
+    assert(b != NULL && "NULL DhtHash pointer");
+    assert(HASH_BYTES % sizeof(int) == 0 && "Size confusion");
+
+    if (a == b)
+        return 1;
+
+    int *ai = (int *)a->value, *bi = (int *)b->value;
+
+    while (ai < (int *)&a->value[HASH_BYTES])
+    {
+        if (*ai++ != *bi++)
+            return 0;
+    }
+
+    return 1;
+}
+
 int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)
 {
     int hi = 0, bi = 0;
