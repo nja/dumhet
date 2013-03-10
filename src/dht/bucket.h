@@ -18,8 +18,11 @@ DhtBucket *DhtBucket_Create();
 void DhtBucket_Destroy(DhtBucket *bucket);
 
 int DhtBucket_ContainsNode(DhtBucket *bucket, DhtNode *node);
+int DhtBucket_IsFull(DhtBucket *bucket);
 
 DhtNode *DhtBucket_ReplaceBad(DhtBucket *bucket, DhtNode *node);
 DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node);
+
+int DhtBucket_AddNode(DhtBucket *bucket, DhtNode *node);
     
 #endif

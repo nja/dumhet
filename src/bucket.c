@@ -99,3 +99,41 @@ DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node)
 
     return NULL;
 }
+
+int DhtBucket_IsFull(DhtBucket *bucket)
+{
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(bucket->count >= 0 && "Negative DhtBucket count");
+    assert(bucket->count <= BUCKET_K && "Too large DhtBucket count");
+
+    return BUCKET_K == bucket->count;
+}
+
+int DhtBucket_AddNode(DhtBucket *bucket, DhtNode *node)
+{
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+    assert(bucket->count >= 0 && "Negative DhtBucket count");
+    assert(bucket->count <= BUCKET_K && "Too large DhtBucket count");
+
+    check(!DhtBucket_IsFull(bucket), "Bucket full");
+
+    int i = 0;
+    for (i = 0; i < BUCKET_K; i++)
+    {
+        if (bucket->nodes[i] == NULL)
+        {
+            bucket->nodes[i] = node;
+            bucket->count++;
+            bucket->change_time = time(NULL);
+
+            assert(bucket->count <= BUCKET_K && "Too large DhtBucket count");
+
+            return 0;
+        }
+    }
+
+    log_err("Bucket with count %d had no empty slots", bucket->count);
+error:
+    return -1;
+}
