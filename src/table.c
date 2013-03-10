@@ -160,7 +160,7 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
     assert(table != NULL && "NULL DhtTable pointer");
     assert(node != NULL && "NULL DhtNode pointer");
 
-    DhtBucket *bucket = DhtTable_FindBucket(table, node);
+    DhtBucket *bucket = DhtTable_FindBucket(table, &node->id);
     check(bucket != NULL, "Found no bucket for node");
 
     if (DhtBucket_ContainsNode(bucket, node)) {
@@ -194,7 +194,7 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
             rc = DhtTable_ShiftBucketNodes(table, bucket);
             check(rc == 0, "DhtTable_ShiftBucketNodes failed");
 
-            bucket = DhtTable_FindBucket(table, node);
+            bucket = DhtTable_FindBucket(table, &node->id);
             check(bucket != NULL, "Found no bucket after adding one");
 	}
     }
@@ -230,12 +230,13 @@ error:
     return NULL;
 }
 
-DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtNode *node)
+DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtHash *id)
 {
     assert(table != NULL && "NULL DhtTable pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(id != NULL && "NULL DhtHash pointer");
+    assert(table->end > 0 && "No buckets in table");
 
-    int pfx = DhtHash_SharedPrefix(&table->id, &node->id);
+    int pfx = DhtHash_SharedPrefix(&table->id, id);
     int i = pfx < table->end ? pfx : table->end - 1;
 
     return table->buckets[i];
@@ -269,3 +270,25 @@ int DhtTable_ForEachNode(DhtTable *table, int (*operate)(DhtNode *))
 error:
     return -1;
 }
+
+DhtNode *DhtTable_FindNode(DhtTable *table, DhtHash *id)
+{
+    assert(table != NULL && "NULL DhtTable pointer");
+    assert(id != NULL && "NULL DhtHash pointer");
+
+    DhtBucket *bucket = DhtTable_FindBucket(table, id);
+    DhtNode **node = bucket->nodes;
+
+    while (node < &bucket->nodes[BUCKET_K])
+    {
+        if (node != NULL && DhtHash_Equals(id, &(*node)->id))
+        {
+            return *node;
+        }
+
+        node++;
+    }
+
+    return NULL;
+}
+

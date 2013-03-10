@@ -15,6 +15,7 @@ typedef struct DhtNode {
 } DhtNode;
 
 DhtNode *DhtNode_Create(DhtHash *id);
+DhtNode *DhtNode_Copy(DhtNode *node);
 int DhtNode_Destroy(DhtNode *node);
 void DhtNode_DestroyBlock(DhtNode *node, size_t count);
 

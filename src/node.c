@@ -43,6 +43,19 @@ error:
     return NULL;
 }
 
+DhtNode *DhtNode_Copy(DhtNode *source)
+{
+    DhtNode *copy = DhtNode_Create(&source->id);
+    check_mem(copy);
+
+    copy->addr = source->addr;
+    copy->port = source->port;
+
+    return copy;
+error:
+    return NULL;
+}
+
 int DhtNode_Destroy(DhtNode *node)
 {
     free(node);

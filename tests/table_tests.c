@@ -20,7 +20,7 @@ char *test_DhtTable_AddBucket()
     for (i = 0; i < HASH_BITS; i++)
     {
 	DhtBucket *added = DhtTable_AddBucket(&table);
-	DhtBucket *found = DhtTable_FindBucket(&table, &node);
+	DhtBucket *found = DhtTable_FindBucket(&table, &node.id);
 
 	mu_assert(table.end == i + 1, "Wrong bucket count");
 	mu_assert(added == found, "Found wrong bucket");
@@ -28,11 +28,11 @@ char *test_DhtTable_AddBucket()
 
     for (i = 0; i < HASH_BITS; i++)
     {
-	DhtBucket *found = DhtTable_FindBucket(&table, &node);
+	DhtBucket *found = DhtTable_FindBucket(&table, &node.id);
 	mu_assert(found == table.buckets[table.end - 1], "Expected last bucket");
 	
 	node.id.value[i / 8] ^= (0x80 >> (i % 8));
-	found = DhtTable_FindBucket(&table, &node);
+	found = DhtTable_FindBucket(&table, &node.id);
 
 	mu_assert(found == table.buckets[i], "Found wrong bucket");
 	node.id.value[i / 8] ^= (0x80 >> (i % 8));
