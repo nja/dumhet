@@ -181,7 +181,7 @@ char *test_DhtTable_InsertNode_FullTable()
         DhtNode_Destroy(node);
     }
 
-    DhtTable_ForEachNode(table, DhtNode_Destroy);
+    DhtTable_DestroyNodes(table);
     DhtTable_Destroy(table);
 
     return NULL;
@@ -217,7 +217,7 @@ char *test_DhtTable_InsertNode_AddBucket()
     mu_assert(result.rc == OKAdded, "Wrong rc");
     mu_assert(table->end == 2, "Added bucket without reason");
 
-    DhtTable_ForEachNode(table, DhtNode_Destroy);
+    DhtTable_DestroyNodes(table);
     DhtTable_Destroy(table);
 
     return NULL;

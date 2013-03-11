@@ -74,11 +74,11 @@ char *test_Search_CopyTable()
             }
         }
 
-        DhtTable_ForEachNode(search->table, DhtNode_Destroy);
+        DhtTable_ForEachNode(search->table, NULL, DhtNode_DestroyOp);
         Search_Destroy(search);
     }
 
-    DhtTable_ForEachNode(table, DhtNode_Destroy);
+    DhtTable_DestroyNodes(table);
     DhtTable_Destroy(table);
 
     return NULL;

@@ -16,8 +16,10 @@ typedef struct DhtNode {
 
 DhtNode *DhtNode_Create(DhtHash *id);
 DhtNode *DhtNode_Copy(DhtNode *node);
-int DhtNode_Destroy(DhtNode *node);
+void DhtNode_Destroy(DhtNode *node);
 void DhtNode_DestroyBlock(DhtNode *node, size_t count);
+
+int DhtNode_DestroyOp(void *ignore, DhtNode *node);
 
 typedef enum DhtNodeStatus { Unknown, Good, Questionable, Bad } DhtNodeStatus;
 
@@ -25,5 +27,7 @@ typedef enum DhtNodeStatus { Unknown, Good, Questionable, Bad } DhtNodeStatus;
 #define NODE_MAX_PENDING 2
 
 DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time);
+
+typedef int (*NodeOp)(void *context, DhtNode *node);
 
 #endif

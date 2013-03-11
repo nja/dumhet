@@ -56,9 +56,16 @@ error:
     return NULL;
 }
 
-int DhtNode_Destroy(DhtNode *node)
+void DhtNode_Destroy(DhtNode *node)
 {
     free(node);
+}
+
+int DhtNode_DestroyOp(void *context, DhtNode *node)
+{
+    (void)(context);
+    free(node);
+
     return 0;
 }
 

@@ -39,6 +39,11 @@ void DhtTable_Destroy(DhtTable *table)
     free(table);
 }
 
+void DhtTable_DestroyNodes(DhtTable *table)
+{
+    DhtTable_ForEachNode(table, NULL, DhtNode_DestroyOp);
+}
+
 int DhtTable_HasShiftableNodes(DhtHash *id, DhtBucket *bucket, DhtNode *node)
 {
     assert(id != NULL && "NULL DhtHash pointer");
@@ -204,8 +209,9 @@ DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtHash *id)
     return table->buckets[i];
 }
 
-int DhtTable_ForEachNode(DhtTable *table, int (*operate)(DhtNode *))
+int DhtTable_ForEachNode(DhtTable *table, void *context, NodeOp operate)
 {
+    assert(table != NULL && "NULL DhtTable pointer");
     assert(operate != NULL && "NULL function pointer");
 
     DhtBucket **bucket = table->buckets;
@@ -220,7 +226,7 @@ int DhtTable_ForEachNode(DhtTable *table, int (*operate)(DhtNode *))
                 continue;
             }
 
-            int rc = operate(*node);
+            int rc = operate(context, *node);
             check(rc == 0, "Operation on DhtNode failed");
             node++;
         }
@@ -253,4 +259,3 @@ DhtNode *DhtTable_FindNode(DhtTable *table, DhtHash *id)
 
     return NULL;
 }
-

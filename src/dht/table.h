@@ -12,9 +12,10 @@ typedef struct DhtTable {
 } DhtTable;
 
 DhtTable *DhtTable_Create(DhtHash *id);
-void DhtTable_Destroy(DhtTable *dht);
+void DhtTable_Destroy(DhtTable *table);
+void DhtTable_DestroyNodes(DhtTable *table);
 
-int DhtTable_ForEachNode(DhtTable *table, int (*NodeOperation)(DhtNode *node));
+int DhtTable_ForEachNode(DhtTable *table, void *context, NodeOp op);
 
 DhtBucket *DhtTable_AddBucket(DhtTable *table);
 DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtHash *id);
