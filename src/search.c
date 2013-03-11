@@ -1,6 +1,7 @@
 #include <assert.h>
 
 #include <dht/search.h>
+#include <dht/table.h>
 #include <lcthw/dbg.h>
 
 Search *Search_Create(DhtHash *id)
@@ -64,4 +65,63 @@ error:
     DhtNode_Destroy(copy);
     DhtNode_Destroy(result.replaced);
     return -1;
+}
+
+int ShouldQuery(DhtNode *node, time_t time);
+
+struct QueryNodesContext
+{
+    time_t time;
+    DArray *nodes;
+};
+
+int AddIfQueryable(void *vcontext, DhtNode *node)
+{
+    struct QueryNodesContext *context = (struct QueryNodesContext *)vcontext;
+    assert(context != NULL && "NULL QueryNodesContext pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+    assert(context->nodes != NULL && "NULL DArray pointer in QueryNodesContext");
+
+    if (ShouldQuery(node, context->time))
+    {
+        int rc = DArray_push(context->nodes, node);
+        check(rc == 0, "DArray_push failed");
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int Search_NodesToQuery(Search *search, DArray *nodes, time_t time)
+{
+    assert(search != NULL && "NULL Search pointer");
+    assert(nodes != NULL && "NULL DArray pointer");
+
+    struct QueryNodesContext context;
+    context.time = time;
+    context.nodes = nodes;
+
+    int rc = DhtTable_ForEachNode(search->table, &context, AddIfQueryable);
+    check(rc == 0, "DhtTable_ForEachNode failed");
+
+    return 0;
+error:
+    return -1;
+}
+
+int ShouldQuery(DhtNode *node, time_t time)
+{
+    assert(node != NULL && "NULL DhtNode pointer");
+
+    if (node->reply_time != 0)
+        return 0;
+
+    if (node->pending_queries >= SEARCH_MAX_PENDING)
+        return 0;
+
+    if (difftime(time, node->query_time) < SEARCH_RESPITE)
+        return 0;
+
+    return 1;
 }

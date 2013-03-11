@@ -84,12 +84,60 @@ char *test_Search_CopyTable()
     return NULL;
 }
 
+char *test_Search_NodesToQuery()
+{
+    time_t now = time(NULL);
+    DhtHash id = { "foo" };
+    Search *search = Search_Create(&id);
+
+    DhtNode *already_replied = DhtNode_Create(&id);
+    already_replied->reply_time = now;
+    already_replied->id.value[0] = 1;
+
+    DhtNode *max_pending = DhtNode_Create(&id);
+    max_pending->pending_queries = SEARCH_MAX_PENDING;
+    max_pending->id.value[0] = 2;
+
+    DhtNode *just_queried = DhtNode_Create(&id);
+    just_queried->query_time = now;
+    just_queried->id.value[0] = 3;
+
+    DhtNode *should_query_a = DhtNode_Create(&id);
+    should_query_a->pending_queries = 1;
+    should_query_a->id.value[0] = 4;
+
+    DhtNode *should_query_b = DhtNode_Create(&id);
+    should_query_b->id.value[0] = 5;
+
+    DhtTable_InsertNode(search->table, already_replied);
+    DhtTable_InsertNode(search->table, should_query_a);
+    DhtTable_InsertNode(search->table, max_pending);
+    DhtTable_InsertNode(search->table, just_queried);
+    DhtTable_InsertNode(search->table, should_query_b);
+
+    DArray *nodes = DArray_create(sizeof(DhtNode *), 2);
+
+    int rc = Search_NodesToQuery(search, nodes, now);
+    mu_assert(rc == 0, "Search_NodesToQuery failed");
+
+    mu_assert(DArray_count(nodes) == 2, "Too many nodes to query");
+    mu_assert(DArray_first(nodes) == should_query_a, "Wrong node");
+    mu_assert(DArray_last(nodes) == should_query_b, "Bad node");
+
+    DhtTable_DestroyNodes(search->table);
+    Search_Destroy(search);
+    DArray_destroy(nodes);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
 
     mu_run_test(test_Search_CreateDestroy);
     mu_run_test(test_Search_CopyTable);
+    mu_run_test(test_Search_NodesToQuery);
 
     return NULL;
 }
