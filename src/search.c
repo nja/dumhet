@@ -46,7 +46,6 @@ int Search_CopyTable(Search *search, DhtTable *source)
 
         while (node < &(*bucket)->nodes[BUCKET_K])
         {
-            debug("Source bucket %d", (*bucket)->index);
             if (*node != NULL)
             {
                 copy = DhtNode_Copy(*node);
@@ -54,7 +53,6 @@ int Search_CopyTable(Search *search, DhtTable *source)
 
                 result = DhtTable_InsertNode(dest, copy);
                 check(result.rc == OKAdded, "DhtTable_InsertNode failed");
-                debug("Copied to dest bucket %d", result.bucket->index);
             }
 
             node++;
