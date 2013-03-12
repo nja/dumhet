@@ -57,8 +57,8 @@ uint32_t PendingResponse_Hash(void *key)
 
 int PendingResponse_Compare(void *a, void *b)
 {
-    assert(a != NULL && "NULL PendingResponseEntry pointer");
-    assert(b != NULL && "NULL PendingResponseEntry pointer");
+    assert(a != NULL && "NULL PendingResponse pointer");
+    assert(b != NULL && "NULL PendingResponse pointer");
 
     tid_t atid = *(tid_t *)a,
 	btid = *(tid_t *)b;
@@ -71,11 +71,11 @@ int PendingResponse_Compare(void *a, void *b)
 	return 0;
 }
 
-int HashmapPendingResponses_Add(HashmapPendingResponses *responses, PendingResponseEntry entry)
+int HashmapPendingResponses_Add(HashmapPendingResponses *responses, PendingResponse entry)
 {
     assert(responses != NULL && "NULL HashmapPendingResponses pointer");
 
-    PendingResponseEntry *mentry = malloc(sizeof(PendingResponseEntry));
+    PendingResponse *mentry = malloc(sizeof(PendingResponse));
     check_mem(mentry);
 
     *mentry = entry;
@@ -89,20 +89,20 @@ error:
     return -1;
 }
     
-PendingResponseEntry HashmapPendingResponses_Remove(void *responses, char *tid, int *rc)
+PendingResponse HashmapPendingResponses_Remove(void *responses, char *tid, int *rc)
 {
     assert(responses != NULL && "NULL HashmapPendingResponses pointer");
     assert(tid != NULL && "NULL tid pointer");
 
-    PendingResponseEntry *entry = Hashmap_delete(((HashmapPendingResponses *)responses)->hashmap, tid);
+    PendingResponse *entry = Hashmap_delete(((HashmapPendingResponses *)responses)->hashmap, tid);
     check(entry != NULL, "Hashmap_delete failed");
 
-    PendingResponseEntry rentry = *entry;
+    PendingResponse rentry = *entry;
     *rc = 0;
     free(entry);
 
     return rentry;
 error:
     *rc = -1;
-    return (PendingResponseEntry) { 0 };
+    return (PendingResponse) { 0 };
 }

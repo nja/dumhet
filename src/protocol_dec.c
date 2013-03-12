@@ -358,7 +358,7 @@ Message *DecodeResponse(BNode *dict, struct PendingResponses *pending)
     rc = GetResponseId(dict, &message->id);
     check(rc == 0, "Bad response node id");
 
-    PendingResponseEntry entry = pending->getPendingResponse(pending, message->t, &rc);
+    PendingResponse entry = pending->getPendingResponse(pending, message->t, &rc);
     check(rc == 0, "getPendingResponse failed");
 
     message->type = entry.type;

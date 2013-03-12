@@ -13,8 +13,8 @@ typedef struct HashmapPendingResponses {
 HashmapPendingResponses *HashmapPendingResponses_Create();
 void HashmapPendingResponses_Destroy(HashmapPendingResponses *pending);
 
-int HashmapPendingResponses_Add(HashmapPendingResponses *responses, PendingResponseEntry entry);
-PendingResponseEntry HashmapPendingResponses_Remove(void *responses, char *tid, int *rc);
+int HashmapPendingResponses_Add(HashmapPendingResponses *responses, PendingResponse entry);
+PendingResponse HashmapPendingResponses_Remove(void *responses, char *tid, int *rc);
 
 int PendingResponse_Compare(void *a, void *b);
 uint32_t PendingResponse_Hash(void *tid);

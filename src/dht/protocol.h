@@ -6,13 +6,13 @@
 
 typedef uint16_t tid_t;
 
-typedef struct PendingResponseEntry {
+typedef struct PendingResponse {
     MessageType type;
     tid_t tid;
     void *context;
-} PendingResponseEntry;
+} PendingResponse;
 
-typedef PendingResponseEntry (*GetPendingResponse_fp)(void *responses,
+typedef PendingResponse (*GetPendingResponse_fp)(void *responses,
                                                       char *transaction_id,
                                                       int *rc);
 

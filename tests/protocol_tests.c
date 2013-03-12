@@ -85,7 +85,7 @@ struct MockResponses {
     int check_tid;
 };
 
-PendingResponseEntry GetMockResponseType(void *responses, char *tid, int *rc)
+PendingResponse GetMockResponseType(void *responses, char *tid, int *rc)
 {
     struct MockResponses *mock = (struct MockResponses *)responses;
 
@@ -93,11 +93,11 @@ PendingResponseEntry GetMockResponseType(void *responses, char *tid, int *rc)
     {
 	log_err("Bad transaction id");
         *rc = -1;
-	return (PendingResponseEntry) { 0 };
+	return (PendingResponse) { 0 };
     }
 
     rc = 0;
-    return (PendingResponseEntry) { mock->type, *(tid_t *)tid, NULL };
+    return (PendingResponse) { mock->type, *(tid_t *)tid, NULL };
 }
 
 struct MockResponses *GetMockResponses(char *tid, MessageType type, int check_tid)
@@ -553,36 +553,36 @@ char *test_Decode_JunkResponse()
     return test_junk_response(junk, gettype);
 }
 
-PendingResponseEntry GetRoundtripResponseMessageType(void *responses, char *t, int *rc)
+PendingResponse GetRoundtripResponseMessageType(void *responses, char *t, int *rc)
 {
     (void)(responses);
 
     if (same_bytes_len("pi", t, sizeof(tid_t)))
     {
         *rc = 0;
-        return (PendingResponseEntry) { RPing, *(tid_t *)t, NULL };
+        return (PendingResponse) { RPing, *(tid_t *)t, NULL };
     }
 
     if (same_bytes_len("fn", t, sizeof(tid_t)))
     {
         *rc = 0;
-        return (PendingResponseEntry) { RFindNode, *(tid_t *)t, NULL };
+        return (PendingResponse) { RFindNode, *(tid_t *)t, NULL };
     }
 
     if (same_bytes_len("gp", t, sizeof(tid_t)))
     {
         *rc = 0;
-        return (PendingResponseEntry) { RGetPeers, *(tid_t *)t, NULL };
+        return (PendingResponse) { RGetPeers, *(tid_t *)t, NULL };
     }
 
     if (same_bytes_len("ap", t, sizeof(tid_t)))
     {
         *rc = 0;
-        return (PendingResponseEntry) { RAnnouncePeer, *(tid_t *)t, NULL };
+        return (PendingResponse) { RAnnouncePeer, *(tid_t *)t, NULL };
     }
 
     *rc = -1;
-    return (PendingResponseEntry) { 0 };
+    return (PendingResponse) { 0 };
 }
 
 char *test_Roundtrip()
