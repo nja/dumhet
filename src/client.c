@@ -4,7 +4,6 @@
 
 #include <lcthw/dbg.h>
 #include <dht/client.h>
-#include <dht/pendingresponses.h>
 #include <dht/network.h>
 
 int CreateSocket();

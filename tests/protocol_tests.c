@@ -79,24 +79,25 @@ char *test_Decode_QPing()
 }
 
 struct MockResponses {
-    GetResponseType_fp getReponseType;
+    GetPendingResponse_fp getPendingReponse;
     char *tid;
     MessageType type;
     int check_tid;
 };
 
-int GetMockResponseType(void *responses, char *tid, MessageType *type)
+PendingResponseEntry GetMockResponseType(void *responses, char *tid, int *rc)
 {
     struct MockResponses *mock = (struct MockResponses *)responses;
 
     if (mock->check_tid && !same_bytes_len(mock->tid, tid, sizeof(tid_t)))
     {
 	log_err("Bad transaction id");
-	return -1;
+        *rc = -1;
+	return (PendingResponseEntry) { 0 };
     }
 
-    *type = mock->type;
-    return 0;
+    rc = 0;
+    return (PendingResponseEntry) { mock->type, *(tid_t *)tid, NULL };
 }
 
 struct MockResponses *GetMockResponses(char *tid, MessageType type, int check_tid)
@@ -104,7 +105,7 @@ struct MockResponses *GetMockResponses(char *tid, MessageType type, int check_ti
     struct MockResponses *responses = malloc(sizeof(struct MockResponses));
     check_mem(responses);
 
-    responses->getReponseType = GetMockResponseType;
+    responses->getPendingReponse = GetMockResponseType;
     responses->tid = tid;
     responses->type = type;
     responses->check_tid = check_tid;
@@ -552,35 +553,36 @@ char *test_Decode_JunkResponse()
     return test_junk_response(junk, gettype);
 }
 
-int GetRoundtripResponseMessageType(void *responses, char *t, MessageType *mt)
+PendingResponseEntry GetRoundtripResponseMessageType(void *responses, char *t, int *rc)
 {
-    responses = responses;
+    (void)(responses);
 
     if (same_bytes_len("pi", t, sizeof(tid_t)))
     {
-	*mt = RPing;
-	return 0;
+        *rc = 0;
+        return (PendingResponseEntry) { RPing, *(tid_t *)t, NULL };
     }
 
     if (same_bytes_len("fn", t, sizeof(tid_t)))
     {
-	*mt = RFindNode;
-	return 0;
+        *rc = 0;
+        return (PendingResponseEntry) { RFindNode, *(tid_t *)t, NULL };
     }
 
     if (same_bytes_len("gp", t, sizeof(tid_t)))
     {
-	*mt = RGetPeers;
-	return 0;
+        *rc = 0;
+        return (PendingResponseEntry) { RGetPeers, *(tid_t *)t, NULL };
     }
 
     if (same_bytes_len("ap", t, sizeof(tid_t)))
     {
-	*mt = RAnnouncePeer;
-	return 0;
+        *rc = 0;
+        return (PendingResponseEntry) { RAnnouncePeer, *(tid_t *)t, NULL };
     }
 
-    return -1;
+    *rc = -1;
+    return (PendingResponseEntry) { 0 };
 }
 
 char *test_Roundtrip()
@@ -599,7 +601,7 @@ char *test_Roundtrip()
 	NULL
     };
 
-    struct PendingResponses responses = { .getResponseType = GetRoundtripResponseMessageType };
+    struct PendingResponses responses = { .getPendingResponse = GetRoundtripResponseMessageType };
 
     int i = 0;
     while (input[i])

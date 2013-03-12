@@ -64,6 +64,7 @@ typedef struct Message {
     char *t;
     size_t t_len;
     DhtHash id;
+    void *context;
     union {
 	QPingData qping;
 	QFindNodeData qfindnode;

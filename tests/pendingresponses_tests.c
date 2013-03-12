@@ -15,7 +15,9 @@ char *test_destroy_with_entries()
     HashmapPendingResponses *responses = HashmapPendingResponses_Create();
     mu_assert(responses != NULL, "HashmapPendingResponses_Create failed");
 
-    HashmapPendingResponses_Add(responses, QFindNode, 0);
+    PendingResponseEntry entry = { QFindNode, 0, NULL };
+    int rc = HashmapPendingResponses_Add(responses, entry);
+    mu_assert(rc == 0, "HashmapPendingResponses_Add failed");
 
     HashmapPendingResponses_Destroy(responses);
 
@@ -46,11 +48,12 @@ char *test_addremove()
     tid_t tid[] = { 1, 2, 3, 4, 0 };
     MessageType type[] = { QPing, QFindNode, QAnnouncePeer, QGetPeers };
 
-    int i = 0;
+    int i = 0, dummy;
 
     while (tid[i] != 0)
     {
-	int rc = HashmapPendingResponses_Add(responses, type[i], tid[i]);
+        PendingResponseEntry entry = { type[i], tid[i], &dummy };
+	int rc = HashmapPendingResponses_Add(responses, entry);
 	mu_assert(rc == 0, "HashmapPendingResponses_Add failed");
 
 	++i;
@@ -60,10 +63,13 @@ char *test_addremove()
     
     while(tid[i] != 0)
     {
-	MessageType rtype = RError;
-	int rc = HashmapPendingResponses_Remove(responses, (char *)&tid[i], &rtype);
-	mu_assert(rc == 0, "HashmapPendingResponses_Remove failed");
-	mu_assert(rtype == type[i], "Wrong type");
+        int rc;
+	PendingResponseEntry entry
+            = HashmapPendingResponses_Remove(responses, (char *)&tid[i], &rc);
+        mu_assert(rc == 0, "HashmapPendingResponses_Remove failed");
+	mu_assert(entry.type == type[i], "Wrong type");
+        mu_assert(entry.tid == tid[i], "Wring tid");
+        mu_assert(entry.context == &dummy, "Unexpected context");
 
 	++i;
     }

@@ -6,12 +6,18 @@
 
 typedef uint16_t tid_t;
 
-typedef int (*GetResponseType_fp)(void *responses,
-				  char *transaction_id,
-				  MessageType *type);
+typedef struct PendingResponseEntry {
+    MessageType type;
+    tid_t tid;
+    void *context;
+} PendingResponseEntry;
+
+typedef PendingResponseEntry (*GetPendingResponse_fp)(void *responses,
+                                                      char *transaction_id,
+                                                      int *rc);
 
 struct PendingResponses {
-    GetResponseType_fp getResponseType;
+    GetPendingResponse_fp getPendingResponse;
 };
 
 Message *Message_Decode(char *data, size_t len, struct PendingResponses *pending); 

@@ -121,9 +121,9 @@ int SendMessage(DhtClient *client, Message *msg, DhtNode *node)
 
   if (MessageType_IsQuery(msg->type))
   {
-      rc = HashmapPendingResponses_Add(client->pending,
-                                       msg->type,
-                                       *(tid_t *)msg->t);
+      PendingResponseEntry entry = { msg->type, *(tid_t *)msg->t, msg->context };
+
+      rc = HashmapPendingResponses_Add(client->pending, entry);
       check(rc == 0, "HashmapPendingResponses_Add failed");
   }
 

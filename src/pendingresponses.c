@@ -8,7 +8,7 @@ HashmapPendingResponses *HashmapPendingResponses_Create()
     HashmapPendingResponses *pending = malloc(sizeof(HashmapPendingResponses));
     check_mem(pending);
 
-    pending->getResponseType = HashmapPendingResponses_Remove;
+    pending->getPendingResponse = HashmapPendingResponses_Remove;
 
     pending->hashmap = Hashmap_create(PendingResponse_Compare, PendingResponse_Hash);
     check_mem(pending->hashmap);
@@ -71,39 +71,38 @@ int PendingResponse_Compare(void *a, void *b)
 	return 0;
 }
 
-int HashmapPendingResponses_Add(HashmapPendingResponses *responses, MessageType type, tid_t tid)
+int HashmapPendingResponses_Add(HashmapPendingResponses *responses, PendingResponseEntry entry)
 {
     assert(responses != NULL && "NULL HashmapPendingResponses pointer");
 
-    PendingResponseEntry *entry = malloc(sizeof(PendingResponseEntry));
-    check_mem(entry);
+    PendingResponseEntry *mentry = malloc(sizeof(PendingResponseEntry));
+    check_mem(mentry);
 
-    entry->type = type;
-    entry->tid = tid;
+    *mentry = entry;
 
-    int rc = Hashmap_set(responses->hashmap, &entry->tid, entry);
+    int rc = Hashmap_set(responses->hashmap, &mentry->tid, mentry);
     check(rc == 0, "Hashmap_set failed");
 
     return 0;
 error:
-    free(entry);
+    free(mentry);
     return -1;
 }
     
-int HashmapPendingResponses_Remove(void *responses, char *tid, MessageType *type)
+PendingResponseEntry HashmapPendingResponses_Remove(void *responses, char *tid, int *rc)
 {
     assert(responses != NULL && "NULL HashmapPendingResponses pointer");
     assert(tid != NULL && "NULL tid pointer");
-    assert(type != NULL && "NULL MessageType pointer");
 
     PendingResponseEntry *entry = Hashmap_delete(((HashmapPendingResponses *)responses)->hashmap, tid);
     check(entry != NULL, "Hashmap_delete failed");
 
-    *type = entry->type;
-
+    PendingResponseEntry rentry = *entry;
+    *rc = 0;
     free(entry);
 
-    return 0;
+    return rentry;
 error:
-    return -1;
+    *rc = -1;
+    return (PendingResponseEntry) { 0 };
 }
