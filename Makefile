@@ -54,7 +54,7 @@ $(PROGRAMS): %: $(TARGET) src/%.c
 valgrind:
 	VALGRIND="valgrind --leak-check=full --error-exitcode=1" $(MAKE)
 
-TAGS: $(SOURCES) $(PROGRAMS_SRC) $(TEST_SRC) $(HEADERS)
+TAGS: $(SOURCES) $(TEST_SRC) $(DHTHEADERS) $(LCTHWHEADERS)
 	etags $^
 
 clean:
