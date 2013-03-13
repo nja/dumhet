@@ -21,6 +21,8 @@ void DhtHash_Invert(DhtHash *hash);
 int DhtHash_Equals(DhtHash *a, DhtHash *b);
 int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b);
 
+const char *DhtHash_Str(DhtHash *hash);
+
 typedef DhtHash DhtDistance;
 
 #define DhtDistance_Destroy(D) DhtHash_Destroy((D))

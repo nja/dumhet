@@ -138,6 +138,32 @@ char *test_DhtHash_Distance()
     return NULL;
 }
 
+char *test_DhtHash_Str()
+{
+    DhtHash id = {{ 0 }};
+    const int expected_len = HASH_BYTES * 2;
+
+    int len = strlen(DhtHash_Str(&id));
+    mu_assert(len == expected_len, "Wrong length string from DhtHash_Str");
+
+    DhtHash_Invert(&id);
+
+    len = strlen(DhtHash_Str(&id));
+    mu_assert(len == expected_len, "Wrong length string from DhtHash_Str");
+
+    RandomState *rs = RandomState_Create(0);
+    int rc = DhtHash_Random(rs, &id);
+    mu_assert(rc == 0, "DhtHash_Random failed");
+    len = strlen(DhtHash_Str(&id));
+    mu_assert(len == expected_len, "Wrong length string from DhtHash_Str");
+
+    debug("hashrandom %s", DhtHash_Str(&id));
+
+    RandomState_Destroy(rs);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -148,6 +174,7 @@ char *all_tests()
     mu_run_test(test_DhtHash_Prefix);
     mu_run_test(test_DhtHash_PrefixedRandom);
     mu_run_test(test_DhtHash_Distance);
+    mu_run_test(test_DhtHash_Str);
 
     return NULL;
 }

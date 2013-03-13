@@ -190,3 +190,26 @@ int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
 
     return 0;
 }
+
+#define STRBUFLEN (HASH_BYTES * 2 + 1)
+static char strbuf[STRBUFLEN];
+
+const char *DhtHash_Str(DhtHash *hash)
+{
+    char *src = hash->value;
+    char *dst = strbuf;
+    char *hex = "0123456789abcdef";
+
+    while (src < hash->value + HASH_BYTES && dst + 1 < strbuf + STRBUFLEN)
+    {
+        int high = (unsigned char)*src >> 4;
+        int low = *src & 0x0f;
+        *dst++ = hex[high];
+        *dst++ = hex[low];
+        src++;
+    }
+
+    *++dst = '\0';
+
+    return strbuf;
+}
