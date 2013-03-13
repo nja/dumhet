@@ -82,6 +82,7 @@ struct MockResponses {
     GetPendingResponse_fp getPendingReponse;
     char *tid;
     MessageType type;
+    DhtHash id;
     int check_tid;
 };
 
@@ -97,10 +98,10 @@ PendingResponse GetMockResponseType(void *responses, char *tid, int *rc)
     }
 
     rc = 0;
-    return (PendingResponse) { mock->type, *(tid_t *)tid, NULL };
+    return (PendingResponse) { mock->type, *(tid_t *)tid, mock->id, NULL };
 }
 
-struct MockResponses *GetMockResponses(char *tid, MessageType type, int check_tid)
+struct MockResponses *GetMockResponses(char *tid, MessageType type, DhtHash id, int check_tid)
 {
     struct MockResponses *responses = malloc(sizeof(struct MockResponses));
     check_mem(responses);
@@ -108,6 +109,7 @@ struct MockResponses *GetMockResponses(char *tid, MessageType type, int check_ti
     responses->getPendingReponse = GetMockResponseType;
     responses->tid = tid;
     responses->type = type;
+    responses->id = id;
     responses->check_tid = check_tid;
 
     return responses;
@@ -115,10 +117,27 @@ error:
     return NULL;
 }
 
+DhtHash ID(char *data)
+{
+    char *id20 = "id20:";
+    char *ch = strstr(data, id20) + strlen(id20);
+    char *end = ch + 20;
+
+    DhtHash id;
+    char *v = id.value;
+
+    while (ch < end)
+    {
+        *v++ = *ch++;
+    }
+
+    return id;
+}
+
 char *test_Decode_RPing()
 {
     char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
-    void *responses = GetMockResponses("aa", RPing, 1);
+    void *responses = GetMockResponses("aa", RPing, ID(data), 1);
 
     Message *message = Message_Decode(data,
 				      strlen(data),
@@ -170,7 +189,7 @@ char *test_Decode_RFindNode()
 	"01234567890123456789ABCDEF"
 	"????????????????????xxxxyy"
 	"e1:t2:aa1:y1:re";
-    void *responses = GetMockResponses("aa", RFindNode, 1);
+    void *responses = GetMockResponses("aa", RFindNode, ID(data), 1);
 
     Message *message = Message_Decode(data, strlen(data), responses);
 
@@ -231,7 +250,7 @@ char *test_Decode_RGetPeers_nodes()
 	"612345678901234567896xxxy6"
 	"712345678901234567897xxxy7"
 	"5:token8:aoeusnthe1:t2:aa1:y1:re";
-    void *responses = GetMockResponses("aa", RGetPeers, 1);
+    void *responses = GetMockResponses("aa", RGetPeers, ID(input), 1);
 
     Message *message = Message_Decode(input, strlen(input), responses);
 
@@ -272,7 +291,7 @@ char *test_Decode_RGetPeers_values()
 	"6:" "1xxxy1"
 	"6:" "2xxxy2"
 	"ee1:t2:aa1:y1:re";
-    void *responses = GetMockResponses("aa", RGetPeers, 1);
+    void *responses = GetMockResponses("aa", RGetPeers, ID(input), 1);
 
     Message *message = Message_Decode(input, strlen(input), responses);
 
@@ -330,7 +349,7 @@ char *test_Decode_QAnnouncePeer()
 char *test_Decode_RAnnouncePeer()
 {
     char *data = "d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aa1:y1:re";
-    void *responses = GetMockResponses("aa", RAnnouncePeer, 1);
+    void *responses = GetMockResponses("aa", RAnnouncePeer, ID(data), 1);
 
     Message *message = Message_Decode(data,
 			      strlen(data),
@@ -484,9 +503,8 @@ char *test_Decode_JunkResponse_find_node()
 	"d1:rd2:id20:mnopqrstuvwxyz1234565:nod__52:01234567890123456789ABCDEF????????????????????xxxxyye1:t2:aa1:y1:re",
 	NULL
     };
-
     void *gettype[] = {
-	GetMockResponses(NULL, RFindNode, 0),
+	GetMockResponses(NULL, RFindNode, ID(junk[0]), 0),
 	NULL
     };
 
@@ -513,7 +531,7 @@ char *test_Decode_JunkResponse_get_peers()
     };
 
     void *gettype[] = {
-	GetMockResponses(NULL, RGetPeers, 0),
+	GetMockResponses(NULL, RGetPeers, ID(junk[0]), 0),
 	NULL
     };
 
@@ -522,14 +540,6 @@ char *test_Decode_JunkResponse_get_peers()
 
 char *test_Decode_JunkResponse()
 {
-    void *gettype[] = {
-	GetMockResponses(NULL, RPing, 0),
-	GetMockResponses(NULL, RFindNode, 0),
-	GetMockResponses(NULL, RGetPeers, 0),
-	GetMockResponses(NULL, RAnnouncePeer, 0),
-	NULL
-    };
-
     char *junk[] = {
 	/* y */
 	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:aae",
@@ -550,6 +560,16 @@ char *test_Decode_JunkResponse()
 	NULL
     };
 
+    DhtHash id = ID(junk[0]);
+
+    void *gettype[] = {
+	GetMockResponses(NULL, RPing, id, 0),
+	GetMockResponses(NULL, RFindNode, id, 0),
+	GetMockResponses(NULL, RGetPeers, id, 0),
+	GetMockResponses(NULL, RAnnouncePeer, id, 0),
+	NULL
+    };
+
     return test_junk_response(junk, gettype);
 }
 
@@ -557,28 +577,30 @@ PendingResponse GetRoundtripResponseMessageType(void *responses, char *t, int *r
 {
     (void)(responses);
 
+    DhtHash id = ID("id20:abcdefghij0123456789");
+
     if (same_bytes_len("pi", t, sizeof(tid_t)))
     {
         *rc = 0;
-        return (PendingResponse) { RPing, *(tid_t *)t, NULL };
+        return (PendingResponse) { RPing, *(tid_t *)t, id, NULL };
     }
 
     if (same_bytes_len("fn", t, sizeof(tid_t)))
     {
         *rc = 0;
-        return (PendingResponse) { RFindNode, *(tid_t *)t, NULL };
+        return (PendingResponse) { RFindNode, *(tid_t *)t, id, NULL };
     }
 
     if (same_bytes_len("gp", t, sizeof(tid_t)))
     {
         *rc = 0;
-        return (PendingResponse) { RGetPeers, *(tid_t *)t, NULL };
+        return (PendingResponse) { RGetPeers, *(tid_t *)t, id, NULL };
     }
 
     if (same_bytes_len("ap", t, sizeof(tid_t)))
     {
         *rc = 0;
-        return (PendingResponse) { RAnnouncePeer, *(tid_t *)t, NULL };
+        return (PendingResponse) { RAnnouncePeer, *(tid_t *)t, id, NULL };
     }
 
     *rc = -1;
@@ -592,11 +614,11 @@ char *test_Roundtrip()
 	"d1:ad2:id20:abcdefghij01234567896:target20:mnopqrstuvwxyz123456e1:q9:find_node1:t2:aa1:y1:qe",
 	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz123456e1:q9:get_peers1:t2:aa1:y1:qe",
 	"d1:ad2:id20:abcdefghij01234567899:info_hash20:mnopqrstuvwxyz1234564:porti6881e5:token8:aoeusnthe1:q13:announce_peer1:t2:aa1:y1:qe",
-	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:pi1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes52:01234567890123456789ABCDEF????????????????????xxxxyye1:t2:fn1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:gp1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz1234565:token8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:gp1:y1:re",
-	"d1:rd2:id20:mnopqrstuvwxyz123456e1:t2:ap1:y1:re",
+	"d1:rd2:id20:abcdefghij0123456789e1:t2:pi1:y1:re",
+	"d1:rd2:id20:abcdefghij01234567895:nodes52:01234567890123456789ABCDEF????????????????????xxxxyye1:t2:fn1:y1:re",
+	"d1:rd2:id20:abcdefghij01234567895:nodes208:012345678901234567890xxxy0112345678901234567891xxxy1212345678901234567892xxxy2312345678901234567893xxxy3412345678901234567894xxxy4512345678901234567895xxxy5612345678901234567896xxxy6712345678901234567897xxxy75:token8:aoeusnthe1:t2:gp1:y1:re",
+	"d1:rd2:id20:abcdefghij01234567895:token8:aoeusnth6:valuesl6:0xxxy06:1xxxy16:2xxxy2ee1:t2:gp1:y1:re",
+	"d1:rd2:id20:abcdefghij0123456789e1:t2:ap1:y1:re",
 	"d1:eli201e23:A Generic Error Ocurrede1:t2:ee1:y1:ee",
 	NULL
     };

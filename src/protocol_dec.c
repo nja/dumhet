@@ -360,6 +360,7 @@ Message *DecodeResponse(BNode *dict, struct PendingResponses *pending)
 
     PendingResponse entry = pending->getPendingResponse(pending, message->t, &rc);
     check(rc == 0, "getPendingResponse failed");
+    check(DhtHash_Equals(&message->id, &entry.id), "Wrong id from responding node");
 
     message->type = entry.type;
     message->context = entry.context;

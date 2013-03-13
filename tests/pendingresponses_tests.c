@@ -15,7 +15,7 @@ char *test_destroy_with_entries()
     HashmapPendingResponses *responses = HashmapPendingResponses_Create();
     mu_assert(responses != NULL, "HashmapPendingResponses_Create failed");
 
-    PendingResponse entry = { QFindNode, 0, NULL };
+    PendingResponse entry = { QFindNode, 0, {{ 0 }}, NULL };
     int rc = HashmapPendingResponses_Add(responses, entry);
     mu_assert(rc == 0, "HashmapPendingResponses_Add failed");
 
@@ -52,7 +52,7 @@ char *test_addremove()
 
     while (tid[i] != 0)
     {
-        PendingResponse entry = { type[i], tid[i], &dummy };
+        PendingResponse entry = { type[i], tid[i], {{ 0 }}, &dummy };
 	int rc = HashmapPendingResponses_Add(responses, entry);
 	mu_assert(rc == 0, "HashmapPendingResponses_Add failed");
 
