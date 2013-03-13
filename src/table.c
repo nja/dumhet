@@ -49,7 +49,7 @@ int DhtTable_HasShiftableNodes(DhtHash *id, DhtBucket *bucket, DhtNode *node)
     assert(id != NULL && "NULL DhtHash pointer");
     assert(bucket != NULL && "NULL DhtBucket pointer");
     assert(node != NULL && "NULL DhtNode pointer");
-    assert(bucket->index < HASH_BITS && "Bad bucket index");
+    assert(bucket->index < MAX_TABLE_BUCKETS && "Bad bucket index");
 
     if (bucket->index < DhtHash_SharedPrefix(id, &node->id))
     {
@@ -74,7 +74,7 @@ int DhtTable_IsLastBucket(DhtTable *table, DhtBucket *bucket)
 {
     assert(table != NULL && "NULL DhtTable pointer");
     assert(bucket != NULL && "NULL DhtBucket pointer");
-    assert(table->end <= HASH_BITS && "Too large table end");
+    assert(table->end <= MAX_TABLE_BUCKETS && "Too large table end");
     assert(table->end >= 0 && "Negative table end");
 
     return table->end - 1 == bucket->index;
@@ -84,7 +84,7 @@ int DhtTable_CanAddBucket(DhtTable *table)
 {
     assert(table != NULL && "NULL DhtTable pointer");
 
-    return table->end < HASH_BITS;
+    return table->end < MAX_TABLE_BUCKETS;
 }
 
 int DhtTable_ShiftBucketNodes(DhtTable *table, DhtBucket *bucket)
@@ -184,7 +184,7 @@ error:
 
 DhtBucket *DhtTable_AddBucket(DhtTable *table)
 {
-    assert(table->end < HASH_BITS && "Adding one bucket too many");
+    assert(table->end < MAX_TABLE_BUCKETS && "Adding one bucket too many");
 
     DhtBucket *bucket = DhtBucket_Create();
     check_mem(bucket);

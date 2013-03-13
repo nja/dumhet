@@ -5,9 +5,11 @@
 #include <dht/hash.h>
 #include <dht/node.h>
 
+#define MAX_TABLE_BUCKETS (HASH_BITS + 1 - BUCKET_LAST_BITS)
+
 typedef struct DhtTable {
     DhtHash id;
-    DhtBucket *buckets[HASH_BITS];
+    DhtBucket *buckets[MAX_TABLE_BUCKETS];
     int end;
 } DhtTable;
 

@@ -17,7 +17,7 @@ char *test_DhtTable_AddBucket()
     }
     node.id.value[HASH_BYTES - 1]++;
 
-    for (i = 0; i < HASH_BITS; i++)
+    for (i = 0; i < MAX_TABLE_BUCKETS; i++)
     {
 	DhtBucket *added = DhtTable_AddBucket(&table);
 	DhtBucket *found = DhtTable_FindBucket(&table, &node.id);
@@ -26,7 +26,7 @@ char *test_DhtTable_AddBucket()
 	mu_assert(added == found, "Found wrong bucket");
     }
 
-    for (i = 0; i < HASH_BITS; i++)
+    for (i = 0; i < MAX_TABLE_BUCKETS; i++)
     {
 	DhtBucket *found = DhtTable_FindBucket(&table, &node.id);
 	mu_assert(found == table.buckets[table.end - 1], "Expected last bucket");
@@ -38,7 +38,7 @@ char *test_DhtTable_AddBucket()
 	node.id.value[i / 8] ^= (0x80 >> (i % 8));
     }
 
-    for (i = 0; i < HASH_BITS; i++)
+    for (i = 0; i < MAX_TABLE_BUCKETS; i++)
     {
 	free(table.buckets[i]);
     }
@@ -66,17 +66,17 @@ char *test_DhtTable_InsertNode()
     for (i = 0; i < BUCKET_K + 1; i++)
     {
 	good_nodes[i].id.value[0] = id.value[0];
-	good_nodes[i].id.value[1] = i;
+	good_nodes[i].id.value[1] = ~i;
 	good_nodes[i].reply_time = now;
 	mu_assert(DhtNode_Status(&good_nodes[i], now) == Good, "Wrong status");
 
 	bad_nodes[i].id.value[0] = id.value[0];
-	bad_nodes[i].id.value[2] = i;
+	bad_nodes[i].id.value[2] = ~i;
 	bad_nodes[i].pending_queries = NODE_MAX_PENDING;
 	mu_assert(DhtNode_Status(&bad_nodes[i], now) == Bad, "Wrong status");
 
 	far_nodes[i].id.value[0] = ~id.value[0];
-	far_nodes[i].id.value[3] = i;
+	far_nodes[i].id.value[3] = ~i;
 	far_nodes[i].reply_time = now;
 	mu_assert(DhtNode_Status(&far_nodes[i], now) == Good, "Wrong status");
     }
@@ -147,21 +147,31 @@ char *test_DhtTable_InsertNode_FullTable()
 
     DhtHash_Invert(&inv);
 
+    const int low_bits = 3;
+    mu_assert(1 << low_bits >= BUCKET_K, "Not enough bits");
+
     DhtTable *table = DhtTable_Create(&id);
     mu_assert(table != NULL, "DhtTable_Create failed");
     
-    DhtNode *node;
-    
     DhtTable_InsertNodeResult result;
 
-    int i = 0;
+    DhtNode *node = DhtNode_Create(&id);
+    result = DhtTable_InsertNode(table, node);
+    mu_assert(result.rc == OKAdded, "Error adding id node");
 
+    int i = 0;
     for (i = 0; i < HASH_BITS; i++)
     {
+        int suffix = HASH_BITS - i;
+        int shift = low_bits < suffix ? low_bits : suffix - 1;
+
         int j = 0;
-        for (j = 0; j < BUCKET_K; j++)
+        for (j = 0; j < BUCKET_K && j < 1 << shift; j++)
         {
             node = DhtNode_Create(&inv);
+
+            node->id.value[HASH_BYTES - 1] &= ~0 << shift;
+            node->id.value[HASH_BYTES - 1] |= j;
 
             DhtHash_Prefix(&node->id, &id, i);
 
@@ -170,11 +180,17 @@ char *test_DhtTable_InsertNode_FullTable()
         }
     }
 
-    for (i = 0; i <= HASH_BITS; i++)
+    for (i = 0; i < table->end; i++)
+    {
+        mu_assert(table->buckets[i]->count == BUCKET_K, "Bucket not full");
+    }
+
+    for (i = 0; i < MAX_TABLE_BUCKETS - 2; i++)
     {
         node = DhtNode_Create(&inv);
         DhtHash_Prefix(&node->id, &id, i);
-
+        node->id.value[HASH_BYTES - 1] &= 0xf0;
+        
         result = DhtTable_InsertNode(table, node);
         mu_assert(result.rc == OKFull, "Should be full");
 
@@ -199,6 +215,7 @@ char *test_DhtTable_InsertNode_AddBucket()
     for (i = 0; i < BUCKET_K; i++)
     {
         node = DhtNode_Create(&id);
+        node->id.value[HASH_BYTES - 1] = i;
         result = DhtTable_InsertNode(table, node);
 
         mu_assert(result.rc == OKAdded, "Wrong rc");
@@ -206,6 +223,7 @@ char *test_DhtTable_InsertNode_AddBucket()
     }
 
     node = DhtNode_Create(&id);
+    node->id.value[HASH_BYTES - 1] = i;
     result = DhtTable_InsertNode(table, node);
 
     mu_assert(result.rc == OKFull, "Wrong rc");

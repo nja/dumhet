@@ -18,31 +18,37 @@ char *test_Search_CopyTable()
     DhtHash id = { "abcdeABCDE12345!@#$" };
     DhtHash invid = id;
 
+    const int low_bits = 3;
+    mu_assert(1 << low_bits >= BUCKET_K, "Not enough bits");
+
     DhtHash_Invert(&invid);
 
     DhtTable *table = DhtTable_Create(&id);
 
     int i = 0;
-    for (i = 0; i < HASH_BITS; i++)
+    for (i = 0; i < HASH_BITS - low_bits; i++)
     {
         DhtTable_InsertNodeResult result;
         DhtNode *node;
 
-        do
+        int j = 0;
+        for (j = 0; j < BUCKET_K; j++)
         {
             node = DhtNode_Create(&invid);
+
+            node->id.value[HASH_BYTES - 1] &= ~0 << low_bits;
+            node->id.value[HASH_BYTES - 1] |= j;
+
             int rc = DhtHash_Prefix(&node->id, &id, i);
             mu_assert(rc == 0, "DhtHash_Prefix failed");
             
             result = DhtTable_InsertNode(table, node);
-        } while (result.rc == OKAdded);
-
-        mu_assert(result.rc == OKFull, "Unexpected rc");
-        DhtNode_Destroy(node);
+            mu_assert(result.rc == OKAdded, "Unexpected rc");
+        }
     }
 
     int shared = 0;
-    for (shared = 0; shared < HASH_BITS; shared++)
+    for (shared = 0; shared < HASH_BITS - low_bits; shared++)
     {
         DhtHash target = invid;
         int rc = DhtHash_Prefix(&target, &id, shared);

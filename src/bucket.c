@@ -26,12 +26,17 @@ int DhtBucket_ContainsNode(DhtBucket *bucket, DhtNode *node)
     assert(bucket != NULL && "NULL DhtBucket pointer");
     assert(node != NULL && "NULL DhtNode pointer");
 
-    int i = 0;
+    DhtNode **bucket_node = bucket->nodes;
 
-    for (i = 0; i < BUCKET_K; i++)
+    while (bucket_node < bucket->nodes + BUCKET_K)
     {
-	if (bucket->nodes[i] == node)
-	    return 1;
+        if (*bucket_node != NULL &&
+            DhtHash_Equals(&node->id, &(*bucket_node)->id))
+        {
+            return 1;
+        }
+
+        bucket_node++;
     }
 
     return 0;
@@ -48,7 +53,8 @@ DhtNode *DhtBucket_ReplaceBad(DhtBucket *bucket, DhtNode *node)
     int i = 0;
     for (i = 0; i < BUCKET_K; i++)
     {
-	assert(bucket->nodes[i] != NULL && "Empty slot in full bucket");
+        if (bucket->nodes[i] == NULL)
+            continue;
 
 	if (DhtNode_Status(bucket->nodes[i], now) == Bad)
 	{
@@ -73,6 +79,9 @@ DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node)
 
     for (i = 0; i < BUCKET_K; i++)
     {
+        if (bucket->nodes[i] == NULL)
+            continue;
+
 	if (DhtNode_Status(bucket->nodes[i], now) == Questionable)
 	{
 	    if (bucket->nodes[i]->reply_time < oldest_time) {

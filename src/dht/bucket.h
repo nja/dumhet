@@ -6,6 +6,7 @@
 #include <dht/node.h>
 
 #define BUCKET_K 8
+#define BUCKET_LAST_BITS 3
 
 typedef struct DhtBucket {
     int index;
