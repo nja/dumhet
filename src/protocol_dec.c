@@ -423,7 +423,7 @@ int GetResponseData(MessageType type, BNode *dict, Message *message)
     }
 }
 
-int GetCompactNodeInfo(BNode *string, DhtNode **nodes, size_t *count);
+DhtNode **GetCompactNodeInfo(BNode *string, size_t *count);
 
 int GetResponseFindNodeData(BNode *arguments, RFindNodeData *data)
 {
@@ -434,10 +434,8 @@ int GetResponseFindNodeData(BNode *arguments, RFindNodeData *data)
 
     check(nodes != NULL, "Missing nodes");
 
-    int rc = GetCompactNodeInfo(nodes,
-				&data->nodes,
-				&data->count);
-    check(rc == 0, "Error reading compact node info");
+    data->nodes = GetCompactNodeInfo(nodes, &data->count);
+    check(data->nodes != NULL, "Error reading compact node info");
 
     return 0;
 error:
@@ -446,35 +444,42 @@ error:
 
 #define COMPACTNODE_BYTES (HASH_BYTES + sizeof(uint32_t) + sizeof(uint16_t))
 
-int GetCompactNodeInfo(BNode *string, DhtNode **nodes, size_t *count)
+DhtNode **GetCompactNodeInfo(BNode *string, size_t *count)
 {
     assert(string != NULL && "NULL BNode string pointer");
-    assert(nodes != NULL && "NULL pointer to DhtNode pointer");
     assert(count != NULL && "NULL pointer to size_t count");
+
+    DhtNode **nodes = NULL;
 
     check(string->type == BString, "Not a BString");
     check(string->count % COMPACTNODE_BYTES == 0, "Bad compact node info length");
     
     *count = string->count / COMPACTNODE_BYTES;
-    *nodes = calloc(*count, sizeof(DhtNode));
-    check_mem(*nodes);
+    nodes = calloc(*count, sizeof(DhtNode));
+    check_mem(nodes);
     
-    DhtNode *node = *nodes;
     char *data = string->value.string;
 
-    while (node < *nodes + *count)
+    unsigned int i = 0;
+    for (i = 0; i < *count; i++)
     {
-	memcpy(node->id.value, data, HASH_BYTES);
-	node->addr.s_addr = ntohl(*(uint32_t *)(data + HASH_BYTES));
-	node->port = ntohs(*(uint16_t *)(data + HASH_BYTES + sizeof(uint32_t)));
+
+        nodes[i] = DhtNode_Create((DhtHash *)data);
+        check_mem(nodes[i]);
+        nodes[i]->addr.s_addr = ntohl(*(uint32_t *)(data + HASH_BYTES));
+	nodes[i]->port = ntohs(*(uint16_t *)(data + HASH_BYTES + sizeof(uint32_t)));
 
 	data += COMPACTNODE_BYTES;
-	node++;
     }
 
-    return 0;
+    return nodes;
 error:
-    return -1;
+    if (nodes != NULL)
+        DhtNode_DestroyBlock(nodes, string->count);
+
+    free(nodes);
+
+    return NULL;
 }
 
 int GetCompactPeerInfo(BNode *list, Peer **values, size_t *count);
@@ -493,8 +498,11 @@ int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
 
     data->token_len = token->count;
 
-    int rc = 0;
+    data->nodes = NULL;
+    data->values = NULL;
+    data->count = 0;
 
+    /* TODO: BNode_TryGetValue */
     BNode *values = BNode_GetValue(arguments, "values", 6);
     BNode *nodes = BNode_GetValue(arguments, "nodes", 5);
 
@@ -504,17 +512,15 @@ int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
     }
     else if (values != NULL)
     {
-	rc = GetCompactPeerInfo(values,
-				&data->values,
-				&data->count);
+	int rc = GetCompactPeerInfo(values,
+                                    &data->values,
+                                    &data->count);
 	check(rc == 0, "Failed to get peer values compact info");
     }
     else if (nodes != NULL)
     {
-	rc = GetCompactNodeInfo(nodes,
-				&data->nodes,
-				&data->count);
-	check(rc == 0, "Failed to get compact node info");
+	data->nodes = GetCompactNodeInfo(nodes, &data->count);
+	check(data->nodes != NULL, "Failed to get compact node info");
     }
     else
     {
@@ -525,15 +531,6 @@ int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
 error:
     free(data->token);
     data->token = NULL;
-
-    free(data->values);
-    data->values = NULL;
-
-    if (data->nodes != NULL)
-	DhtNode_DestroyBlock(data->nodes, data->count);
-    data->nodes = NULL;
-
-    data->count = 0;
 
     return -1;
 }

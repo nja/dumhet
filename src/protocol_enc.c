@@ -314,7 +314,7 @@ int NodesLen(size_t nodes_count)
     return SLen("5:nodes") + BStringLen(nodes_count * COMPACTNODEBYTES);
 }
 
-void NodesCpy(char **dest, DhtNode *nodes, size_t count)
+void NodesCpy(char **dest, DhtNode **nodes, size_t count)
 {
     SCpy(*dest, "5:nodes");
 
@@ -322,19 +322,19 @@ void NodesCpy(char **dest, DhtNode *nodes, size_t count)
 
     StringHeaderCpy(dest, len);
 
-    size_t i = 0;
+    unsigned int i = 0;
     for (i = 0; i < count; i++)
     {
-	memcpy(*dest, nodes[i].id.value, HASH_BYTES);
+	memcpy(*dest, nodes[i]->id.value, HASH_BYTES);
 	*dest += HASH_BYTES;
 
-	(*dest)[0] = nodes[i].addr.s_addr >> 24;
-	(*dest)[1] = nodes[i].addr.s_addr >> 16;
-	(*dest)[2] = nodes[i].addr.s_addr >> 8;
-	(*dest)[3] = nodes[i].addr.s_addr;
+	(*dest)[0] = nodes[i]->addr.s_addr >> 24;
+	(*dest)[1] = nodes[i]->addr.s_addr >> 16;
+	(*dest)[2] = nodes[i]->addr.s_addr >> 8;
+	(*dest)[3] = nodes[i]->addr.s_addr;
 
-	(*dest)[4] = nodes[i].port >> 8;
-	(*dest)[5] = nodes[i].port;
+	(*dest)[4] = nodes[i]->port >> 8;
+	(*dest)[5] = nodes[i]->port;
 
 	*dest += 6;
     }

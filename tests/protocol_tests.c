@@ -199,21 +199,22 @@ char *test_Decode_RFindNode()
     mu_assert(message->data.rfindnode.count == 2, "Wrong node count");
 
     mu_assert(same_bytes("01234567890123456789",
-			 message->data.rfindnode.nodes[0].id.value),
+			 message->data.rfindnode.nodes[0]->id.value),
 	      "Wrong nodes[0] id");
-    mu_assert(message->data.rfindnode.nodes[0].addr.s_addr == chntohl("ABCD"),
+    mu_assert(message->data.rfindnode.nodes[0]->addr.s_addr == chntohl("ABCD"),
 	      "Wrong nodes[0] addr");
-    mu_assert(message->data.rfindnode.nodes[0].port == chntohs("EF"),
+    mu_assert(message->data.rfindnode.nodes[0]->port == chntohs("EF"),
     	      "Wrong nodes[0] port");
 
     mu_assert(same_bytes("????????????????????",
-			 message->data.rfindnode.nodes[1].id.value),
+			 message->data.rfindnode.nodes[1]->id.value),
 	      "Wrong nodes[1] id");
-    mu_assert(message->data.rfindnode.nodes[1].addr.s_addr == chntohl("xxxx"),
+    mu_assert(message->data.rfindnode.nodes[1]->addr.s_addr == chntohl("xxxx"),
 	      "Wrong nodes[1] addr");
-    mu_assert(message->data.rfindnode.nodes[1].port == chntohs("yy"),
+    mu_assert(message->data.rfindnode.nodes[1]->port == chntohs("yy"),
 	      "Wrong nodes[1] port");
 
+    Message_DestroyNodes(message);
     Message_Destroy(message);
     free(responses);
 
@@ -273,11 +274,12 @@ char *test_Decode_RGetPeers_nodes()
 	addr[0] = '0' + i;
 	port[1] = '0' + i;
 
-	mu_assert(same_bytes(id, data->nodes[i].id.value), "Bad id");
-	mu_assert(data->nodes[i].addr.s_addr == chntohl(addr), "Bad addr");
-	mu_assert(data->nodes[i].port == chntohs(port), "Bad port");
+	mu_assert(same_bytes(id, data->nodes[i]->id.value), "Bad id");
+	mu_assert(data->nodes[i]->addr.s_addr == chntohl(addr), "Bad addr");
+	mu_assert(data->nodes[i]->port == chntohs(port), "Bad port");
     }
 
+    Message_DestroyNodes(message);
     Message_Destroy(message);
     free(responses);
     
@@ -646,6 +648,7 @@ char *test_Roundtrip()
 	mu_assert(rc == len, "Encoded too little");
 	mu_assert(same_bytes_len(input[i], dest, len), "Roundtrip failed");
 
+        Message_DestroyNodes(message);
 	Message_Destroy(message);
 	free(dest);
 

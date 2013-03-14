@@ -69,10 +69,15 @@ int DhtNode_DestroyOp(void *context, DhtNode *node)
     return 0;
 }
 
-void DhtNode_DestroyBlock(DhtNode *node, size_t count)
+void DhtNode_DestroyBlock(DhtNode **nodes, size_t count)
 {
-    assert(((node == NULL && count == 0)
-	    || (node != NULL && count > 0)) && "Bad count for block");
-    count = count;		/* Unused */
-    free(node);
+    assert(((nodes == NULL && count == 0)
+	    || (nodes != NULL && count > 0)) && "Bad count for block");
+
+    unsigned int i = 0;
+    for (i = 0; i < count; i++)
+    {
+        DhtNode_Destroy(nodes[i]);
+        nodes[i] = NULL;
+    }
 }

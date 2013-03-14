@@ -39,7 +39,7 @@ typedef struct RPingData {
 } RPingData;
 
 typedef struct RFindNodeData {
-    DhtNode *nodes;
+    DhtNode **nodes;
     size_t count;
 } RFindNodeData;
 
@@ -47,7 +47,7 @@ typedef struct RGetPeersData {
     char *token;
     size_t token_len;
     Peer *values;
-    DhtNode *nodes;
+    DhtNode **nodes;
     size_t count;
 } RGetPeersData;
 
@@ -79,5 +79,6 @@ typedef struct Message {
 } Message;
 
 void Message_Destroy(Message *message);
+void Message_DestroyNodes(Message *message);
 
 #endif

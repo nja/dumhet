@@ -25,17 +25,12 @@ void Message_Destroy(Message *message)
     case RPing:
 	break;
     case RFindNode:
-	DhtNode_Destroy(message->data.rfindnode.nodes);
+	free(message->data.rfindnode.nodes);
 	break;
     case RGetPeers:
 	free(message->data.rgetpeers.token);
 	free(message->data.rgetpeers.values); /* TODO: destroy? */
-
-	if (message->data.rgetpeers.values == NULL)
-	{
-	    DhtNode_DestroyBlock(message->data.rgetpeers.nodes,
-				 message->data.rgetpeers.count);
-	}
+        free(message->data.rgetpeers.nodes);
 	break;
     case RAnnouncePeer:
 	break;
@@ -47,6 +42,28 @@ void Message_Destroy(Message *message)
     }
 
     free(message);
+}
+
+void Message_DestroyNodes(Message *message)
+{
+    if (message == NULL)
+        return;
+
+    switch (message->type)
+    {
+    case RFindNode:
+        DhtNode_DestroyBlock(message->data.rfindnode.nodes,
+                             message->data.rfindnode.count);
+        break;
+    case RGetPeers:
+        if (message->data.rgetpeers.nodes != NULL)
+        {
+            DhtNode_DestroyBlock(message->data.rgetpeers.nodes,
+                                 message->data.rgetpeers.count);
+        }
+        break;
+    default: break;
+    }
 }
 
 int MessageType_IsQuery(MessageType type)
