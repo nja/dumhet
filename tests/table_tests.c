@@ -241,6 +241,97 @@ char *test_DhtTable_InsertNode_AddBucket()
     return NULL;
 }
 
+DhtNode **MakeNodes(int count, char high)
+{
+    DhtNode **nodes = calloc(count, sizeof(DhtNode *));
+
+    int i = 0;
+    for (i = 0; i < count; i++)
+    {
+        DhtHash id = {{ 0 }};
+        id.value[0] = high;
+        id.value[2] = i + 1;
+        nodes[i] = DhtNode_Create(&id);
+        nodes[i]->reply_time = time(NULL);
+    }
+
+    return nodes;
+}
+
+int HasNode(DArray *nodes, DhtNode *node)
+{
+    int i = 0;
+    for (i = 0; i < DArray_end(nodes); i++)
+    {
+        if (node == DArray_get(nodes, i))
+            return 1;
+    }
+
+    return 0;
+}
+
+char *test_DhtTable_GatherClosest()
+{
+    DhtHash id = {{ 0 }};
+
+    int i = 0;
+    for (i = 0; i <= BUCKET_K; i++)
+    {
+        DhtTable *table = DhtTable_Create(&id);
+
+        int far = i;
+        int close = BUCKET_K - i;
+
+        DhtNode **far_nodes = MakeNodes(far, 0x40);
+        DhtNode **close_nodes = MakeNodes(close, 0x20);
+        DhtNode **filler_nodes = MakeNodes(BUCKET_K, 0x80);
+
+        DhtTable_InsertNodeResult result;
+        int j = 0;
+        for (j = 0; j < BUCKET_K; j++)
+        {
+            result = DhtTable_InsertNode(table, filler_nodes[j]);
+            mu_assert(result.rc == OKAdded, "add");
+        }
+
+        for (j = 0; j < far; j++)
+        {
+            result = DhtTable_InsertNode(table, far_nodes[j]);
+            mu_assert(result.rc == OKAdded, "add");
+        }
+        
+        for (j = 0; j < close; j++)
+        {
+            result = DhtTable_InsertNode(table, close_nodes[j]);
+            mu_assert(result.rc == OKAdded, "add");
+        }            
+
+        DhtHash target = {{ 0 }};
+        target.value[1] = 16;
+
+        DArray *found = DhtTable_GatherClosest(table, &target);
+
+        for (j = 0; j < BUCKET_K; j++)
+            mu_assert(!HasNode(found, filler_nodes[j]), "Filler node found");
+
+        for (j = 0; j < far; j++)
+            mu_assert(HasNode(found, far_nodes[j]), "Far node missing");
+
+        for (j = 0; j < close; j++)
+            mu_assert(HasNode(found, close_nodes[j]), "Close node missing");
+
+        DhtTable_ForEachNode(table, NULL, DhtNode_DestroyOp);
+        DhtTable_Destroy(table);
+        DArray_destroy(found);
+
+        free(far_nodes);
+        free(close_nodes);
+        free(filler_nodes);
+    }
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -249,6 +340,7 @@ char *all_tests()
     mu_run_test(test_DhtTable_InsertNode);
     mu_run_test(test_DhtTable_InsertNode_FullTable);
     mu_run_test(test_DhtTable_InsertNode_AddBucket);
+    mu_run_test(test_DhtTable_GatherClosest);
 
     return NULL;
 }

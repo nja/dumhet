@@ -3,6 +3,7 @@
 
 #include <time.h>
 
+#include <lcthw/darray.h>
 #include <dht/node.h>
 
 #define BUCKET_K 8
@@ -25,5 +26,7 @@ DhtNode *DhtBucket_ReplaceBad(DhtBucket *bucket, DhtNode *node);
 DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node);
 
 int DhtBucket_AddNode(DhtBucket *bucket, DhtNode *node);
-    
+
+int DhtBucket_GatherGoodNodes(DhtBucket *bucket, DArray *found);
+
 #endif

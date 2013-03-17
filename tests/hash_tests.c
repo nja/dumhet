@@ -118,22 +118,18 @@ char *test_DhtHash_Distance()
     DhtHash ha = {{0}}, hb = {{0}}, hc = {{0}};
     DhtDistance zero_d = {{0}};
 
-    DhtDistance *daa = DhtHash_Distance(&ha, &ha);
+    DhtDistance daa = DhtHash_Distance(&ha, &ha);
 
-    mu_assert(DhtDistance_Compare(&zero_d, daa) == 0, "Wrong distance");
+    mu_assert(DhtDistance_Compare(&zero_d, &daa) == 0, "Wrong distance");
 
     hb.value[0] = 0xE0;
     hc.value[0] = 0xF0;
 
-    DhtDistance *dab = DhtHash_Distance(&ha, &hb);
-    DhtDistance *dac = DhtHash_Distance(&ha, &hc);
+    DhtDistance dab = DhtHash_Distance(&ha, &hb);
+    DhtDistance dac = DhtHash_Distance(&ha, &hc);
 
-    mu_assert(DhtDistance_Compare(daa, dab) < 0, "Wrong distance");
-    mu_assert(DhtDistance_Compare(dab, dac) < 0, "Wrong distance");
-
-    DhtDistance_Destroy(daa);
-    DhtDistance_Destroy(dab);
-    DhtDistance_Destroy(dac);
+    mu_assert(DhtDistance_Compare(&daa, &dab) < 0, "Wrong distance");
+    mu_assert(DhtDistance_Compare(&dab, &dac) < 0, "Wrong distance");
 
     return NULL;
 }

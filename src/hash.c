@@ -154,23 +154,20 @@ void DhtHash_Invert(DhtHash *hash)
 
 /* DhtDistance */
 
-DhtDistance *DhtHash_Distance(DhtHash *a, DhtHash *b)
+DhtDistance DhtHash_Distance(DhtHash *a, DhtHash *b)
 {
     assert(a != NULL && b != NULL && "NULL DhtHash pointer");
 
-    DhtDistance *distance = malloc(sizeof(DhtDistance));
-    check_mem(distance);
+    DhtDistance distance;
 
     int i = 0;
 
     for (i = 0; i < HASH_BYTES; i++)
     {
-	distance->value[i] = a->value[i] ^ b->value[i];
+	distance.value[i] = a->value[i] ^ b->value[i];
     }
 
     return distance;
-error:
-    return NULL;
 }
 
 int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)

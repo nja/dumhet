@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <dht/close.h>
 #include <dht/table.h>
 #include <lcthw/dbg.h>
 
@@ -257,5 +258,32 @@ DhtNode *DhtTable_FindNode(DhtTable *table, DhtHash *id)
         node++;
     }
 
+    return NULL;
+}
+
+int CloseNodes_AddOp(void *close, DhtNode *node)
+{
+    return CloseNodes_Add((CloseNodes *)close, node);
+}
+
+DArray *DhtTable_GatherClosest(DhtTable *table, DhtHash *id)
+{
+    assert(table != NULL && "NULL DhtTable pointer");
+    assert(id != NULL && "NULL DhtHash pointer");
+
+    CloseNodes *close = CloseNodes_Create(id);
+    check(close != NULL, "CloseNodes_Create failed");
+
+    int rc = DhtTable_ForEachNode(table, close, CloseNodes_AddOp);
+    check(rc == 0, "DhtTable_ForEachNode failed");
+
+    DArray *found = CloseNodes_GetNodes(close);
+    check(found != NULL, "CloseNodes_GetNodes failed");
+
+    CloseNodes_Destroy(close);
+
+    return found;
+error:
+    CloseNodes_Destroy(close);
     return NULL;
 }

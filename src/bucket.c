@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <time.h>
 
 #include <dht/bucket.h>
 #include <dht/node.h>
@@ -143,6 +144,29 @@ int DhtBucket_AddNode(DhtBucket *bucket, DhtNode *node)
     }
 
     log_err("Bucket with count %d had no empty slots", bucket->count);
+error:
+    return -1;
+}
+
+int DhtBucket_GatherGoodNodes(DhtBucket *bucket, DArray *found)
+{
+    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(found != NULL && "NULL DArray pointer");
+
+    DhtNode **node = bucket->nodes;
+
+    while (DArray_count(found) < BUCKET_K && node < bucket->nodes + BUCKET_K)
+    {
+        if (*node != NULL && DhtNode_Status(*node, time(NULL)) == Good)
+        {
+            int rc = DArray_push(found, *node);
+            check(rc == 0, "DArray_push failed");
+        }
+
+        node++;
+    }
+
+    return 0;
 error:
     return -1;
 }

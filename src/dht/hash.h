@@ -27,7 +27,7 @@ typedef DhtHash DhtDistance;
 
 #define DhtDistance_Destroy(D) DhtHash_Destroy((D))
 
-DhtDistance *DhtHash_Distance(DhtHash *a, DhtHash *b);
+DhtDistance DhtHash_Distance(DhtHash *a, DhtHash *b);
 
 int DhtDistance_Compare(DhtDistance *a, DhtDistance *b);
 

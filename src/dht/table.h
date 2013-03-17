@@ -27,6 +27,8 @@ DhtNode *DhtTable_FindNode(DhtTable *table, DhtHash *id);
 enum DhtTable_InsertNodeResultRc {
     ERROR, OKAdded, OKReplaced, OKFull, OKAlreadyAdded
 };
+DArray *DhtTable_GatherClosest(DhtTable *table, DhtHash *id);
+
 
 typedef struct DhtTable_InsertNodeResult {
     enum DhtTable_InsertNodeResultRc rc;
