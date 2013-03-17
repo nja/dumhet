@@ -8,14 +8,21 @@
 DhtHash *DhtHash_Clone(DhtHash *hash)
 {
     assert(hash != NULL && "NULL DhtHash hash pointer");
+    assert(HASH_BYTES % sizeof(int32_t) == 0 && "Size confusion");
 
     DhtHash *clone = malloc(sizeof(DhtHash));
     check_mem(clone);
 
-    int i = 0;
-    for (i = 0; i < HASH_BYTES; i++)
+    unsigned int i = 0;
+
+    for (i = 0; i <= HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
     {
-	clone->value[i] = hash->value[i];
+        *(int_fast32_t *)&clone->value[i] = *(int_fast32_t *)&hash->value[i];
+    }
+
+    for (; i <= HASH_BYTES - sizeof(int32_t); i += sizeof(int32_t))
+    {
+        *(int32_t *)&clone->value[i] = *(int32_t *)&hash->value[i];
     }
 
     return clone;
@@ -41,14 +48,28 @@ error:
     return -1;
 }
 
-int DhtHash_Prefix(DhtHash *hash, DhtHash *prefix, int prefix_len)
+int DhtHash_Prefix(DhtHash *hash, DhtHash *prefix, unsigned int prefix_len)
 {
     assert(hash != NULL && "NULL DhtHash hash pointer");
     assert(prefix != NULL && "NULL DhtHash prefix pointer");
 
-    check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
+    check(prefix_len <= HASH_BITS, "Bad prefix_len");
 
-    int i = 0;
+    unsigned int i = 0;
+
+    while (prefix_len >= sizeof(int_fast32_t) * 8)
+    {
+        *(int_fast32_t *)&hash->value[i] = *(int_fast32_t *)&prefix->value[i];
+        prefix_len -= sizeof(int_fast32_t) * 8;
+        i += sizeof(int_fast32_t);
+    }
+
+    while (prefix_len >= sizeof(int32_t) * 8)
+    {
+        *(int32_t *)&hash->value[i] = *(int32_t *)&prefix->value[i];
+        prefix_len -= sizeof(int32_t) * 8;
+        i += sizeof(int32_t);
+    }
 
     while (prefix_len >= 8)
     {
@@ -93,16 +114,22 @@ int DhtHash_Equals(DhtHash *a, DhtHash *b)
 {
     assert(a != NULL && "NULL DhtHash pointer");
     assert(b != NULL && "NULL DhtHash pointer");
-    assert(HASH_BYTES % sizeof(int) == 0 && "Size confusion");
+    assert(HASH_BYTES % sizeof(int32_t) == 0 && "Size confusion");
 
     if (a == b)
         return 1;
 
-    int *ai = (int *)a->value, *bi = (int *)b->value;
+    unsigned int i = 0;
 
-    while (ai < (int *)&a->value[HASH_BYTES])
+    for (i = 0; i <= HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
     {
-        if (*ai++ != *bi++)
+        if (*(int_fast32_t *)&a->value[i] != *(int_fast32_t *)&b->value[i])
+            return 0;
+    }
+
+    for (; i <= HASH_BYTES - sizeof(int32_t); i += sizeof(int32_t))
+    {
+        if (*(int32_t *)&a->value[i] != *(int32_t *)&b->value[i])
             return 0;
     }
 
@@ -111,16 +138,30 @@ int DhtHash_Equals(DhtHash *a, DhtHash *b)
 
 int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)
 {
-    int hi = 0, bi = 0;
+    unsigned int hi = 0;
 
-    for (hi = 0; hi < HASH_BYTES; hi++)
+    for (hi = 0; hi <= HASH_BYTES - sizeof(int_fast32_t); hi += sizeof(int_fast32_t))
     {
-	if (a->value[hi] == b->value[hi])
-	{
-	    bi += 8;
-	    continue;
-	}
+        if (*(int_fast32_t *)&a->value[hi] != *(int_fast32_t *)&b->value[hi])
+            break;
+    }
 
+    for (; hi <= HASH_BYTES - sizeof(int32_t); hi += sizeof(int32_t))
+    {
+        if (*(int32_t *)&a->value[hi] != *(int32_t *)&b->value[hi])
+            break;
+    }
+
+    for (; hi < HASH_BYTES; hi++)
+    {
+	if (a->value[hi] != b->value[hi])
+            break;
+    }
+
+    unsigned int bi = hi * 8;
+
+    if (hi < HASH_BYTES)
+    {
 	uint8_t mask = 1 << 7;
         uint8_t xor = a->value[hi] ^ b->value[hi];
 	while (mask)
@@ -144,11 +185,18 @@ done:
 void DhtHash_Invert(DhtHash *hash)
 {
     assert(HASH_BYTES % sizeof(int) == 0 && "Byte confusion");
+    assert(HASH_BYTES % sizeof(int32_t) == 0 && "Size confusion");
 
-    int *i;    
-    for (i = (int *)hash->value; (char *)i < hash->value + HASH_BYTES; i++)
+    unsigned int i = 0;
+
+    for (i = 0; i <= HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
     {
-        *i = ~*i;
+        *(int_fast32_t *)&hash->value[i] = ~(*(int_fast32_t *)&hash->value[i]);
+    }
+
+    for (; i <= HASH_BYTES - sizeof(int32_t); i += sizeof(int32_t))
+    {
+        *(int32_t *)&hash->value[i] = ~(*(int32_t *)&hash->value[i]);
     }
 }
 
@@ -160,11 +208,18 @@ DhtDistance DhtHash_Distance(DhtHash *a, DhtHash *b)
 
     DhtDistance distance;
 
-    int i = 0;
+    unsigned int i = 0;
 
-    for (i = 0; i < HASH_BYTES; i++)
+    for (i = 0; i <= HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
     {
-	distance.value[i] = a->value[i] ^ b->value[i];
+        *(int_fast32_t *)&distance.value[i] =
+            *(int_fast32_t *)&a->value[i] ^ *(int_fast32_t *)&b->value[i];
+    }
+
+    for (; i <= HASH_BYTES - sizeof(int32_t); i += sizeof(int32_t))
+    {
+        *(int32_t *)&distance.value[i] =
+            *(int32_t *)&a->value[i] ^ *(int32_t *)&b->value[i];
     }
 
     return distance;
@@ -174,9 +229,15 @@ int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
 {
     assert(a != NULL && b != NULL && "NULL DhtDistance pointer");
 
-    int i = 0;
+    unsigned int i = 0;
 
-    for (i = 0; i < HASH_BYTES; i++)
+    for (i = 0; i < HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
+    {
+        if (*(int_fast32_t *)&a->value[i] != *(int_fast32_t *)&b->value[i])
+            break;
+    }
+
+    for (; i < HASH_BYTES; i++)
     {
 	if ((unsigned char)a->value[i] < (unsigned char)b->value[i])
 	    return -1;

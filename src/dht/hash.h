@@ -13,7 +13,7 @@ typedef struct DhtHash {
 DhtHash *DhtHash_Clone(DhtHash *hash);
 void DhtHash_Destroy(DhtHash *hash);
 
-int DhtHash_Prefix(DhtHash *hash, DhtHash *prefix, int prefix_len);
+int DhtHash_Prefix(DhtHash *hash, DhtHash *prefix, unsigned int prefix_len);
 int DhtHash_Random(RandomState *rs, DhtHash *hash);
 int DhtHash_PrefixedRandom(RandomState *rs, DhtHash *hash, DhtHash *prefix, int prefix_len);
 void DhtHash_Invert(DhtHash *hash);

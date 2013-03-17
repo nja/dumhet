@@ -50,7 +50,7 @@ int Random_Fill(RandomState *randomState, char *buf, size_t len)
     size_t i = 0;
     int rc = 0;
 
-    for (i = 0; i + 3 < len; i += 4)
+    for (i = 0; i + sizeof(int32_t) <= len; i += sizeof(int32_t))
     {
 	rc = random_r(randomState->data, (int32_t *)&buf[i]);
 	check(rc == 0, "Random number generation error");
@@ -58,7 +58,7 @@ int Random_Fill(RandomState *randomState, char *buf, size_t len)
 
     if (i == len) return 0;
 
-    int r = 0;
+    int32_t r = 0;
     rc = random_r(randomState->data, &r);
     check(rc == 0, "Random number generation error");
 
