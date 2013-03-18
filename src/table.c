@@ -287,3 +287,23 @@ error:
     CloseNodes_Destroy(close);
     return NULL;
 }
+
+int DhtTable_MarkReply(DhtTable *table, DhtHash *id)
+{
+    assert(table != NULL && "NULL DhtTable pointer");
+    assert(id != NULL && "NULL DhtHash pointer");
+
+    DhtNode *node = DhtTable_FindNode(table, id);
+
+    if (node == NULL)
+        return 0;
+
+    check(node->pending_queries > 0, "No pending queries on node");
+
+    node->reply_time = time(NULL);
+    node->pending_queries--;
+
+    return 0;
+error:
+    return -1;
+}
