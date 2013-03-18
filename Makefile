@@ -1,6 +1,6 @@
 WFLAGS=-Wall -Wextra -Werror -Wno-missing-field-initializers
 CFLAGS=-g -O2 -Isrc -rdynamic -DNDEBUG $(WFLAGS) $(OPTFLAGS)
-LIBS=-ldl $(OPTLIBS)
+LIBS=-lcrypto -ldl $(OPTLIBS)
 PREFIX?=/usr/local
 
 DHTHEADERS=$(wildcard src/dht/*.h)
@@ -45,11 +45,11 @@ build/%.o: src/%.c $(LCTHWHEADERS) $(DHTHEADERS)
 
 bin/tests/%: $(TARGET) tests/%.c tests/minunit.h
 	@mkdir -p bin/tests
-	$(CC) $(LIBS) $(CFLAGS) tests/$*.c $< -o $@
+	$(CC) $(CFLAGS) tests/$*.c $< -o $@ $(LIBS)
 
 $(PROGRAMS): %: $(TARGET) src/%.c
 	@mkdir -p bin
-	$(CC) $(LIBS) $(CFLAGS) src/$@.c $< -o $@
+	$(CC) $(CFLAGS) src/$@.c $< -o $@ $(LIBS)
 
 valgrind:
 	VALGRIND="valgrind --leak-check=full --error-exitcode=1" $(MAKE)
