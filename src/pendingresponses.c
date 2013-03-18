@@ -26,7 +26,8 @@ int FreeEntry(HashmapNode *node)
 
 void HashmapPendingResponses_Destroy(HashmapPendingResponses *pending)
 {
-    assert(pending != NULL && "NULL HashmapPendingResponses pointer");
+    if (pending == NULL)
+        return;
     
     Hashmap_traverse(pending->hashmap, FreeEntry);
     Hashmap_destroy(pending->hashmap);
