@@ -40,6 +40,9 @@ error:
 
 void RandomState_Destroy(RandomState *randomState)
 {
+    if (randomState == NULL)
+        return;
+
     free(randomState->buf);
     free(randomState->data);
     free(randomState);
