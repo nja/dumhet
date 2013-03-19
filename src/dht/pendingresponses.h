@@ -7,13 +7,14 @@
 
 typedef struct HashmapPendingResponses {
     GetPendingResponse_fp getPendingResponse;
+    AddPendingResponse_fp addPendingResponse;
     Hashmap *hashmap;
 } HashmapPendingResponses;
 
 HashmapPendingResponses *HashmapPendingResponses_Create();
 void HashmapPendingResponses_Destroy(HashmapPendingResponses *pending);
 
-int HashmapPendingResponses_Add(HashmapPendingResponses *responses, PendingResponse entry);
+int HashmapPendingResponses_Add(void *responses, PendingResponse entry);
 PendingResponse HashmapPendingResponses_Remove(void *responses, char *tid, int *rc);
 
 int PendingResponse_Compare(void *a, void *b);

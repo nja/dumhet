@@ -1,9 +1,8 @@
 #ifndef _dhtclient_h
 #define _dhtclient_h
 
-#include <dht/message.h>
 #include <dht/table.h>
-#include <dht/pendingresponses.h>
+#include <dht/protocol.h>
 
 #define SECRETS_LEN 2
 
@@ -13,7 +12,7 @@ typedef struct DhtClient {
     DhtNode node;
     DhtTable *table;
     int socket;
-    HashmapPendingResponses *pending;
+    struct PendingResponses *pending;
     char *buf;
     int next_t;
     DhtHash secrets[SECRETS_LEN];

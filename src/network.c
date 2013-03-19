@@ -123,8 +123,8 @@ int SendMessage(DhtClient *client, Message *msg, DhtNode *node)
   {
       PendingResponse entry = { msg->type, *(tid_t *)msg->t, node->id, msg->context };
 
-      rc = HashmapPendingResponses_Add(client->pending, entry);
-      check(rc == 0, "HashmapPendingResponses_Add failed");
+      rc = client->pending->addPendingResponse(client->pending, entry);
+      check(rc == 0, "addPendingResponses failed");
   }
 
   return 0;

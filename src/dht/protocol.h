@@ -14,11 +14,14 @@ typedef struct PendingResponse {
 } PendingResponse;
 
 typedef PendingResponse (*GetPendingResponse_fp)(void *responses,
-                                                      char *transaction_id,
-                                                      int *rc);
+                                                 char *transaction_id,
+                                                 int *rc);
+
+typedef int (*AddPendingResponse_fp)(void *responses, PendingResponse entry);
 
 struct PendingResponses {
     GetPendingResponse_fp getPendingResponse;
+    AddPendingResponse_fp addPendingResponse;
 };
 
 Message *Message_Decode(char *data, size_t len, struct PendingResponses *pending); 

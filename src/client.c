@@ -6,6 +6,7 @@
 #include <lcthw/dbg.h>
 #include <dht/client.h>
 #include <dht/network.h>
+#include <dht/pendingresponses.h>
 #include <dht/random.h>
 
 int CreateSocket();
@@ -23,8 +24,8 @@ DhtClient *DhtClient_Create(DhtHash id, uint32_t addr, uint16_t port)
   client->table = DhtTable_Create(&client->node.id);
   check_mem(client->table);
 
-  client->pending = HashmapPendingResponses_Create();
-  check_mem(client->pending);
+  client->pending = (struct PendingResponses *)HashmapPendingResponses_Create();
+  check(client->pending != NULL, "HashmapPendingResponses_Create failed");
 
   client->buf = calloc(1, UDPBUFLEN);
   check_mem(client->buf);
@@ -47,7 +48,7 @@ error:
   if (client != NULL)
   {
       free(client->buf);
-      HashmapPendingResponses_Destroy(client->pending);
+      HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
       DhtTable_Destroy(client->table);
   }
 
@@ -62,7 +63,7 @@ void DhtClient_Destroy(DhtClient *client)
     return;
 
   DhtTable_Destroy(client->table);
-  HashmapPendingResponses_Destroy(client->pending);
+  HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
   free(client->buf);
   
   if (client->socket != -1)

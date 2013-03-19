@@ -9,6 +9,7 @@ HashmapPendingResponses *HashmapPendingResponses_Create()
     check_mem(pending);
 
     pending->getPendingResponse = HashmapPendingResponses_Remove;
+    pending->addPendingResponse = HashmapPendingResponses_Add;
 
     pending->hashmap = Hashmap_create(PendingResponse_Compare, PendingResponse_Hash);
     check_mem(pending->hashmap);
@@ -72,7 +73,7 @@ int PendingResponse_Compare(void *a, void *b)
 	return 0;
 }
 
-int HashmapPendingResponses_Add(HashmapPendingResponses *responses, PendingResponse entry)
+int HashmapPendingResponses_Add(void *responses, PendingResponse entry)
 {
     assert(responses != NULL && "NULL HashmapPendingResponses pointer");
 
@@ -81,7 +82,9 @@ int HashmapPendingResponses_Add(HashmapPendingResponses *responses, PendingRespo
 
     *mentry = entry;
 
-    int rc = Hashmap_set(responses->hashmap, &mentry->tid, mentry);
+    int rc = Hashmap_set(((HashmapPendingResponses *)responses)->hashmap,
+                         &mentry->tid,
+                         mentry);
     check(rc == 0, "Hashmap_set failed");
 
     return 0;
