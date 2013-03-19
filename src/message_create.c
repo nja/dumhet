@@ -52,3 +52,8 @@ Message *Message_CreateRFindNode(DhtClient *client, Message *query, DArray *foun
 error:
     return NULL;
 }
+
+Message *Message_CreateRPing(DhtClient *client)
+{
+    return Message_Create(client, RPing);
+}
