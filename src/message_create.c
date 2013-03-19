@@ -1,23 +1,28 @@
 #include <dht/client.h>
 #include <dht/message.h>
 
-Message *Message_CreateQPing(DhtClient *client)
+Message *Message_Create(DhtClient *client, MessageType type)
 {
     assert(client != NULL && "NULL DhtClient pointer");
 
-    Message *ping = calloc(1, sizeof(Message));
-    check_mem(ping);
+    Message *message = calloc(1, sizeof(Message));
+    check_mem(message);
 
-    ping->type = QPing;
+    message->type = type;
 
-    ping->t = malloc(sizeof(tid_t));
-    check_mem(ping->t);
-    *(tid_t *)ping->t = client->next_t++;
-    ping->t_len = sizeof(tid_t);
+    message->t = malloc(sizeof(tid_t));
+    check_mem(message->t);
+    *(tid_t *)message->t = client->next_t++;
+    message->t_len = sizeof(tid_t);
 
-    ping->id = client->node.id;
+    message->id = client->node.id;
 
-    return ping;
+    return message;
 error:
     return NULL;
+}    
+
+Message *Message_CreateQPing(DhtClient *client)
+{
+    return Message_Create(client, QPing);
 }
