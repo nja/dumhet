@@ -6,4 +6,6 @@
 
 Message *Message_CreateQPing(DhtClient *client);
 
+Message *Message_CreateRFindNode(DhtClient *client, Message *query, DArray *found);
+
 #endif
