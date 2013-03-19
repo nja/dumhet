@@ -21,8 +21,6 @@ typedef struct DhtClient {
 DhtClient *DhtClient_Create(DhtHash id, uint32_t addr, uint16_t port);
 void DhtClient_Destroy(DhtClient *client);
 
-Message *Ping_Create(DhtClient *client);
-
 Token DhtClient_MakeToken(DhtClient *client, DhtNode *from);
 int DhtClient_IsValidToken(DhtClient *client, DhtNode *from,
                            char *token, size_t token_len);

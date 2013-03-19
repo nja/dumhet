@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 
 #include "minunit.h"
+#include <dht/message_create.h>
 #include <dht/table.h>
 #include <dht/network.h>
 
@@ -65,7 +66,7 @@ char *test_NetworkSendReceiveMessage()
     rc = NetworkUp(recver);
     mu_assert(rc == 0, "NetworkUp failed");
 
-    Message *send = Ping_Create(sender);
+    Message *send = Message_CreateQPing(sender);
 
     rc = SendMessage(sender, send, &recver->node);
     mu_assert(rc == 0, "SendMessage failed");
