@@ -7,6 +7,9 @@
 Message *Message_CreateQPing(DhtClient *client);
 Message *Message_CreateQFindNode(DhtClient *client, DhtHash *id);
 Message *Message_CreateQGetPeers(DhtClient *client, DhtHash *id);
+Message *Message_CreateQAnnouncePeer(DhtClient *client,
+                                     DhtHash *info_hash,
+                                     Token *token);
 
 Message *Message_CreateRFindNode(DhtClient *client, DArray *found);
 Message *Message_CreateRPing(DhtClient *client);

@@ -6,14 +6,16 @@ char *test_DhtClient_CreateDestroy()
   DhtHash id = { "abcdeABCDEabcdeABCD" };
   uint32_t addr = 0x10203040;
   uint16_t port = 0x5060;
+  uint16_t peer_port = 0x0506;
 
-  DhtClient *client = DhtClient_Create(id, addr, port);
+  DhtClient *client = DhtClient_Create(id, addr, port, peer_port);
   mu_assert(client != NULL, "DhtClient_Create failed");
   mu_assert(client->table != NULL, "No DhtTable created");
   mu_assert(client->pending != NULL, "No pending responses");
   mu_assert(client->buf != NULL, "No buffer allocated");
   mu_assert(client->node.addr.s_addr == addr, "Address not copied");
   mu_assert(client->node.port == port, "Port not copied");
+  mu_assert(client->peer_port == peer_port, "Peer port not copied");
 
   DhtClient_Destroy(client);
   
@@ -25,8 +27,9 @@ char *test_Token()
     DhtHash id = { "foobar" };
     uint32_t addr = 0x10203040;
     uint16_t port = 0x5060;
+    uint16_t peer_port = 0x0506;
 
-    DhtClient *client = DhtClient_Create(id, addr, port);
+    DhtClient *client = DhtClient_Create(id, addr, port, peer_port);
 
     DhtNode node_a = {{{ 0 }}};
     DhtNode node_b = {{{ 0 }}};

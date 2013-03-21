@@ -11,7 +11,10 @@
 
 int CreateSocket();
 
-DhtClient *DhtClient_Create(DhtHash id, uint32_t addr, uint16_t port)
+DhtClient *DhtClient_Create(DhtHash id,
+                            uint32_t addr,
+                            uint16_t port,
+                            uint16_t peer_port)
 {
   RandomState *rs = NULL;
   DhtClient *client = calloc(1, sizeof(DhtClient));
@@ -20,6 +23,8 @@ DhtClient *DhtClient_Create(DhtHash id, uint32_t addr, uint16_t port)
   client->node.id = id;
   client->node.addr.s_addr = addr;
   client->node.port = port;
+
+  client->peer_port = peer_port;
 
   client->table = DhtTable_Create(&client->node.id);
   check_mem(client->table);

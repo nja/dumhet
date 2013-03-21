@@ -63,6 +63,40 @@ error:
     return NULL;
 }
 
+Message *Message_CreateQAnnouncePeer(DhtClient *client,
+                                     DhtHash *info_hash,
+                                     Token *token)
+{
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(token != NULL && "NULL Token pointer");
+
+    QAnnouncePeerData data = { 0 };
+
+    Message *message = Message_Create(client, QAnnouncePeer);
+    check(message != NULL, "Message_Create failed");
+
+    data.info_hash = malloc(HASH_BYTES);
+    check_mem(data.info_hash);
+
+    memcpy(data.info_hash, info_hash->value, HASH_BYTES);
+
+    data.token = malloc(HASH_BYTES);
+    check_mem(data.token);
+
+    memcpy(data.token, token->value, HASH_BYTES);
+    data.token_len = HASH_BYTES;
+
+    data.port = client->peer_port;
+
+    message->data.qannouncepeer = data;
+
+    return message;
+error:
+    free(data.info_hash);
+    return NULL;
+}
+
 /* This does not copy the found nodes, so the message must be sent before
  * they can be destroyed. */
 Message *Message_CreateRFindNode(DhtClient *client, DArray *found)

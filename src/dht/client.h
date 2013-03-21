@@ -12,13 +12,17 @@ typedef struct DhtClient {
     DhtNode node;
     DhtTable *table;
     int socket;
+    uint16_t peer_port;
     struct PendingResponses *pending;
     char *buf;
     int next_t;
     DhtHash secrets[SECRETS_LEN];
 } DhtClient;
 
-DhtClient *DhtClient_Create(DhtHash id, uint32_t addr, uint16_t port);
+DhtClient *DhtClient_Create(DhtHash id,
+                            uint32_t addr,
+                            uint16_t port,
+                            uint16_t peer_port);
 void DhtClient_Destroy(DhtClient *client);
 
 Token DhtClient_MakeToken(DhtClient *client, DhtNode *from);
