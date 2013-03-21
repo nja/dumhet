@@ -29,10 +29,9 @@ Message *Message_CreateQPing(DhtClient *client)
 
 /* This does not copy the found nodes, so the message must be sent before
  * they can be destroyed. */
-Message *Message_CreateRFindNode(DhtClient *client, Message *query, DArray *found)
+Message *Message_CreateRFindNode(DhtClient *client, DArray *found)
 {
     assert(client != NULL && "NULL DhtClient pointer");
-    assert(query != NULL && "NULL Message pointer");
     assert(found != NULL && "NULL DArray pointer");
 
     Message *message = Message_Create(client, RFindNode);
@@ -40,7 +39,7 @@ Message *Message_CreateRFindNode(DhtClient *client, Message *query, DArray *foun
 
     RFindNodeData data;
     data.count = DArray_count(found);
-    data.nodes = calloc(data.count, sizeof(DhtNode *));
+    data.nodes = malloc(data.count * sizeof(DhtNode *));
 
     unsigned int i = 0;
     for (i = 0; i < data.count; i++)
