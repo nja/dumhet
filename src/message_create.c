@@ -56,3 +56,64 @@ Message *Message_CreateRPing(DhtClient *client)
 {
     return Message_Create(client, RPing);
 }
+
+Message *Message_CreateRAnnouncePeer(DhtClient *client)
+{
+    return Message_Create(client, RAnnouncePeer);
+}
+
+/* This does not copy the found nodes, so the message must be sent before
+ * they can be destroyed. */
+Message *Message_CreateRGetPeers(DhtClient *client,
+                                 DArray *peers,
+                                 DArray *nodes, 
+                                 Token *token)
+{
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(token != NULL && "NULL Token pointer");
+
+    RGetPeersData data = { 0 };
+
+    check(peers != NULL || nodes != NULL, "Neither peers nor nodes in RGetPeers");
+    check(peers == NULL || nodes == NULL, "Both peers and nodes in RGetPeers");
+
+    Message *message = Message_Create(client, RGetPeers);
+    check(message != NULL, "Message_Create failed");
+
+    data.token = malloc(HASH_BYTES);
+    check_mem(data.token);
+    memcpy(data.token, token->value, HASH_BYTES);
+    data.token_len = HASH_BYTES;
+
+    unsigned int i = 0;
+
+    if (peers != NULL)
+    {
+        data.count = DArray_count(peers);
+        data.values = malloc(sizeof(Peer) * data.count);
+        check_mem(data.values);
+
+        for (i = 0; i < data.count; i++)
+        {
+            data.values[i] = *(Peer *)DArray_get(peers, i);
+        }
+    }
+    else
+    {
+        data.count = DArray_count(nodes);
+        data.nodes = malloc(data.count * sizeof(DhtNode *));
+        check_mem(data.nodes);
+
+        for (i = 0; i < data.count; i++)
+        {
+            data.nodes[i] = DArray_get(nodes, i);
+        }
+    }
+
+    message->data.rgetpeers = data;
+
+    return message;
+error:
+    free(data.token);
+    return NULL;
+}

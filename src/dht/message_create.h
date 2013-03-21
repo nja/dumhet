@@ -8,5 +8,10 @@ Message *Message_CreateQPing(DhtClient *client);
 
 Message *Message_CreateRFindNode(DhtClient *client, DArray *found);
 Message *Message_CreateRPing(DhtClient *client);
+Message *Message_CreateRAnnouncePeer(DhtClient *client);
+Message *Message_CreateRGetPeers(DhtClient *client,
+                                 DArray *peers,
+                                 DArray *nodes,
+                                 Token *token);
 
 #endif
