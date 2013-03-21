@@ -68,14 +68,14 @@ void Message_DestroyNodes(Message *message)
 
 int MessageType_IsQuery(MessageType type)
 {
-  switch (type)
-  {
-  case QPing:
-  case QFindNode:
-  case QGetPeers:
-  case QAnnouncePeer:
-      return 1;
-  default:
-      return 0;
-  }
+    switch (type)
+    {
+    case QPing:
+    case QFindNode:
+    case QGetPeers:
+    case QAnnouncePeer:
+        return 1;
+    default:
+        return 0;
+    }
 }

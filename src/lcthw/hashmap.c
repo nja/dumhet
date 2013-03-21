@@ -97,7 +97,7 @@ error:
 
 
 static inline DArray *Hashmap_find_bucket(Hashmap *map, void *key,
-        int create, uint32_t *hash_out)
+                                          int create, uint32_t *hash_out)
 {
     uint32_t hash = map->hash(key);
     int bucket_n = hash % DEFAULT_NUMBER_OF_BUCKETS;

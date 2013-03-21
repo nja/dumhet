@@ -12,140 +12,140 @@
 
 int NetworkUp(DhtClient *client)
 {
-  assert(client != NULL && "NULL DhtClient pointer");
-  assert(client->socket != -1 && "Invalid DhtClient socket");
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client->socket != -1 && "Invalid DhtClient socket");
 
-  struct sockaddr_in sockaddr = { 0 };
+    struct sockaddr_in sockaddr = { 0 };
 
-  sockaddr.sin_family = AF_INET;
-  sockaddr.sin_port = client->node.port;
-  sockaddr.sin_addr = client->node.addr;
+    sockaddr.sin_family = AF_INET;
+    sockaddr.sin_port = client->node.port;
+    sockaddr.sin_addr = client->node.addr;
 
-  int rc = bind(client->socket,
-                (struct sockaddr *) &sockaddr,
-                sizeof(struct sockaddr_in));
-  check(rc == 0, "bind failed");
+    int rc = bind(client->socket,
+                  (struct sockaddr *) &sockaddr,
+                  sizeof(struct sockaddr_in));
+    check(rc == 0, "bind failed");
 
-  return 0;
- error:
-  return -1;
+    return 0;
+error:
+    return -1;
 }
 
 int NetworkDown(DhtClient *client)
 {
-  assert(client != NULL && "NULL DhtClient pointer");
-  assert(client->socket != -1 && "Invalid DhtClient socket");
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client->socket != -1 && "Invalid DhtClient socket");
 
-  int rc;
+    int rc;
 
- retry:
+retry:
   
-  rc = close(client->socket);
+    rc = close(client->socket);
 
-  if (rc == -1 && errno == EINTR)
-    goto retry;
+    if (rc == -1 && errno == EINTR)
+        goto retry;
 
-  check(rc == 0, "Close on socket fd failed");
+    check(rc == 0, "Close on socket fd failed");
 
-  return 0;
- error:
-  return -1;
+    return 0;
+error:
+    return -1;
 }
 
 int Send(DhtClient *client, DhtNode *node, char *buf, size_t len)
 {
-  assert(client != NULL && "NULL DhtClient pointer");
-  assert(node != NULL && "NULL DhtNode pointer");
-  assert(buf != NULL && "NULL buf pointer");
-  assert(len <= UDPBUFLEN && "buf too large for UDP");
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+    assert(buf != NULL && "NULL buf pointer");
+    assert(len <= UDPBUFLEN && "buf too large for UDP");
 
-  struct sockaddr_in addr = { 0 };
+    struct sockaddr_in addr = { 0 };
 
-  addr.sin_family = AF_INET;
-  addr.sin_addr = node->addr;
-  addr.sin_port = node->port;
+    addr.sin_family = AF_INET;
+    addr.sin_addr = node->addr;
+    addr.sin_port = node->port;
 
-  int rc = sendto(client->socket,
-                  buf,
-                  len,
-                  0, (struct sockaddr *) &addr,
-                  sizeof(addr));
-  check(rc == (int)len, "sendto failed");
+    int rc = sendto(client->socket,
+                    buf,
+                    len,
+                    0, (struct sockaddr *) &addr,
+                    sizeof(addr));
+    check(rc == (int)len, "sendto failed");
 
-  return 0;
- error:
-  return -1;
+    return 0;
+error:
+    return -1;
 }
 
 int Receive(DhtClient *client, DhtNode *node, char *buf, size_t len)
 {
-  assert(client != NULL && "NULL DhtClient pointer");
-  assert(node != NULL && "NULL DhtNode pointer");
-  assert(buf != NULL && "NULL buf pointer");
-  assert(len >= UDPBUFLEN && "buf too small for UDP");
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+    assert(buf != NULL && "NULL buf pointer");
+    assert(len >= UDPBUFLEN && "buf too small for UDP");
 
-  struct sockaddr_in srcaddr = { 0 };
-  socklen_t addrlen = sizeof(srcaddr);
+    struct sockaddr_in srcaddr = { 0 };
+    socklen_t addrlen = sizeof(srcaddr);
 
-  int rc = recvfrom(client->socket,
-                    buf,
-                    len,
-                    0,
-                    (struct sockaddr *) &srcaddr,
-                    &addrlen);
+    int rc = recvfrom(client->socket,
+                      buf,
+                      len,
+                      0,
+                      (struct sockaddr *) &srcaddr,
+                      &addrlen);
 
-  assert(addrlen == sizeof(srcaddr) && "Unexpected addrlen from recvfrom");
+    assert(addrlen == sizeof(srcaddr) && "Unexpected addrlen from recvfrom");
 
-  check(rc >= 0, "Receive failed");
+    check(rc >= 0, "Receive failed");
 
-  node->addr = srcaddr.sin_addr;
-  node->port = srcaddr.sin_port;
+    node->addr = srcaddr.sin_addr;
+    node->port = srcaddr.sin_port;
 
-  return rc;
- error:
-  return -1;
+    return rc;
+error:
+    return -1;
 }
 
 int SendMessage(DhtClient *client, Message *msg, DhtNode *node)
 {
-  assert(client != NULL && "NULL DhtClient pointer");
-  assert(msg != NULL && "NULL Message pointer");
-  assert(node != NULL && "NULL DhtNode pointer");
-  assert(msg->t_len == sizeof(tid_t) && "Wrong outgoing t");
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(msg != NULL && "NULL Message pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
+    assert(msg->t_len == sizeof(tid_t) && "Wrong outgoing t");
 
-  int len = Message_Encode(msg, client->buf, UDPBUFLEN);
-  check(len > 0, "Message_Encode failed");
+    int len = Message_Encode(msg, client->buf, UDPBUFLEN);
+    check(len > 0, "Message_Encode failed");
 
-  int rc = Send(client, node, client->buf, len);
-  check(rc == 0, "Send failed");
+    int rc = Send(client, node, client->buf, len);
+    check(rc == 0, "Send failed");
 
-  if (MessageType_IsQuery(msg->type))
-  {
-      PendingResponse entry = { msg->type, *(tid_t *)msg->t, node->id, msg->context };
+    if (MessageType_IsQuery(msg->type))
+    {
+        PendingResponse entry = { msg->type, *(tid_t *)msg->t, node->id, msg->context };
 
-      rc = client->pending->addPendingResponse(client->pending, entry);
-      check(rc == 0, "addPendingResponses failed");
-  }
+        rc = client->pending->addPendingResponse(client->pending, entry);
+        check(rc == 0, "addPendingResponses failed");
+    }
 
-  return 0;
- error:
-  return -1;
+    return 0;
+error:
+    return -1;
 }
 
 Message *ReceiveMessage(DhtClient *client, DhtNode *node)
 {
-  assert(client != NULL && "NULL DhtClient pointer");
-  assert(node != NULL && "NULL DhtNode pointer");
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(node != NULL && "NULL DhtNode pointer");
 
-  int len = Receive(client, node, client->buf, UDPBUFLEN);
-  check(len > 0, "Receive failed");
+    int len = Receive(client, node, client->buf, UDPBUFLEN);
+    check(len > 0, "Receive failed");
 
-  Message *message = Message_Decode(client->buf,
-                                    len,
-                                    (struct PendingResponses *)client->pending);
-  check(message != NULL, "Message_Decode failed");
+    Message *message = Message_Decode(client->buf,
+                                      len,
+                                      (struct PendingResponses *)client->pending);
+    check(message != NULL, "Message_Decode failed");
 
-  return message;
- error:
-  return NULL;
+    return message;
+error:
+    return NULL;
 }

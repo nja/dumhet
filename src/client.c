@@ -16,65 +16,65 @@ DhtClient *DhtClient_Create(DhtHash id,
                             uint16_t port,
                             uint16_t peer_port)
 {
-  RandomState *rs = NULL;
-  DhtClient *client = calloc(1, sizeof(DhtClient));
-  check_mem(client);
+    RandomState *rs = NULL;
+    DhtClient *client = calloc(1, sizeof(DhtClient));
+    check_mem(client);
 
-  client->node.id = id;
-  client->node.addr.s_addr = addr;
-  client->node.port = port;
+    client->node.id = id;
+    client->node.addr.s_addr = addr;
+    client->node.port = port;
 
-  client->peer_port = peer_port;
+    client->peer_port = peer_port;
 
-  client->table = DhtTable_Create(&client->node.id);
-  check_mem(client->table);
+    client->table = DhtTable_Create(&client->node.id);
+    check_mem(client->table);
 
-  client->pending = (struct PendingResponses *)HashmapPendingResponses_Create();
-  check(client->pending != NULL, "HashmapPendingResponses_Create failed");
+    client->pending = (struct PendingResponses *)HashmapPendingResponses_Create();
+    check(client->pending != NULL, "HashmapPendingResponses_Create failed");
 
-  client->buf = calloc(1, UDPBUFLEN);
-  check_mem(client->buf);
+    client->buf = calloc(1, UDPBUFLEN);
+    check_mem(client->buf);
 
-  rs = RandomState_Create(time(NULL));
-  check(rs != NULL, "RandomState_Create failed");
+    rs = RandomState_Create(time(NULL));
+    check(rs != NULL, "RandomState_Create failed");
 
-  int rc = Random_Fill(rs, (char *)client->secrets, SECRETS_LEN * sizeof(DhtHash));
-  check(rc == 0, "Random_Fill failed");
+    int rc = Random_Fill(rs, (char *)client->secrets, SECRETS_LEN * sizeof(DhtHash));
+    check(rc == 0, "Random_Fill failed");
 
-  client->socket = CreateSocket();
-  check(client->socket != -1, "CreateSocket failed");
+    client->socket = CreateSocket();
+    check(client->socket != -1, "CreateSocket failed");
 
-  RandomState_Destroy(rs);
+    RandomState_Destroy(rs);
 
-  return client;
+    return client;
 error:
-  RandomState_Destroy(rs);
+    RandomState_Destroy(rs);
 
-  if (client != NULL)
-  {
-      free(client->buf);
-      HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
-      DhtTable_Destroy(client->table);
-  }
+    if (client != NULL)
+    {
+        free(client->buf);
+        HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
+        DhtTable_Destroy(client->table);
+    }
 
-  free(client);
+    free(client);
 
-  return NULL;
+    return NULL;
 }
 
 void DhtClient_Destroy(DhtClient *client)
 {
-  if (client == NULL)
-    return;
+    if (client == NULL)
+        return;
 
-  DhtTable_Destroy(client->table);
-  HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
-  free(client->buf);
+    DhtTable_Destroy(client->table);
+    HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
+    free(client->buf);
   
-  if (client->socket != -1)
-    close(client->socket);
+    if (client->socket != -1)
+        close(client->socket);
 
-  free(client);
+    free(client);
 }
 
 #define TOKEN_DATA_LEN (sizeof(DhtHash) + sizeof(in_addr_t))
@@ -160,10 +160,10 @@ error:
 
 int CreateSocket()
 {
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  check(sock != -1, "Create socket failed");
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    check(sock != -1, "Create socket failed");
 
-  return sock;
- error:
-  return -1;
+    return sock;
+error:
+    return -1;
 }

@@ -69,27 +69,27 @@
 /* Compute the snapped size for a given requested size.  By snapping to powers
    of 2 like this, repeated reallocations are avoided. */
 static int snapUpSize (int i) {
-	if (i < 8) {
-		i = 8;
-	} else {
-		unsigned int j;
-		j = (unsigned int) i;
+    if (i < 8) {
+        i = 8;
+    } else {
+        unsigned int j;
+        j = (unsigned int) i;
 
-		j |= (j >>  1);
-		j |= (j >>  2);
-		j |= (j >>  4);
-		j |= (j >>  8);		/* Ok, since int >= 16 bits */
+        j |= (j >>  1);
+        j |= (j >>  2);
+        j |= (j >>  4);
+        j |= (j >>  8);		/* Ok, since int >= 16 bits */
 #if (UINT_MAX != 0xffff)
-		j |= (j >> 16);		/* For 32 bit int systems */
+        j |= (j >> 16);		/* For 32 bit int systems */
 #if (UINT_MAX > 0xffffffffUL)
-		j |= (j >> 32);		/* For 64 bit int systems */
+        j |= (j >> 32);		/* For 64 bit int systems */
 #endif
 #endif
-		/* Least power of two greater than i */
-		j++;
-		if ((int) j >= i) i = (int) j;
-	}
-	return i;
+        /* Least power of two greater than i */
+        j++;
+        if ((int) j >= i) i = (int) j;
+    }
+    return i;
 }
 
 /*  int balloc (bstring b, int len)
@@ -97,59 +97,59 @@ static int snapUpSize (int i) {
  *  Increase the size of the memory backing the bstring b to at least len.
  */
 int balloc (bstring b, int olen) {
-	int len;
-	if (b == NULL || b->data == NULL || b->slen < 0 || b->mlen <= 0 || 
-	    b->mlen < b->slen || olen <= 0) {
-		return BSTR_ERR;
-	}
+    int len;
+    if (b == NULL || b->data == NULL || b->slen < 0 || b->mlen <= 0 || 
+        b->mlen < b->slen || olen <= 0) {
+        return BSTR_ERR;
+    }
 
-	if (olen >= b->mlen) {
-		unsigned char * x;
+    if (olen >= b->mlen) {
+        unsigned char * x;
 
-		if ((len = snapUpSize (olen)) <= b->mlen) return BSTR_OK;
+        if ((len = snapUpSize (olen)) <= b->mlen) return BSTR_OK;
 
-		/* Assume probability of a non-moving realloc is 0.125 */
-		if (7 * b->mlen < 8 * b->slen) {
+        /* Assume probability of a non-moving realloc is 0.125 */
+        if (7 * b->mlen < 8 * b->slen) {
 
-			/* If slen is close to mlen in size then use realloc to reduce
-			   the memory defragmentation */
+            /* If slen is close to mlen in size then use realloc to reduce
+               the memory defragmentation */
 
-			reallocStrategy:;
+        reallocStrategy:;
 
-			x = (unsigned char *) bstr__realloc (b->data, (size_t) len);
-			if (x == NULL) {
+            x = (unsigned char *) bstr__realloc (b->data, (size_t) len);
+            if (x == NULL) {
 
-				/* Since we failed, try allocating the tighest possible 
-				   allocation */
+                /* Since we failed, try allocating the tighest possible 
+                   allocation */
 
-				if (NULL == (x = (unsigned char *) bstr__realloc (b->data, (size_t) (len = olen)))) {
-					return BSTR_ERR;
-				}
-			}
-		} else {
+                if (NULL == (x = (unsigned char *) bstr__realloc (b->data, (size_t) (len = olen)))) {
+                    return BSTR_ERR;
+                }
+            }
+        } else {
 
-			/* If slen is not close to mlen then avoid the penalty of copying
-			   the extra bytes that are allocated, but not considered part of
-			   the string */
+            /* If slen is not close to mlen then avoid the penalty of copying
+               the extra bytes that are allocated, but not considered part of
+               the string */
 
-			if (NULL == (x = (unsigned char *) bstr__alloc ((size_t) len))) {
+            if (NULL == (x = (unsigned char *) bstr__alloc ((size_t) len))) {
 
-				/* Perhaps there is no available memory for the two 
-				   allocations to be in memory at once */
+                /* Perhaps there is no available memory for the two 
+                   allocations to be in memory at once */
 
-				goto reallocStrategy;
+                goto reallocStrategy;
 
-			} else {
-				if (b->slen) bstr__memcpy ((char *) x, (char *) b->data, (size_t) b->slen);
-				bstr__free (b->data);
-			}
-		}
-		b->data = x;
-		b->mlen = len;
-		b->data[b->slen] = (unsigned char) '\0';
-	}
+            } else {
+                if (b->slen) bstr__memcpy ((char *) x, (char *) b->data, (size_t) b->slen);
+                bstr__free (b->data);
+            }
+        }
+        b->data = x;
+        b->mlen = len;
+        b->data[b->slen] = (unsigned char) '\0';
+    }
 
-	return BSTR_OK;
+    return BSTR_OK;
 }
 
 /*  int ballocmin (bstring b, int len)
@@ -159,24 +159,24 @@ int balloc (bstring b, int olen) {
  *  performance.
  */
 int ballocmin (bstring b, int len) {
-	unsigned char * s;
+    unsigned char * s;
 
-	if (b == NULL || b->data == NULL || (b->slen+1) < 0 || b->mlen <= 0 || 
-	    b->mlen < b->slen || len <= 0) {
-		return BSTR_ERR;
-	}
+    if (b == NULL || b->data == NULL || (b->slen+1) < 0 || b->mlen <= 0 || 
+        b->mlen < b->slen || len <= 0) {
+        return BSTR_ERR;
+    }
 
-	if (len < b->slen + 1) len = b->slen + 1;
+    if (len < b->slen + 1) len = b->slen + 1;
 
-	if (len != b->mlen) {
-		s = (unsigned char *) bstr__realloc (b->data, (size_t) len);
-		if (NULL == s) return BSTR_ERR;
-		s[b->slen] = (unsigned char) '\0';
-		b->data = s;
-		b->mlen = len;
-	}
+    if (len != b->mlen) {
+        s = (unsigned char *) bstr__realloc (b->data, (size_t) len);
+        if (NULL == s) return BSTR_ERR;
+        s[b->slen] = (unsigned char) '\0';
+        b->data = s;
+        b->mlen = len;
+    }
 
-	return BSTR_OK;
+    return BSTR_OK;
 }
 
 /*  bstring bfromcstr (const char * str)
@@ -185,25 +185,25 @@ int ballocmin (bstring b, int len) {
  *  buffer str.
  */
 bstring bfromcstr (const char * str) {
-bstring b;
-int i;
-size_t j;
+    bstring b;
+    int i;
+    size_t j;
 
-	if (str == NULL) return NULL;
-	j = (strlen) (str);
-	i = snapUpSize ((int) (j + (2 - (j != 0))));
-	if (i <= (int) j) return NULL;
+    if (str == NULL) return NULL;
+    j = (strlen) (str);
+    i = snapUpSize ((int) (j + (2 - (j != 0))));
+    if (i <= (int) j) return NULL;
 
-	b = (bstring) bstr__alloc (sizeof (struct tagbstring));
-	if (NULL == b) return NULL;
-	b->slen = (int) j;
-	if (NULL == (b->data = (unsigned char *) bstr__alloc (b->mlen = i))) {
-		bstr__free (b);
-		return NULL;
-	}
+    b = (bstring) bstr__alloc (sizeof (struct tagbstring));
+    if (NULL == b) return NULL;
+    b->slen = (int) j;
+    if (NULL == (b->data = (unsigned char *) bstr__alloc (b->mlen = i))) {
+        bstr__free (b);
+        return NULL;
+    }
 
-	bstr__memcpy (b->data, str, j+1);
-	return b;
+    bstr__memcpy (b->data, str, j+1);
+    return b;
 }
 
 /*  bstring bfromcstralloc (int mlen, const char * str)
@@ -213,27 +213,27 @@ size_t j;
  *  characters in length.
  */
 bstring bfromcstralloc (int mlen, const char * str) {
-bstring b;
-int i;
-size_t j;
+    bstring b;
+    int i;
+    size_t j;
 
-	if (str == NULL) return NULL;
-	j = (strlen) (str);
-	i = snapUpSize ((int) (j + (2 - (j != 0))));
-	if (i <= (int) j) return NULL;
+    if (str == NULL) return NULL;
+    j = (strlen) (str);
+    i = snapUpSize ((int) (j + (2 - (j != 0))));
+    if (i <= (int) j) return NULL;
 
-	b = (bstring) bstr__alloc (sizeof (struct tagbstring));
-	if (b == NULL) return NULL;
-	b->slen = (int) j;
-	if (i < mlen) i = mlen;
+    b = (bstring) bstr__alloc (sizeof (struct tagbstring));
+    if (b == NULL) return NULL;
+    b->slen = (int) j;
+    if (i < mlen) i = mlen;
 
-	if (NULL == (b->data = (unsigned char *) bstr__alloc (b->mlen = i))) {
-		bstr__free (b);
-		return NULL;
-	}
+    if (NULL == (b->data = (unsigned char *) bstr__alloc (b->mlen = i))) {
+        bstr__free (b);
+        return NULL;
+    }
 
-	bstr__memcpy (b->data, str, j+1);
-	return b;
+    bstr__memcpy (b->data, str, j+1);
+    return b;
 }
 
 /*  bstring blk2bstr (const void * blk, int len)
@@ -242,29 +242,29 @@ size_t j;
  *  len.
  */
 bstring blk2bstr (const void * blk, int len) {
-bstring b;
-int i;
+    bstring b;
+    int i;
 
-	if (blk == NULL || len < 0) return NULL;
-	b = (bstring) bstr__alloc (sizeof (struct tagbstring));
-	if (b == NULL) return NULL;
-	b->slen = len;
+    if (blk == NULL || len < 0) return NULL;
+    b = (bstring) bstr__alloc (sizeof (struct tagbstring));
+    if (b == NULL) return NULL;
+    b->slen = len;
 
-	i = len + (2 - (len != 0));
-	i = snapUpSize (i);
+    i = len + (2 - (len != 0));
+    i = snapUpSize (i);
 
-	b->mlen = i;
+    b->mlen = i;
 
-	b->data = (unsigned char *) bstr__alloc ((size_t) b->mlen);
-	if (b->data == NULL) {
-		bstr__free (b);
-		return NULL;
-	}
+    b->data = (unsigned char *) bstr__alloc ((size_t) b->mlen);
+    if (b->data == NULL) {
+        bstr__free (b);
+        return NULL;
+    }
 
-	if (len > 0) bstr__memcpy (b->data, blk, (size_t) len);
-	b->data[len] = (unsigned char) '\0';
+    if (len > 0) bstr__memcpy (b->data, blk, (size_t) len);
+    b->data[len] = (unsigned char) '\0';
 
-	return b;
+    return b;
 }
 
 /*  char * bstr2cstr (const_bstring s, char z)
@@ -275,21 +275,21 @@ int i;
  *  bcstrfree () call, by the calling application.
  */
 char * bstr2cstr (const_bstring b, char z) {
-int i, l;
-char * r;
+    int i, l;
+    char * r;
 
-	if (b == NULL || b->slen < 0 || b->data == NULL) return NULL;
-	l = b->slen;
-	r = (char *) bstr__alloc ((size_t) (l + 1));
-	if (r == NULL) return r;
+    if (b == NULL || b->slen < 0 || b->data == NULL) return NULL;
+    l = b->slen;
+    r = (char *) bstr__alloc ((size_t) (l + 1));
+    if (r == NULL) return r;
 
-	for (i=0; i < l; i ++) {
-		r[i] = (char) ((b->data[i] == '\0') ? z : (char) (b->data[i]));
-	}
+    for (i=0; i < l; i ++) {
+        r[i] = (char) ((b->data[i] == '\0') ? z : (char) (b->data[i]));
+    }
 
-	r[l] = (unsigned char) '\0';
+    r[l] = (unsigned char) '\0';
 
-	return r;
+    return r;
 }
 
 /*  int bcstrfree (char * s)
@@ -304,11 +304,11 @@ char * r;
  *  redefinitions.
  */
 int bcstrfree (char * s) {
-	if (s) {
-		bstr__free (s);
-		return BSTR_OK;
-	}
-	return BSTR_ERR;
+    if (s) {
+        bstr__free (s);
+        return BSTR_OK;
+    }
+    return BSTR_ERR;
 }
 
 /*  int bconcat (bstring b0, const_bstring b1)
@@ -316,47 +316,47 @@ int bcstrfree (char * s) {
  *  Concatenate the bstring b1 to the bstring b0.
  */
 int bconcat (bstring b0, const_bstring b1) {
-int len, d;
-bstring aux = (bstring) b1;
+    int len, d;
+    bstring aux = (bstring) b1;
 
-	if (b0 == NULL || b1 == NULL || b0->data == NULL || b1->data == NULL) return BSTR_ERR;
+    if (b0 == NULL || b1 == NULL || b0->data == NULL || b1->data == NULL) return BSTR_ERR;
 
-	d = b0->slen;
-	len = b1->slen;
-	if ((d | (b0->mlen - d) | len | (d + len)) < 0) return BSTR_ERR;
+    d = b0->slen;
+    len = b1->slen;
+    if ((d | (b0->mlen - d) | len | (d + len)) < 0) return BSTR_ERR;
 
-	if (b0->mlen <= d + len + 1) {
-		ptrdiff_t pd = b1->data - b0->data;
-		if (0 <= pd && pd < b0->mlen) {
-			if (NULL == (aux = bstrcpy (b1))) return BSTR_ERR;
-		}
-		if (balloc (b0, d + len + 1) != BSTR_OK) {
-			if (aux != b1) bdestroy (aux);
-			return BSTR_ERR;
-		}
-	}
+    if (b0->mlen <= d + len + 1) {
+        ptrdiff_t pd = b1->data - b0->data;
+        if (0 <= pd && pd < b0->mlen) {
+            if (NULL == (aux = bstrcpy (b1))) return BSTR_ERR;
+        }
+        if (balloc (b0, d + len + 1) != BSTR_OK) {
+            if (aux != b1) bdestroy (aux);
+            return BSTR_ERR;
+        }
+    }
 
-	bBlockCopy (&b0->data[d], &aux->data[0], (size_t) len);
-	b0->data[d + len] = (unsigned char) '\0';
-	b0->slen = d + len;
-	if (aux != b1) bdestroy (aux);
-	return BSTR_OK;
+    bBlockCopy (&b0->data[d], &aux->data[0], (size_t) len);
+    b0->data[d + len] = (unsigned char) '\0';
+    b0->slen = d + len;
+    if (aux != b1) bdestroy (aux);
+    return BSTR_OK;
 }
 
 /*  int bconchar (bstring b, char c)
-/ *
- *  Concatenate the single character c to the bstring b.
- */
+    / *
+    *  Concatenate the single character c to the bstring b.
+    */
 int bconchar (bstring b, char c) {
-int d;
+    int d;
 
-	if (b == NULL) return BSTR_ERR;
-	d = b->slen;
-	if ((d | (b->mlen - d)) < 0 || balloc (b, d + 2) != BSTR_OK) return BSTR_ERR;
-	b->data[d] = (unsigned char) c;
-	b->data[d + 1] = (unsigned char) '\0';
-	b->slen++;
-	return BSTR_OK;
+    if (b == NULL) return BSTR_ERR;
+    d = b->slen;
+    if ((d | (b->mlen - d)) < 0 || balloc (b, d + 2) != BSTR_OK) return BSTR_ERR;
+    b->data[d] = (unsigned char) c;
+    b->data[d + 1] = (unsigned char) '\0';
+    b->slen++;
+    return BSTR_OK;
 }
 
 /*  int bcatcstr (bstring b, const char * s)
@@ -364,25 +364,25 @@ int d;
  *  Concatenate a char * string to a bstring.
  */
 int bcatcstr (bstring b, const char * s) {
-char * d;
-int i, l;
+    char * d;
+    int i, l;
 
-	if (b == NULL || b->data == NULL || b->slen < 0 || b->mlen < b->slen
-	 || b->mlen <= 0 || s == NULL) return BSTR_ERR;
+    if (b == NULL || b->data == NULL || b->slen < 0 || b->mlen < b->slen
+        || b->mlen <= 0 || s == NULL) return BSTR_ERR;
 
-	/* Optimistically concatenate directly */
-	l = b->mlen - b->slen;
-	d = (char *) &b->data[b->slen];
-	for (i=0; i < l; i++) {
-		if ((*d++ = *s++) == '\0') {
-			b->slen += i;
-			return BSTR_OK;
-		}
-	}
-	b->slen += i;
+    /* Optimistically concatenate directly */
+    l = b->mlen - b->slen;
+    d = (char *) &b->data[b->slen];
+    for (i=0; i < l; i++) {
+        if ((*d++ = *s++) == '\0') {
+            b->slen += i;
+            return BSTR_OK;
+        }
+    }
+    b->slen += i;
 
-	/* Need to explicitely resize and concatenate tail */
-	return bcatblk (b, (const void *) s, (int) strlen (s));
+    /* Need to explicitely resize and concatenate tail */
+    return bcatblk (b, (const void *) s, (int) strlen (s));
 }
 
 /*  int bcatblk (bstring b, const void * s, int len)
@@ -390,18 +390,18 @@ int i, l;
  *  Concatenate a fixed length buffer to a bstring.
  */
 int bcatblk (bstring b, const void * s, int len) {
-int nl;
+    int nl;
 
-	if (b == NULL || b->data == NULL || b->slen < 0 || b->mlen < b->slen
-	 || b->mlen <= 0 || s == NULL || len < 0) return BSTR_ERR;
+    if (b == NULL || b->data == NULL || b->slen < 0 || b->mlen < b->slen
+        || b->mlen <= 0 || s == NULL || len < 0) return BSTR_ERR;
 
-	if (0 > (nl = b->slen + len)) return BSTR_ERR; /* Overflow? */
-	if (b->mlen <= nl && 0 > balloc (b, nl + 1)) return BSTR_ERR;
+    if (0 > (nl = b->slen + len)) return BSTR_ERR; /* Overflow? */
+    if (b->mlen <= nl && 0 > balloc (b, nl + 1)) return BSTR_ERR;
 
-	bBlockCopy (&b->data[b->slen], s, (size_t) len);
-	b->slen = nl;
-	b->data[nl] = (unsigned char) '\0';
-	return BSTR_OK;
+    bBlockCopy (&b->data[b->slen], s, (size_t) len);
+    b->slen = nl;
+    b->data[nl] = (unsigned char) '\0';
+    return BSTR_OK;
 }
 
 /*  bstring bstrcpy (const_bstring b)
@@ -409,39 +409,39 @@ int nl;
  *  Create a copy of the bstring b.
  */
 bstring bstrcpy (const_bstring b) {
-bstring b0;
-int i,j;
+    bstring b0;
+    int i,j;
 
-	/* Attempted to copy an invalid string? */
-	if (b == NULL || b->slen < 0 || b->data == NULL) return NULL;
+    /* Attempted to copy an invalid string? */
+    if (b == NULL || b->slen < 0 || b->data == NULL) return NULL;
 
-	b0 = (bstring) bstr__alloc (sizeof (struct tagbstring));
-	if (b0 == NULL) {
-		/* Unable to allocate memory for string header */
-		return NULL;
-	}
+    b0 = (bstring) bstr__alloc (sizeof (struct tagbstring));
+    if (b0 == NULL) {
+        /* Unable to allocate memory for string header */
+        return NULL;
+    }
 
-	i = b->slen;
-	j = snapUpSize (i + 1);
+    i = b->slen;
+    j = snapUpSize (i + 1);
 
-	b0->data = (unsigned char *) bstr__alloc (j);
-	if (b0->data == NULL) {
-		j = i + 1;
-		b0->data = (unsigned char *) bstr__alloc (j);
-		if (b0->data == NULL) {
-			/* Unable to allocate memory for string data */
-			bstr__free (b0);
-			return NULL;
-		}
-	}
+    b0->data = (unsigned char *) bstr__alloc (j);
+    if (b0->data == NULL) {
+        j = i + 1;
+        b0->data = (unsigned char *) bstr__alloc (j);
+        if (b0->data == NULL) {
+            /* Unable to allocate memory for string data */
+            bstr__free (b0);
+            return NULL;
+        }
+    }
 
-	b0->mlen = j;
-	b0->slen = i;
+    b0->mlen = j;
+    b0->slen = i;
 
-	if (i) bstr__memcpy ((char *) b0->data, (char *) b->data, i);
-	b0->data[b0->slen] = (unsigned char) '\0';
+    if (i) bstr__memcpy ((char *) b0->data, (char *) b->data, i);
+    b0->data[b0->slen] = (unsigned char) '\0';
 
-	return b0;
+    return b0;
 }
 
 /*  int bassign (bstring a, const_bstring b)
@@ -449,18 +449,18 @@ int i,j;
  *  Overwrite the string a with the contents of string b.
  */
 int bassign (bstring a, const_bstring b) {
-	if (b == NULL || b->data == NULL || b->slen < 0)
-		return BSTR_ERR;
-	if (b->slen != 0) {
-		if (balloc (a, b->slen) != BSTR_OK) return BSTR_ERR;
-		bstr__memmove (a->data, b->data, b->slen);
-	} else {
-		if (a == NULL || a->data == NULL || a->mlen < a->slen || 
-		    a->slen < 0 || a->mlen == 0) 
-			return BSTR_ERR;
-	}
-	a->data[b->slen] = (unsigned char) '\0';
-	a->slen = b->slen;
+    if (b == NULL || b->data == NULL || b->slen < 0)
+        return BSTR_ERR;
+    if (b->slen != 0) {
+        if (balloc (a, b->slen) != BSTR_OK) return BSTR_ERR;
+        bstr__memmove (a->data, b->data, b->slen);
+    } else {
+        if (a == NULL || a->data == NULL || a->mlen < a->slen || 
+            a->slen < 0 || a->mlen == 0) 
+            return BSTR_ERR;
+    }
+    a->data[b->slen] = (unsigned char) '\0';
+    a->slen = b->slen;
 	return BSTR_OK;
 }
 

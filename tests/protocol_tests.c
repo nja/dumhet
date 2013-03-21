@@ -354,8 +354,8 @@ char *test_Decode_RAnnouncePeer()
     void *responses = GetMockResponses("aa", RAnnouncePeer, ID(data), 1);
 
     Message *message = Message_Decode(data,
-			      strlen(data),
-			      responses);
+                                      strlen(data),
+                                      responses);
 
     mu_assert(check_Message(message, RAnnouncePeer) == NULL, "Bad decoded message");
 

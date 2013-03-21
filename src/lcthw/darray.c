@@ -83,8 +83,8 @@ int DArray_expand(DArray *array)
 {
     size_t old_max = array->max;
     check(DArray_resize(array, array->max + array->expand_rate) == 0,
-            "Failed to expand array to new size: %d",
-            array->max + (int)array->expand_rate);
+          "Failed to expand array to new size: %d",
+          array->max + (int)array->expand_rate);
 
     memset(array->contents + old_max, 0, array->expand_rate + 1);
     return 0;
