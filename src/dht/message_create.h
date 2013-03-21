@@ -5,6 +5,7 @@
 #include <dht/message.h>
 
 Message *Message_CreateQPing(DhtClient *client);
+Message *Message_CreateQFindNode(DhtClient *client, DhtHash *id);
 
 Message *Message_CreateRFindNode(DhtClient *client, DArray *found);
 Message *Message_CreateRPing(DhtClient *client);

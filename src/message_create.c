@@ -27,6 +27,24 @@ Message *Message_CreateQPing(DhtClient *client)
     return Message_Create(client, QPing);
 }
 
+Message *Message_CreateQFindNode(DhtClient *client, DhtHash *id)
+{
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(id != NULL && "NULL DhtHash pointer");
+
+    Message *message = Message_Create(client, QFindNode);
+    check(message != NULL, "Message_Create failed");
+
+    message->data.qfindnode.target = malloc(HASH_BYTES);
+    check_mem(message->data.qfindnode.target);
+
+    memcpy(message->data.qfindnode.target, id->value, HASH_BYTES);
+
+    return message;
+error:
+    return NULL;
+}
+
 /* This does not copy the found nodes, so the message must be sent before
  * they can be destroyed. */
 Message *Message_CreateRFindNode(DhtClient *client, DArray *found)
