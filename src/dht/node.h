@@ -19,6 +19,8 @@ DhtNode *DhtNode_Copy(DhtNode *node);
 void DhtNode_Destroy(DhtNode *node);
 void DhtNode_DestroyBlock(DhtNode **node, size_t count);
 
+int DhtNode_Same(DhtNode *a, DhtNode *b);
+
 int DhtNode_DestroyOp(void *ignore, DhtNode *node);
 
 typedef enum DhtNodeStatus { Unknown, Good, Questionable, Bad } DhtNodeStatus;

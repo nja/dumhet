@@ -81,3 +81,14 @@ void DhtNode_DestroyBlock(DhtNode **nodes, size_t count)
         nodes[i] = NULL;
     }
 }
+
+int DhtNode_Same(DhtNode *a, DhtNode *b)
+{
+    assert(a != NULL && "NULL DhtNode pointer");
+    assert(b != NULL && "NULL DhtNode pointer");
+
+    return a->addr.s_addr == b->addr.s_addr
+        && a->port == b->port
+        && DhtHash_Equals(&a->id, &b->id);
+}
+
