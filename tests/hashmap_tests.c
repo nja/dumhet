@@ -5,6 +5,7 @@
 
 Hashmap *map = NULL;
 static int traverse_called = 0;
+static int increment = 1;
 struct tagbstring test1 = bsStatic("test data 1");
 struct tagbstring test2 = bsStatic("test data 2");
 struct tagbstring test3 = bsStatic("xest data 3");
@@ -12,18 +13,18 @@ struct tagbstring expect1 = bsStatic("THE VALUE 1");
 struct tagbstring expect2 = bsStatic("THE VALUE 2");
 struct tagbstring expect3 = bsStatic("THE VALUE 3");
 
-static int traverse_good_cb(HashmapNode *node)
+static int traverse_good_cb(void *context, HashmapNode *node)
 {
     (void)(node);
-    traverse_called++;
+    traverse_called += *(int *)context;
     return 0;
 }
 
 
-static int traverse_fail_cb(HashmapNode *node)
+static int traverse_fail_cb(void *context, HashmapNode *node)
 {
     (void)(node);
-    traverse_called++;
+    traverse_called += *(int *)context;
 
     if(traverse_called == 2) {
         return 1;
@@ -71,12 +72,12 @@ char *test_get_set()
 
 char *test_traverse()
 {
-    int rc = Hashmap_traverse(map, traverse_good_cb);
+    int rc = Hashmap_traverse(map, &increment, traverse_good_cb);
     mu_assert(rc == 0, "Failed to traverse.");
     mu_assert(traverse_called == 3, "Wrong count traverse.");
 
     traverse_called = 0;
-    rc = Hashmap_traverse(map, traverse_fail_cb);
+    rc = Hashmap_traverse(map, &increment, traverse_fail_cb);
     mu_assert(rc == 1, "Failed to traverse.");
     mu_assert(traverse_called == 2, "Wrong count traverse for fail.");
 

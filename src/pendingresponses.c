@@ -19,18 +19,12 @@ error:
     return NULL;
 }
 
-int FreeEntry(HashmapNode *node)
-{
-    free(node->data);
-    return 0;
-}
-
 void HashmapPendingResponses_Destroy(HashmapPendingResponses *pending)
 {
     if (pending == NULL)
         return;
     
-    Hashmap_traverse(pending->hashmap, FreeEntry);
+    Hashmap_traverse(pending->hashmap, NULL, Hashmap_freeNodeData);
     Hashmap_destroy(pending->hashmap);
     free(pending);
 }

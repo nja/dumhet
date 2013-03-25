@@ -171,8 +171,15 @@ error: // fallthrough
     return NULL;
 }
 
+int Hashmap_freeNodeData(void *context, HashmapNode *node)
+{
+    (void)(context);
 
-int Hashmap_traverse(Hashmap *map, Hashmap_traverse_cb traverse_cb) 
+    free(node->data);
+    return 0;
+}
+
+int Hashmap_traverse(Hashmap *map, void *context, Hashmap_traverse_cb traverse_cb)
 {
     int i = 0;
     int j = 0;
@@ -183,7 +190,7 @@ int Hashmap_traverse(Hashmap *map, Hashmap_traverse_cb traverse_cb)
         if(bucket) {
             for(j = 0; j < DArray_count(bucket); j++) {
                 HashmapNode *node = DArray_get(bucket, j);
-                rc = traverse_cb(node);
+                rc = traverse_cb(context, node);
                 if(rc != 0) return rc;
             }
         }
