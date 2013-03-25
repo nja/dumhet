@@ -11,10 +11,11 @@ Message *Message_CreateQAnnouncePeer(DhtClient *client,
                                      DhtHash *info_hash,
                                      Token *token);
 
-Message *Message_CreateRFindNode(DhtClient *client, DArray *found);
-Message *Message_CreateRPing(DhtClient *client);
-Message *Message_CreateRAnnouncePeer(DhtClient *client);
+Message *Message_CreateRFindNode(DhtClient *client, Message *query, DArray *found);
+Message *Message_CreateRPing(DhtClient *client, Message *query);
+Message *Message_CreateRAnnouncePeer(DhtClient *client, Message *query);
 Message *Message_CreateRGetPeers(DhtClient *client,
+                                 Message *query,
                                  DArray *peers,
                                  DArray *nodes,
                                  Token *token);

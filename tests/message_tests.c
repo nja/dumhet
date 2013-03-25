@@ -96,20 +96,49 @@ char *test_CreateDestroy_QAnnouncePeer()
     return NULL;
 }
 
+Message *CreateTestQuery(MessageType type)
+{
+    const int t_len = 3;
+    char *t = "abc";
+    Message *message = calloc(1, sizeof(Message));
+    message->t = malloc(t_len);
+    memcpy(message->t, t, t_len);
+    message->t_len = t_len;
+    message->type = type;
+
+    return message;
+}
+
+int SameT(Message *query, Message *response)
+{
+    check(query->t_len == response->t_len, "Wrong t_len");
+
+    unsigned int i = 0;
+    for (i = 0; i < query->t_len; i++)
+        check(query->t[i] == response->t[i], "Wrong t at %d", i);
+
+    return 1;
+error:
+    return 0;
+}
+
 char *test_CreateDestroy_RPing()
 {
     DhtHash id = { "rping" };
     DhtClient *client = DhtClient_Create(id, 0, 0, 0);
 
-    Message *message = Message_CreateRPing(client);
+    Message *query = CreateTestQuery(QPing);
+    Message *message = Message_CreateRPing(client, query);
 
     mu_assert(message != NULL, "Message_CreateRPing failed");
     mu_assert(message->type == RPing, "Wrong message type");
     mu_assert(DhtHash_Equals(&id, &message->id), "Wrong message id");
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
+    mu_assert(SameT(query, message), "Wrong t");
 
     DhtClient_Destroy(client);
+    Message_Destroy(query);
     Message_Destroy(message);
 
     return NULL;
@@ -119,6 +148,7 @@ char *test_CreateDestroy_RFindNode()
 {
     DhtHash id = { "rfindnode" };
     DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Message *query = CreateTestQuery(RFindNode);
 
     int i = 0;
     for (i = 0; i < BUCKET_K; i++)
@@ -135,7 +165,7 @@ char *test_CreateDestroy_RFindNode()
             DArray_push(found, node);
         }
 
-        Message *message = Message_CreateRFindNode(client, found);
+        Message *message = Message_CreateRFindNode(client, query, found);
 
         mu_assert(message->data.rfindnode.count == (unsigned int)i,
                   "Wrong node count");
@@ -153,6 +183,7 @@ char *test_CreateDestroy_RFindNode()
         mu_assert(DhtHash_Equals(&id, &message->id), "Wrong message id");
         mu_assert(message->t != NULL, "No message t");
         mu_assert(message->t_len > 0, "No t_len");
+        mu_assert(SameT(query, message), "Wrong t");
 
         Message_Destroy(message);
 
@@ -162,6 +193,7 @@ char *test_CreateDestroy_RFindNode()
         DArray_destroy(found);
     }
 
+    Message_Destroy(query);
     DhtClient_Destroy(client);
 
     return NULL;
@@ -172,15 +204,18 @@ char *test_CreateDestroy_RAnnouncePeer()
     DhtHash id = { "rAnnounceData" };
     DhtClient *client = DhtClient_Create(id, 0, 0, 0);
 
-    Message *message = Message_CreateRAnnouncePeer(client);
+    Message *query = CreateTestQuery(RAnnouncePeer);
+    Message *message = Message_CreateRAnnouncePeer(client, query);
 
     mu_assert(message != NULL, "Message_CreateQAnnouncePeer failed");
     mu_assert(message->type == RAnnouncePeer, "Wrong message type");
     mu_assert(DhtHash_Equals(&id, &message->id), "Wrong message id");
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
+    mu_assert(SameT(query, message), "Wrong t");
 
     DhtClient_Destroy(client);
+    Message_Destroy(query);
     Message_Destroy(message);
 
     return NULL;
@@ -190,6 +225,7 @@ char *test_CreateDestroy_RGetPeers_Nodes()
 {
     DhtHash id = { "rgetpeers_nodes" };
     DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Message *query = CreateTestQuery(RGetPeers);
 
     int i = 0;
 
@@ -211,6 +247,7 @@ char *test_CreateDestroy_RGetPeers_Nodes()
         token.value[5] = i;
 
         Message *message = Message_CreateRGetPeers(client,
+                                                   query,
                                                    NULL,
                                                    found,
                                                    &token);
@@ -236,6 +273,7 @@ char *test_CreateDestroy_RGetPeers_Nodes()
                   "Wrong token_len");
         mu_assert(message->t != NULL, "No message t");
         mu_assert(message->t_len > 0, "No t_len");
+        mu_assert(SameT(query, message), "Wrong t");
 
         Message_Destroy(message);
 
@@ -246,6 +284,7 @@ char *test_CreateDestroy_RGetPeers_Nodes()
     }
 
     DhtClient_Destroy(client);
+    Message_Destroy(query);
 
     return NULL;
 
@@ -255,6 +294,7 @@ char *test_CreateDestroy_RGetPeers_Peers()
 {
     DhtHash id = { "rgetpeers_peers" };
     DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Message *query = CreateTestQuery(RGetPeers);
 
     int i = 0;
 
@@ -274,6 +314,7 @@ char *test_CreateDestroy_RGetPeers_Peers()
         token.value[5] = i;
 
         Message *message = Message_CreateRGetPeers(client,
+                                                   query,
                                                    found,
                                                    NULL,
                                                    &token);
@@ -300,6 +341,7 @@ char *test_CreateDestroy_RGetPeers_Peers()
                   "Wrong token_len");
         mu_assert(message->t != NULL, "No message t");
         mu_assert(message->t_len > 0, "No t_len");
+        mu_assert(SameT(query, message), "Wrong t");
 
         Message_Destroy(message);
 
@@ -310,9 +352,9 @@ char *test_CreateDestroy_RGetPeers_Peers()
     }
 
     DhtClient_Destroy(client);
+    Message_Destroy(query);
 
     return NULL;
-
 }
 
 char *all_tests()
