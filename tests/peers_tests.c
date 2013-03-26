@@ -94,6 +94,40 @@ char *test_Peers_RepeatAdd()
     return NULL;
 }
 
+char *test_Peers_GetPeers()
+{
+    DhtHash info_hash = { "info_hash" };
+    Peers *peers = Peers_Create(&info_hash);
+
+    while (peers->count < MAXPEERS)
+    {
+        Peer peer = { 0 };
+        peer.addr = peers->count;
+        Peers_AddPeer(peers, &peer);
+    }
+
+    DArray *result = DArray_create(sizeof(Peer *), MAXPEERS + 1);
+
+    int rc = Peers_GetPeers(peers, result);
+    mu_assert(rc == 0, "Peers_GetPeers failed");
+    mu_assert(DArray_count(result) == MAXPEERS, "Wrong result count");
+
+    char *seen = calloc(1, MAXPEERS);
+
+    while (DArray_count(result) > 0)
+    {
+        Peer *peer = DArray_pop(result);
+        mu_assert(seen[peer->addr] == 0, "Already seen peer");
+        seen[peer->addr] = 1;
+    }
+
+    DArray_destroy(result);
+    Peers_Destroy(peers);
+    free(seen);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -101,6 +135,7 @@ char *all_tests()
     mu_run_test(test_Peers_CreateDestroy);
     mu_run_test(test_MaxPeersInRGetPeersEncoded);
     mu_run_test(test_Peers_RepeatAdd);
+    mu_run_test(test_Peers_GetPeers);
 
     return NULL;
 }
