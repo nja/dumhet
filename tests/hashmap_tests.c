@@ -70,6 +70,14 @@ char *test_get_set()
     return NULL;
 }
 
+char *test_set_repeated()
+{
+    int rc = Hashmap_set(map, &test1, &expect2);
+    mu_assert(rc != 0, "Set existing key &test1 without error.");
+
+    return NULL;
+}
+
 char *test_traverse()
 {
     int rc = Hashmap_traverse(map, &increment, traverse_good_cb);
@@ -113,6 +121,7 @@ char *all_tests()
 
     mu_run_test(test_create);
     mu_run_test(test_get_set);
+    mu_run_test(test_set_repeated);
     mu_run_test(test_traverse);
     mu_run_test(test_delete);
     mu_run_test(test_destroy);

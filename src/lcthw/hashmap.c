@@ -119,12 +119,28 @@ error:
     return NULL;
 }
 
+static inline int Hashmap_get_node(Hashmap *map, uint32_t hash, DArray *bucket, void *key)
+{
+    int i = 0;
+
+    for(i = 0; i < DArray_end(bucket); i++) {
+        HashmapNode *node = DArray_get(bucket, i);
+        if(node->hash == hash && map->compare(node->key, key) == 0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
 
 int Hashmap_set(Hashmap *map, void *key, void *data)
 {
     uint32_t hash = 0;
     DArray *bucket = Hashmap_find_bucket(map, key, 1, &hash);
     check(bucket, "Error can't create bucket.");
+
+    if (Hashmap_get_node(map, hash, bucket, key) >= 0)
+        return -1;
 
     HashmapNode *node = Hashmap_node_create(hash, key, data);
     check_mem(node);
@@ -134,21 +150,6 @@ int Hashmap_set(Hashmap *map, void *key, void *data)
     return 0;
 
 error:
-    return -1;
-}
-
-static inline int Hashmap_get_node(Hashmap *map, uint32_t hash, DArray *bucket, void *key)
-{
-    int i = 0;
-
-    for(i = 0; i < DArray_end(bucket); i++) {
-        debug("TRY: %d", i);
-        HashmapNode *node = DArray_get(bucket, i);
-        if(node->hash == hash && map->compare(node->key, key) == 0) {
-            return i;
-        }
-    }
-
     return -1;
 }
 
