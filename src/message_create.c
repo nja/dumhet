@@ -46,10 +46,10 @@ error:
     return NULL;
 }
 
-Message *Message_CreateQGetPeers(DhtClient *client, DhtHash *id)
+Message *Message_CreateQGetPeers(DhtClient *client, DhtHash *info_hash)
 {
     assert(client != NULL && "NULL DhtClient pointer");
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(info_hash != NULL && "NULL DhtHash pointer");
 
     Message *message = Message_CreateQuery(client, QGetPeers);
     check(message != NULL, "Message_Create failed");
@@ -57,7 +57,7 @@ Message *Message_CreateQGetPeers(DhtClient *client, DhtHash *id)
     message->data.qgetpeers.info_hash = malloc(HASH_BYTES);
     check_mem(message->data.qgetpeers.info_hash);
 
-    memcpy(message->data.qgetpeers.info_hash, id->value, HASH_BYTES);
+    memcpy(message->data.qgetpeers.info_hash, info_hash->value, HASH_BYTES);
 
     return message;
 error:
