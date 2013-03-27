@@ -140,7 +140,7 @@ Hashmap *PeersHashmap_Create()
 {
     Hashmap *hashmap = Hashmap_create(
         (Hashmap_compare)DhtDistance_Compare,
-        DhtHash_Hash);
+        (Hashmap_hash)DhtHash_Hash);
     check_mem(hashmap);
 
     return hashmap;

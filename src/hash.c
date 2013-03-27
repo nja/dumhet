@@ -274,18 +274,20 @@ const char *DhtHash_Str(DhtHash *hash)
     return strbuf;
 }
 
-uint32_t DhtHash_Hash(void *dht)
+uint32_t DhtHash_Hash(DhtHash *dht)
 {
     assert(dht != NULL && "NULL DhtHash pointer");
     assert(HASH_BYTES % sizeof(uint32_t) == 0 && "Size confusion");
 
-    uint32_t *data = (uint32_t *)((DhtHash *)dht)->value;
-    uint32_t *end = (uint32_t *)(((DhtHash *)dht)->value + HASH_BYTES);
+    uint32_t *data = (uint32_t *)dht->value;
+    uint32_t *end = data + HASH_BYTES / sizeof(uint32_t);
     uint32_t hash = 0;
 
-    while (data < end);
+    while (data < end)
     {
-        hash = hash * 33 + *data++;
+        hash += *data++;
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
     }
 
     hash += (hash << 3);

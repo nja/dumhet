@@ -160,6 +160,25 @@ char *test_DhtHash_Str()
     return NULL;
 }
 
+char *test_DhtHash_Hash()
+{
+    DhtHash id = {{ 0 }};
+
+    uint32_t prev = DhtHash_Hash(&id);
+
+    int i = 0;
+    for (i = 0; i < HASH_BYTES; i++)
+    {
+        id.value[i] = 1 << i % 8;
+        uint32_t hash = DhtHash_Hash(&id);
+        debug("%s %x", DhtHash_Str(&id), hash);
+        mu_assert(prev != hash, "Unchanged hash");
+        prev = hash;
+    }
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -171,6 +190,7 @@ char *all_tests()
     mu_run_test(test_DhtHash_PrefixedRandom);
     mu_run_test(test_DhtHash_Distance);
     mu_run_test(test_DhtHash_Str);
+    mu_run_test(test_DhtHash_Hash);
 
     return NULL;
 }
