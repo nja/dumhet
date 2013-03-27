@@ -30,7 +30,7 @@ typedef struct QGetPeersData {
 
 typedef struct QAnnouncePeerData {
     DhtHash *info_hash;
-    int port;
+    uint16_t port;
     char *token;
     size_t token_len;
 } QAnnouncePeerData;
