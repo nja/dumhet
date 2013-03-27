@@ -207,6 +207,8 @@ DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtHash *id)
     int pfx = DhtHash_SharedPrefix(&table->id, id);
     int i = pfx < table->end ? pfx : table->end - 1;
 
+    assert(table->buckets[i] != NULL && "Found NULL bucket");
+
     return table->buckets[i];
 }
 

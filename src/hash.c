@@ -178,6 +178,8 @@ int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)
 	}
     }
 
+    assert(bi <= HASH_BITS && "Shared prefix too large");
+
 done:
     return bi;
 }
