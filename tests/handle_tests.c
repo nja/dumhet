@@ -127,15 +127,87 @@ char *test_HandleQGetPeers_peers()
     return NULL;
 }
 
+char *test_HandleQAnnouncePeer()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtHash target_id = { "target id" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+
+    DhtTable_InsertNode(client->table, &from->node);
+    Token token = DhtClient_MakeToken(client, &from->node);
+
+    Message *query = Message_CreateQAnnouncePeer(from, &target_id, &token);
+
+    Message *reply = HandleQAnnouncePeer(client, query, &from->node);
+
+    mu_assert(reply != NULL, "HandleQAnnouncePeer failed");
+    mu_assert(reply->type == RAnnouncePeer, "Wrong type");
+    mu_assert(SameT(query, reply), "Wrong t");
+    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+
+    DArray *peers = NULL;
+
+    int rc = DhtClient_GetPeers(client, &target_id, &peers);
+    mu_assert(rc == 0, "DhtClient_GetPeers failed");
+    mu_assert(peers != NULL, "NULL DArray");
+    mu_assert(DArray_count(peers) == 1, "Wrong peers count");
+
+    Peer *peer = DArray_get(peers, 0);
+    mu_assert(peer != NULL, "NULL Peer");
+    mu_assert(peer->addr == from->node.addr.s_addr, "Wrong peer addr");
+    mu_assert(peer->port == from->peer_port, "Wrong peer port");
+
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+    Message_Destroy(query);
+    Message_Destroy(reply);
+    DArray_destroy(peers);
+
+    return NULL;
+}
+
+char *test_HandleQAnnouncePeer_badtoken()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtHash target_id = { "target id" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+
+    DhtTable_InsertNode(client->table, &from->node);
+    Token token = { "bad token" };
+
+    Message *query = Message_CreateQAnnouncePeer(from, &target_id, &token);
+
+    Message *reply = HandleQAnnouncePeer(client, query, &from->node);
+
+    mu_assert(reply != NULL, "HandleQAnnouncePeer failed");
+    mu_assert(reply->type == RError, "Wrong type");
+    mu_assert(reply->data.rerror.code = RERROR_PROTOCOL, "Wrong error code");
+    mu_assert(SameT(query, reply), "Wrong t");
+    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+    Message_Destroy(query);
+    Message_Destroy(reply);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
 
     mu_run_test(test_HandleQPing);
     mu_run_test(test_HandleQGetPeers_nodes);
+    mu_run_test(test_HandleQGetPeers_peers);
+    mu_run_test(test_HandleQAnnouncePeer);
+    mu_run_test(test_HandleQAnnouncePeer_badtoken);
 
     return NULL;
 }
 
 RUN_TESTS(all_tests);
-    mu_run_test(test_HandleQGetPeers_peers);

@@ -170,6 +170,8 @@ Message *HandleQAnnouncePeer(DhtClient *client, Message *query, DhtNode *from)
     assert(query->type == QAnnouncePeer && "Wrong message type");
     assert(from != NULL && "NULL DhtNode pointer");
 
+    DhtTable_MarkQuery(client->table, &query->id);
+
     if (!DhtClient_IsValidToken(client,
                                 from,
                                 query->data.qannouncepeer.token,
