@@ -133,6 +133,8 @@ Message *HandleQFindNode(DhtClient *client, Message *query)
     assert(query != NULL && "NULL Message pointer");
     assert(query->type == QFindNode && "Wrong message type");
 
+    DhtTable_MarkQuery(client->table, &query->id);
+
     DArray *found = DhtTable_GatherClosest(client->table,
                                            query->data.qfindnode.target);
     check(found != NULL, "DhtTable_GatherClosest failed");

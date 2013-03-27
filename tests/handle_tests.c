@@ -197,6 +197,35 @@ char *test_HandleQAnnouncePeer_badtoken()
     return NULL;
 }
 
+char *test_HandleQFindNode()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtHash target_id = { "target id" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+
+    DhtTable_InsertNode(client->table, &from->node);
+
+    Message *query = Message_CreateQFindNode(from, &target_id);
+
+    Message *reply = HandleQFindNode(client, query);
+
+    mu_assert(reply != NULL, "HandleQFindNode failed");
+    mu_assert(reply->type == RFindNode, "Wrong type");
+    mu_assert(reply->data.rfindnode.nodes != NULL, "No nodes");
+    mu_assert(reply->data.rfindnode.count == 1, "Wrong count");
+    mu_assert(SameT(query, reply), "Wrong t");
+    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+    Message_Destroy(query);
+    Message_Destroy(reply);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -206,6 +235,7 @@ char *all_tests()
     mu_run_test(test_HandleQGetPeers_peers);
     mu_run_test(test_HandleQAnnouncePeer);
     mu_run_test(test_HandleQAnnouncePeer_badtoken);
+    mu_run_test(test_HandleQFindNode);
 
     return NULL;
 }
