@@ -31,4 +31,6 @@ DhtDistance DhtHash_Distance(DhtHash *a, DhtHash *b);
 
 int DhtDistance_Compare(DhtDistance *a, DhtDistance *b);
 
+uint32_t DhtHash_Hash(void *hash);
+
 #endif

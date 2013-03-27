@@ -35,6 +35,9 @@ DhtClient *DhtClient_Create(DhtHash id,
     client->buf = calloc(1, UDPBUFLEN);
     check_mem(client->buf);
 
+    client->peers = PeersHashmap_Create();
+    check(client->peers != NULL, "PeersHashmap_Create failed");
+
     rs = RandomState_Create(time(NULL));
     check(rs != NULL, "RandomState_Create failed");
 
@@ -55,6 +58,7 @@ error:
         free(client->buf);
         HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
         DhtTable_Destroy(client->table);
+        PeersHashmap_Destroy(client->peers);
     }
 
     free(client);
@@ -70,6 +74,7 @@ void DhtClient_Destroy(DhtClient *client)
     DhtTable_Destroy(client->table);
     HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
     free(client->buf);
+    PeersHashmap_Destroy(client->peers);
   
     if (client->socket != -1)
         close(client->socket);

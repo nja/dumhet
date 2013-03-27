@@ -125,3 +125,22 @@ int ShouldQuery(DhtNode *node, time_t time)
 
     return 1;
 }
+
+int Search_AddPeers(Search *search, Peer *peers, int count)
+{
+    assert(search != NULL && "NULL Search pointer");
+    assert(peers != NULL && "NULL Peer pointer");
+
+    Peer *end = peers + count;
+
+    while (peers < end)
+    {
+        int rc = Peers_AddPeer(search->peers, peers);
+        check(rc == 0, "Peers_AddPeer failed");
+        peers++;
+    }
+
+    return 0;
+error:
+    return -1;
+}
