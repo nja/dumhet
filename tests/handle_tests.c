@@ -80,6 +80,44 @@ char *test_HandleQGetPeers_nodes()
               "Invalid token");
     mu_assert(reply->data.rgetpeers.nodes != NULL, "No nodes");
     mu_assert(reply->data.rgetpeers.count == 1, "Wrong count");
+    mu_assert(reply->data.rgetpeers.values == NULL, "Unwanted peers");
+
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+    Message_Destroy(qgetpeers);
+    Message_Destroy(reply);
+
+    return NULL;
+}
+
+char *test_HandleQGetPeers_peers()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtHash target_id = { "target id" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 1, 1);
+    Peer peer = { .addr = 2, .port = 3 };
+
+    DhtTable_InsertNode(client->table, &from->node);
+    DhtClient_AddPeer(client, &target_id, &peer);
+
+    Message *qgetpeers = Message_CreateQGetPeers(from, &target_id);
+
+    Message *reply = HandleQGetPeers(client, qgetpeers, &from->node);
+
+    mu_assert(reply != NULL, "HandleQGetPeers failed");
+    mu_assert(reply->type == RGetPeers, "Wrong type");
+    mu_assert(SameT(qgetpeers, reply), "Wrong t");
+    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+    mu_assert(DhtClient_IsValidToken(client,
+                                     &from->node,
+                                     reply->data.rgetpeers.token,
+                                     reply->data.rgetpeers.token_len),
+              "Invalid token");
+    mu_assert(reply->data.rgetpeers.values != NULL, "No peers");
+    mu_assert(reply->data.rgetpeers.count == 1, "Wrong count");
+    mu_assert(reply->data.rgetpeers.nodes == NULL, "Unwanted nodes");
 
     DhtClient_Destroy(client);
     DhtClient_Destroy(from);
@@ -100,3 +138,4 @@ char *all_tests()
 }
 
 RUN_TESTS(all_tests);
+    mu_run_test(test_HandleQGetPeers_peers);

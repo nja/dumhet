@@ -223,18 +223,13 @@ Message *HandleQGetPeers(DhtClient *client, Message *query, DhtNode *from)
     Message *reply = Message_CreateRGetPeers(client, query, peers, nodes, &token);
     check(reply != NULL, "Message_CreateRGetPeers failed");
 
-done:
-    if (peers != NULL)
-    {
-        while (DArray_count(peers) > 0)
-            free(DArray_pop(peers));
-        DArray_destroy(peers);
-    }
-
+    DArray_destroy(peers);
     DArray_destroy(nodes);
 
     return reply;
 error:
-    reply = NULL;
-    goto done;
+    DArray_destroy(peers);
+    DArray_destroy(nodes);
+
+    return NULL;
 }
