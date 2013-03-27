@@ -200,14 +200,19 @@ Message *HandleQGetPeers(DhtClient *client, Message *query, DhtNode *from)
     assert(query->type == QGetPeers && "Wrong message type");
     assert(from != NULL && "NULL DhtNode pointer");
 
+    DhtTable_MarkQuery(client->table, &query->id);
+
     DArray *peers = NULL;
     DArray *nodes = NULL;
 
     int rc = DhtClient_GetPeers(client, query->data.qgetpeers.info_hash, &peers);
     check(rc == 0, "DhtClient_GetPeers failed");
 
-    if (peers == NULL)
+    if (DArray_count(peers) == 0)
     {
+        DArray_destroy(peers);
+        peers = NULL;
+
         nodes = DhtTable_GatherClosest(client->table,
                                        query->data.qgetpeers.info_hash);
         check(nodes != NULL, "DhtTable_GatherClosest failed");

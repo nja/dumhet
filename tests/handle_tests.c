@@ -42,7 +42,7 @@ char *test_HandleQPing()
 
     Message *reply = HandleQPing(client, qping);
 
-    mu_assert(reply != NULL, "Handle_QPing failed");
+    mu_assert(reply != NULL, "HandleQPing failed");
     mu_assert(reply->type == RPing, "Wrong type");
     mu_assert(SameT(qping, reply), "Wrong t");
     mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
@@ -55,11 +55,46 @@ char *test_HandleQPing()
     return NULL;
 }
 
+char *test_HandleQGetPeers_nodes()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtHash target_id = { "target id" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 1, 1);
+
+    DhtTable_InsertNode(client->table, &from->node);
+
+    Message *qgetpeers = Message_CreateQGetPeers(from, &target_id);
+
+    Message *reply = HandleQGetPeers(client, qgetpeers, &from->node);
+
+    mu_assert(reply != NULL, "HandleQGetPeers failed");
+    mu_assert(reply->type == RGetPeers, "Wrong type");
+    mu_assert(SameT(qgetpeers, reply), "Wrong t");
+    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+    mu_assert(DhtClient_IsValidToken(client,
+                                     &from->node,
+                                     reply->data.rgetpeers.token,
+                                     reply->data.rgetpeers.token_len),
+              "Invalid token");
+    mu_assert(reply->data.rgetpeers.nodes != NULL, "No nodes");
+    mu_assert(reply->data.rgetpeers.count == 1, "Wrong count");
+
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+    Message_Destroy(qgetpeers);
+    Message_Destroy(reply);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
 
     mu_run_test(test_HandleQPing);
+    mu_run_test(test_HandleQGetPeers_nodes);
 
     return NULL;
 }
