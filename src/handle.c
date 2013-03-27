@@ -180,7 +180,7 @@ Message *HandleQAnnouncePeer(DhtClient *client, Message *query, DhtNode *from)
 
     Peer peer = { .addr = from->addr.s_addr, .port = query->data.qannouncepeer.port };
 
-    int rc = DhtClient_AddPeer(client, &peer);
+    int rc = DhtClient_AddPeer(client, query->data.qannouncepeer.info_hash, &peer);
     check(rc == 0, "Client_AddPeer failed");
 
     Message *reply = Message_CreateRAnnouncePeer(client, query);

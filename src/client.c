@@ -172,3 +172,35 @@ int CreateSocket()
 error:
     return -1;
 }
+
+int DhtClient_AddPeer(DhtClient *client, DhtHash *info_hash, Peer *peer)
+{
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(peer != NULL && "NULL Peer pointer");
+
+    int rc = PeersHashmap_AddPeer(client->peers, info_hash, peer);
+    check(rc == 0, "PeersHashmap_AddPeer failed");
+
+    return 0;
+error:
+    return -1;
+}
+
+int DhtClient_GetPeers(DhtClient *client, DhtHash *info_hash, DArray **peers)
+{
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(peers != NULL && "NULL pointer to DArray pointer");
+
+    *peers = DArray_create(sizeof(Peer *), 128);
+    check(*peers != NULL, "DArray_create failed");
+
+    int rc = PeersHashmap_GetPeers(client->peers, info_hash, *peers);
+    check(rc == 0, "PeersHashmap_GetPeers failed");
+
+    return 0;
+error:
+    DArray_destroy(*peers);
+    return -1;
+}

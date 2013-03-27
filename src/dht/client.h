@@ -32,7 +32,7 @@ int DhtClient_IsValidToken(DhtClient *client, DhtNode *from,
                            char *token, size_t token_len);
 int DhtClient_NewSecret(DhtClient *client);
 
-int DhtClient_GetPeers(DhtClient *client, DhtHash *id, DArray **peers);
-int DhtClient_AddPeer(DhtClient *client, Peer *peer);
+int DhtClient_GetPeers(DhtClient *client, DhtHash *info_hash, DArray **peers);
+int DhtClient_AddPeer(DhtClient *client, DhtHash *info_hash, Peer *peer);
 
 #endif
