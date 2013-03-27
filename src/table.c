@@ -309,3 +309,18 @@ int DhtTable_MarkReply(DhtTable *table, DhtHash *id)
 error:
     return -1;
 }
+
+void DhtTable_MarkQuery(DhtTable *table, DhtHash *id)
+{
+    assert(table != NULL && "NULL DhtTable pointer");
+    assert(id != NULL && "NULL DhtHash pointer");
+
+    DhtNode *node = DhtTable_FindNode(table, id);
+
+    if (node == NULL)
+        return;
+
+    node->query_time = time(NULL);
+
+    return;
+}

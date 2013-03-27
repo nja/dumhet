@@ -39,5 +39,6 @@ typedef struct DhtTable_InsertNodeResult {
 DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node);
 
 int DhtTable_MarkReply(DhtTable *table, DhtHash *id);
+void DhtTable_MarkQuery(DhtTable *table, DhtHash *id);
 
 #endif

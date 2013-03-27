@@ -153,6 +153,8 @@ Message *HandleQPing(DhtClient *client, Message *query)
     assert(query != NULL && "NULL Message pointer");
     assert(query->type == QPing && "Wrong message type");
 
+    DhtTable_MarkQuery(client->table, &query->id);
+
     Message *reply = Message_CreateRPing(client, query);
     check(reply != NULL, "Message_CreateRPing failed");
 
