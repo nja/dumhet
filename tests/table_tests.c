@@ -332,6 +332,19 @@ char *test_DhtTable_GatherClosest()
     return NULL;
 }
 
+char *test_DhtTable_FindNode_EmptyBucket()
+{
+    DhtHash id = { "id" };
+    DhtTable *table = DhtTable_Create(&id);
+
+    DhtNode *node = DhtTable_FindNode(table, &id);
+    mu_assert(node == NULL, "Mystery node found");
+
+    DhtTable_Destroy(table);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -341,6 +354,7 @@ char *all_tests()
     mu_run_test(test_DhtTable_InsertNode_FullTable);
     mu_run_test(test_DhtTable_InsertNode_AddBucket);
     mu_run_test(test_DhtTable_GatherClosest);
+    mu_run_test(test_DhtTable_FindNode_EmptyBucket);
 
     return NULL;
 }

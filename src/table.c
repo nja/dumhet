@@ -252,7 +252,7 @@ DhtNode *DhtTable_FindNode(DhtTable *table, DhtHash *id)
 
     while (node < &bucket->nodes[BUCKET_K])
     {
-        if (node != NULL && DhtHash_Equals(id, &(*node)->id))
+        if (*node != NULL && DhtHash_Equals(id, &(*node)->id))
         {
             return *node;
         }
