@@ -1,3 +1,4 @@
+#include <dht/hash.h>
 #include <dht/peers.h>
 #include <lcthw/dbg.h>
 
@@ -126,3 +127,88 @@ int Peers_GetPeers(Peers *peers, DArray *result)
 error:
     return -1;
 }
+
+int FreePeersHashmapEntry(void *context, HashmapNode *node)
+{
+    (void)(context);
+    Peers_Destroy(node->data);
+
+    return 0;
+}
+
+Hashmap *PeersHashmap_Create()
+{
+    Hashmap *hashmap = Hashmap_create(
+        (Hashmap_compare)DhtDistance_Compare,
+        DhtHash_Hash);
+    check_mem(hashmap);
+
+    return hashmap;
+error:
+    return NULL;
+}
+
+void PeersHashmap_Destroy(Hashmap *hashmap)
+{
+    if (hashmap == NULL)
+        return;
+
+    Hashmap_traverse(hashmap, NULL, FreePeersHashmapEntry);
+    Hashmap_destroy(hashmap);
+}
+
+Peers *PeersHashmap_GetSetPeers(Hashmap *hashmap, DhtHash *info_hash)
+{
+    assert(hashmap != NULL && "NULL Hashmap pointer");
+    assert(info_hash != NULL && "NULL DhtHash pointer");
+
+    Peers *peers = Hashmap_get(hashmap, info_hash);
+    Peers *new_peers = NULL;
+
+    if (peers == NULL)
+    {
+        peers = new_peers = Peers_Create(info_hash);
+        check(peers != NULL, "Peers_Create failed");
+
+        int rc = Hashmap_set(hashmap, info_hash, peers);
+        check(rc == 0, "Hashmap_set failed");
+    }
+
+    return peers;
+error:
+    Peers_Destroy(new_peers);
+    return NULL;
+}
+
+int PeersHashmap_GetPeers(Hashmap *hashmap, DhtHash *info_hash, DArray *result)
+{
+    assert(hashmap != NULL && "NULL Hashmap pointer");
+    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(result != NULL && "NULL DArray pointer");
+
+    Peers *peers = PeersHashmap_GetSetPeers(hashmap, info_hash);
+
+    int rc = Peers_GetPeers(peers, result);
+    check(rc == 0, "Peers_GetPeers failed");
+
+    return 0;
+error:
+    return -1;
+}
+
+int PeersHashmap_AddPeer(Hashmap *hashmap, DhtHash *info_hash, Peer *peer)
+{
+    assert(hashmap != NULL && "NULL Hashmap pointer");
+    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(peer != NULL && "NULL Peer pointer");
+
+    Peers *peers = PeersHashmap_GetSetPeers(hashmap, info_hash);
+
+    int rc = Peers_AddPeer(peers, peer);
+    check(rc == 0, "Peers_AddPeer failed");
+
+    return 0;
+error:
+    return -1;
+}
+

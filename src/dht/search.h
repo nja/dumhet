@@ -20,6 +20,6 @@ int Search_CopyTable(Search *search, DhtTable *source);
 
 int Search_NodesToQuery(Search *search, DArray *nodes, time_t time);
 
-int Search_AddPeers(Search *search, Peer *peers);
+int Search_AddPeers(Search *search, Peer *peers, int count);
 
 #endif
