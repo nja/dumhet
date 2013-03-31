@@ -357,6 +357,30 @@ char *test_CreateDestroy_RGetPeers_Peers()
     return NULL;
 }
 
+char *test_CreateDestroy_RError()
+{
+    DhtHash id = { "rerror" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Message *query = CreateTestQuery(RAnnouncePeer);
+
+    Message *message = Message_CreateRErrorBadToken(client, query);
+    mu_assert(message != NULL, "Message_CreateRErrorBadToken failed");
+    mu_assert(message->type == RError, "Wrong message type");
+    mu_assert(DhtHash_Equals(&id, &message->id), "Wrong message id");
+    mu_assert(message->t != NULL, "No message t");
+    mu_assert(message->t_len > 0, "No t_len");
+    mu_assert(SameT(query, message), "Wrong t");
+
+    mu_assert(message->data.rerror.code == RERROR_PROTOCOL, "Wrong error code");
+    mu_assert(blength(message->data.rerror.message) != 0, "No message");
+
+    DhtClient_Destroy(client);
+    Message_Destroy(query);
+    Message_Destroy(message);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -371,6 +395,8 @@ char *all_tests()
     mu_run_test(test_CreateDestroy_RFindNode);
     mu_run_test(test_CreateDestroy_RGetPeers_Peers);
     mu_run_test(test_CreateDestroy_RGetPeers_Nodes);
+
+    mu_run_test(test_CreateDestroy_RError);
 
     return NULL;
 }

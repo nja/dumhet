@@ -81,4 +81,9 @@ typedef struct Message {
 void Message_Destroy(Message *message);
 void Message_DestroyNodes(Message *message);
 
+#define RERROR_GENERIC       201
+#define RERROR_SERVER        202
+#define RERROR_PROTOCOL      203
+#define RERROR_METHODUNKNOWN 204
+
 #endif

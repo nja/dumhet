@@ -20,4 +20,6 @@ Message *Message_CreateRGetPeers(DhtClient *client,
                                  DArray *nodes,
                                  Token *token);
 
+Message *Message_CreateRErrorBadToken(DhtClient *client, Message *query);
+
 #endif

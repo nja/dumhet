@@ -217,3 +217,21 @@ error:
     free(data.token);
     return NULL;
 }
+
+Message *Message_CreateRErrorBadToken(DhtClient *client, Message *query)
+{
+    assert(client != NULL && "NULL DhtClient pointer");
+    assert(query != NULL && "NULL Message pointer");
+
+    Message *message = Message_CreateResponse(client, query, RError);
+    check(message != NULL, "Message_CreateResponse failed");
+
+    message->data.rerror.code = RERROR_PROTOCOL;
+    message->data.rerror.message = bfromcstr("Bad token");
+    check_mem(message->data.rerror.message);
+
+    return message;
+error:
+    Message_Destroy(message);
+    return NULL;
+}
