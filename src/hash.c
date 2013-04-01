@@ -210,18 +210,11 @@ DhtDistance DhtHash_Distance(DhtHash *a, DhtHash *b)
 
     DhtDistance distance;
 
-    unsigned int i = 0;
+    int i = 0;
 
-    for (i = 0; i <= HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
+    for (i = 0; i < HASH_BYTES; i++)
     {
-        *(int_fast32_t *)&distance.value[i] =
-            *(int_fast32_t *)&a->value[i] ^ *(int_fast32_t *)&b->value[i];
-    }
-
-    for (; i <= HASH_BYTES - sizeof(int32_t); i += sizeof(int32_t))
-    {
-        *(int32_t *)&distance.value[i] =
-            *(int32_t *)&a->value[i] ^ *(int32_t *)&b->value[i];
+        distance.value[i] = a->value[i] ^ b->value[i];
     }
 
     return distance;
