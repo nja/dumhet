@@ -16,12 +16,8 @@ int HandleReply(DhtClient *client, Message *message)
     int rc = DhtTable_MarkReply(client->table, &message->id);
     check(rc == 0, "Table_MarkReply failed");
 
-    Message_Destroy(message);
-
     return 0;
 error:
-    Message_Destroy(message);
-
     return -1;
 }
 
@@ -35,6 +31,7 @@ int HandleRFindNode(DhtClient *client, Message *message)
     assert(message->context != NULL && "NULL message context");
 
     Search *search = (Search *)message->context;
+    check(search != NULL, "Missing Search context");
 
     int rc = DhtTable_MarkReply(client->table, &message->id);
     check(rc == 0, "Table_MarkReply failed (client->table)");
@@ -47,14 +44,8 @@ int HandleRFindNode(DhtClient *client, Message *message)
                         message->data.rfindnode.count);
     check(rc == 0, "AddSearchNodes failed");
  
-    Message_DestroyNodes(message);
-    Message_Destroy(message);
-
     return 0;
 error:
-    Message_DestroyNodes(message);
-    Message_Destroy(message);
-
     return -1;
 }
 

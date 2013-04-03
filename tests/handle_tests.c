@@ -3,6 +3,7 @@
 #include <dht/handle.h>
 #include <dht/message.h>
 #include <dht/message_create.h>
+#include <dht/search.h>
 
 int SameT(Message *a, Message *b)
 {
@@ -19,13 +20,22 @@ int SameT(Message *a, Message *b)
     return 1;
 }
 
-int HasRecentQuery(DhtClient *client, DhtHash id)
+int HasRecentQuery(DhtTable *table, DhtHash id)
 {
-    DhtNode *node = DhtTable_FindNode(client->table, &id);
+    DhtNode *node = DhtTable_FindNode(table, &id);
     check(node != NULL, "No node in client table");
-    check(node->query_time > 0, "query_time not set");
 
-    return 1;
+    return node->query_time > 0;
+error:
+    return 0;
+}
+
+int HasRecentReply(DhtTable *table, DhtHash id)
+{
+    DhtNode *node = DhtTable_FindNode(table, &id);
+    check(node != NULL, "No node in table");
+
+    return node->reply_time > 0;
 error:
     return 0;
 }
@@ -45,7 +55,7 @@ char *test_HandleQPing()
     mu_assert(reply != NULL, "HandleQPing failed");
     mu_assert(reply->type == RPing, "Wrong type");
     mu_assert(SameT(qping, reply), "Wrong t");
-    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+    mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
 
     DhtClient_Destroy(client);
     DhtClient_Destroy(from);
@@ -72,7 +82,7 @@ char *test_HandleQGetPeers_nodes()
     mu_assert(reply != NULL, "HandleQGetPeers failed");
     mu_assert(reply->type == RGetPeers, "Wrong type");
     mu_assert(SameT(qgetpeers, reply), "Wrong t");
-    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+    mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
     mu_assert(DhtClient_IsValidToken(client,
                                      &from->node,
                                      reply->data.rgetpeers.token,
@@ -109,7 +119,7 @@ char *test_HandleQGetPeers_peers()
     mu_assert(reply != NULL, "HandleQGetPeers failed");
     mu_assert(reply->type == RGetPeers, "Wrong type");
     mu_assert(SameT(qgetpeers, reply), "Wrong t");
-    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+    mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
     mu_assert(DhtClient_IsValidToken(client,
                                      &from->node,
                                      reply->data.rgetpeers.token,
@@ -145,7 +155,7 @@ char *test_HandleQAnnouncePeer()
     mu_assert(reply != NULL, "HandleQAnnouncePeer failed");
     mu_assert(reply->type == RAnnouncePeer, "Wrong type");
     mu_assert(SameT(query, reply), "Wrong t");
-    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+    mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
 
     DArray *peers = NULL;
 
@@ -187,7 +197,7 @@ char *test_HandleQAnnouncePeer_badtoken()
     mu_assert(reply->type == RError, "Wrong type");
     mu_assert(reply->data.rerror.code = RERROR_PROTOCOL, "Wrong error code");
     mu_assert(SameT(query, reply), "Wrong t");
-    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+    mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
 
     DhtClient_Destroy(client);
     DhtClient_Destroy(from);
@@ -216,12 +226,63 @@ char *test_HandleQFindNode()
     mu_assert(reply->data.rfindnode.nodes != NULL, "No nodes");
     mu_assert(reply->data.rfindnode.count == 1, "Wrong count");
     mu_assert(SameT(query, reply), "Wrong t");
-    mu_assert(HasRecentQuery(client, from_id), "Node query_time not set");
+    mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
 
     DhtClient_Destroy(client);
     DhtClient_Destroy(from);
     Message_Destroy(query);
     Message_Destroy(reply);
+
+    return NULL;
+}
+
+char *test_HandleRFindNode()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtHash target_id = { "target id" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+    DhtNode found_node = { .id = { "found id" },
+                           .addr = { .s_addr = 2345 },
+                           .port = 2345};
+
+    DArray *found = DArray_create(sizeof(DhtNode *), 2);
+    DArray_push(found, &found_node);
+
+    Search *search = Search_Create(&target_id);
+
+    /* Insert to tables so replies can be marked by handle */
+    DhtNode *client_from_node = DhtNode_Copy(&from->node);
+    client_from_node->pending_queries = 1;
+    DhtTable_InsertNode(client->table, client_from_node);
+    DhtNode *search_from_node = DhtNode_Copy(&from->node);
+    search_from_node->pending_queries = 1;
+    DhtTable_InsertNode(search->table, search_from_node);
+
+    Message *query = Message_CreateQFindNode(client, &target_id);
+
+    Message *rfindnode = Message_CreateRFindNode(from, query, found);
+    rfindnode->context = search; /* Would be set when decoding */
+
+    int rc = HandleRFindNode(client, rfindnode);
+    mu_assert(rc == 0, "HandleRFindNode failed");
+
+    mu_assert(search->peers->count == 0, "Wrong peers count on search");
+
+    mu_assert(HasRecentReply(client->table, from->node.id),
+              "Reply not marked in client->table");
+    mu_assert(HasRecentReply(search->table, from->node.id),
+              "Reply not marked in search->table");
+
+    DArray_destroy(found);
+    Search_Destroy(search);
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+    DhtNode_Destroy(client_from_node);
+    DhtNode_Destroy(search_from_node);
+    Message_Destroy(query);
+    Message_Destroy(rfindnode);
 
     return NULL;
 }
@@ -236,6 +297,8 @@ char *all_tests()
     mu_run_test(test_HandleQAnnouncePeer);
     mu_run_test(test_HandleQAnnouncePeer_badtoken);
     mu_run_test(test_HandleQFindNode);
+
+    mu_run_test(test_HandleRFindNode);
 
     return NULL;
 }
