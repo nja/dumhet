@@ -8,6 +8,9 @@ char *test_Search_CreateDestroy()
     Search *search = Search_Create(&id);
     mu_assert(search != NULL, "Search_Create failed");
 
+    mu_assert(search->table != NULL, "NULL table");
+    mu_assert(search->peers != NULL, "NULL peers");
+
     Search_Destroy(search);
 
     return NULL;

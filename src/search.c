@@ -8,21 +8,30 @@ Search *Search_Create(DhtHash *id)
 {
     assert(id != NULL && "NULL DhtHash pointer");
 
-    Search *search = malloc(sizeof(Search));
+    Search *search = calloc(1, sizeof(Search));
     check_mem(search);
 
     search->table = DhtTable_Create(id);
-    check_mem(search->table);
+    check(search->table != NULL, "DhtTable_Create failed");
+
+    search->peers = Peers_Create(id);
+    check(search->peers != NULL, "Peers_Create failed");
 
     return search;
 error:
-    free(search);
+    Search_Destroy(search);
     return NULL;
 }
 
 void Search_Destroy(Search *search)
 {
+    if (search == NULL)
+    {
+        return;
+    }
+
     DhtTable_Destroy(search->table);
+    Peers_Destroy(search->peers);
     free(search);
 }
 
