@@ -318,6 +318,40 @@ char *test_HandleRPing()
     return NULL;
 }
 
+char *test_HandleRAnnouncePeer()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtHash info_hash = { "info_hash" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+
+    DhtNode *from_node = DhtNode_Copy(&from->node);
+    from_node->pending_queries = 1;
+    DhtTable_InsertNode(client->table, from_node);
+
+    Token token = DhtClient_MakeToken(client, &from->node);
+
+    Message *query = Message_CreateQAnnouncePeer(client, &info_hash, &token);
+
+    Message *reply = Message_CreateRAnnouncePeer(from, query);
+
+    int rc = HandleReply(client, reply);
+
+    mu_assert(rc == 0, "HandleReply failed");
+    mu_assert(HasRecentReply(client->table, from_node->id), "Reply not marked");
+    mu_assert(reply->type == RAnnouncePeer, "Wrong type");
+    mu_assert(SameT(query, reply), "Wrong t");
+
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+    DhtNode_Destroy(from_node);
+    Message_Destroy(query);
+    Message_Destroy(reply);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
