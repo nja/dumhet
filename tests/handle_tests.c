@@ -287,6 +287,37 @@ char *test_HandleRFindNode()
     return NULL;
 }
 
+char *test_HandleRPing()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+
+    DhtNode *from_node = DhtNode_Copy(&from->node);
+    from_node->pending_queries = 1;
+    DhtTable_InsertNode(client->table, from_node);
+
+    Message *query = Message_CreateQPing(client);
+
+    Message *reply = Message_CreateRPing(from, query);
+
+    int rc = HandleReply(client, reply);
+
+    mu_assert(rc == 0, "HandleReply failed");
+    mu_assert(HasRecentReply(client->table, from_node->id), "Reply not marked");
+    mu_assert(reply->type == RPing, "Wrong type");
+    mu_assert(SameT(query, reply), "Wrong t");
+
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+    DhtNode_Destroy(from_node);
+    Message_Destroy(query);
+    Message_Destroy(reply);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -299,6 +330,7 @@ char *all_tests()
     mu_run_test(test_HandleQFindNode);
 
     mu_run_test(test_HandleRFindNode);
+    mu_run_test(test_HandleRPing);
 
     return NULL;
 }

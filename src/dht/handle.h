@@ -1,8 +1,9 @@
 #ifndef _handle_h
 #define _handle_h
 
-int HandleRFindNode(DhtClient *client, Message *message);
-int HandleRGetPeers(DhtClient *client, Message *message);
+int HandleReply(DhtClient *client, Message *reply);
+int HandleRFindNode(DhtClient *client, Message *reply);
+int HandleRGetPeers(DhtClient *client, Message *reply);
 
 Message *HandleQFindNode(DhtClient *client, Message *query);
 Message *HandleQPing(DhtClient *client, Message *query);
