@@ -11,7 +11,9 @@ HashmapPendingResponses *HashmapPendingResponses_Create()
     pending->getPendingResponse = HashmapPendingResponses_Remove;
     pending->addPendingResponse = HashmapPendingResponses_Add;
 
-    pending->hashmap = Hashmap_create(PendingResponse_Compare, PendingResponse_Hash);
+    pending->hashmap = Hashmap_create(
+        (Hashmap_compare)PendingResponse_Compare,
+        (Hashmap_hash)PendingResponse_Hash);
     check_mem(pending->hashmap);
 
     return pending;
@@ -29,17 +31,15 @@ void HashmapPendingResponses_Destroy(HashmapPendingResponses *pending)
     free(pending);
 }
 
-uint32_t PendingResponse_Hash(void *key)
+uint32_t PendingResponse_Hash(tid_t *key)
 {
     assert(key != NULL && "NULL tid pointer");
-
-    tid_t tid = *(tid_t *)key;
 
     uint32_t hash = 0, i = 0;
 
     for (i = 0; i < sizeof(uint32_t); i += sizeof(tid_t))
     {
-	hash += tid;
+	hash += *key;
 	hash += (hash << 10);
 	hash ^= (hash >> 6);
     }
@@ -51,20 +51,12 @@ uint32_t PendingResponse_Hash(void *key)
     return hash;
 }
 
-int PendingResponse_Compare(void *a, void *b)
+int PendingResponse_Compare(tid_t *a, tid_t *b)
 {
     assert(a != NULL && "NULL PendingResponse pointer");
     assert(b != NULL && "NULL PendingResponse pointer");
 
-    tid_t atid = *(tid_t *)a,
-	btid = *(tid_t *)b;
-
-    if (atid < btid)
-	return -1;
-    else if (btid < atid)
-	return 1;
-    else
-	return 0;
+    return *a < *b ? -1 : *b < *a;
 }
 
 int HashmapPendingResponses_Add(void *responses, PendingResponse entry)

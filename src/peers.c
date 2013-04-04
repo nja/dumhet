@@ -2,18 +2,18 @@
 #include <dht/peers.h>
 #include <lcthw/dbg.h>
 
-int Peer_Compare(void *a, void *b)
+int Peer_Compare(Peer *a, Peer *b)
 {
     assert(a != NULL && "NULL Peer pointer");
     assert(b != NULL && "NULL Peer pointer");
 
-    if (((Peer *)a)->addr < ((Peer *)b)->addr)
+    if (a->addr < b->addr)
         return -1;
-    else if (((Peer *)b)->addr < ((Peer *)a)->addr)
+    else if (b->addr < a->addr)
         return 1;
-    else if (((Peer *)a)->port < ((Peer *)b)->port)
+    else if (a->port < b->port)
         return -1;
-    else if (((Peer *)b)->port < ((Peer *)a)->port)
+    else if (b->port < a->port)
         return 1;
     else
         return 0;
@@ -35,7 +35,7 @@ Peers *Peers_Create(DhtHash *info_hash)
 
     peers->count = 0;
 
-    peers->hashmap = Hashmap_create(Peer_Compare, Peer_Hash);
+    peers->hashmap = Hashmap_create((Hashmap_compare)Peer_Compare, Peer_Hash);
     check(peers->hashmap != NULL, "Hashmap_create failed");
 
     peers->info_hash = *info_hash;

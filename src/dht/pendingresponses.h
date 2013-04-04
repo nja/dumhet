@@ -17,7 +17,7 @@ void HashmapPendingResponses_Destroy(HashmapPendingResponses *pending);
 int HashmapPendingResponses_Add(void *responses, PendingResponse entry);
 PendingResponse HashmapPendingResponses_Remove(void *responses, char *tid, int *rc);
 
-int PendingResponse_Compare(void *a, void *b);
-uint32_t PendingResponse_Hash(void *tid);
+int PendingResponse_Compare(tid_t *a, tid_t *b);
+uint32_t PendingResponse_Hash(tid_t *tid);
 
 #endif
