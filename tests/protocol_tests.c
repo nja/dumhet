@@ -45,6 +45,7 @@ char *check_Message(Message *message, MessageType type)
 	mu_assert(same_bytes(rid, message->id.value), "Wrong reply id");
 	break;
     case RError:
+    case MUnknown:
 	mu_assert(0, "Bad type");
 	break;
     }
@@ -85,7 +86,12 @@ PendingResponse GetMockResponseType(void *responses, char *tid, int *rc)
     }
 
     rc = 0;
-    return (PendingResponse) { mock->type, *(tid_t *)tid, mock->id, NULL };
+
+    PendingResponse pr = { mock->type,
+                           tid != NULL ? *(tid_t *)tid : 0,
+                           mock->id,
+                           NULL };
+    return pr;
 }
 
 struct MockResponses *GetMockResponses(char *tid, MessageType type, Hash id, int check_tid)
@@ -452,7 +458,9 @@ char *test_Decode_JunkQuery()
     while (junk[i])
     {
 	Message *result = Message_Decode(junk[i], strlen(junk[i]), NULL);
-	mu_assert(result == NULL, "Decoded junk without error");
+        mu_assert(result != NULL, "Message_Decode failed");
+        mu_assert(result->errors, "Junk decoded without errors");
+        Message_Destroy(result);
 	i++;
     }
 
@@ -470,7 +478,10 @@ char *test_junk_response(char **junk, void **gettype)
 	while (gettype[j])
 	{
 	    Message *result = Message_Decode(junk[i], len, gettype[j]);
-	    mu_assert(result == NULL, "Decoded junk without error");
+	    mu_assert(result != NULL, "Message_Decode failed");
+            mu_assert(result->errors, "Decoded junk without error");
+            Message_DestroyNodes(result);
+            Message_Destroy(result);
 
 	    j++;
 	}

@@ -6,43 +6,56 @@
 #include <dht/protocol.h>
 #include <lcthw/dbg.h>
 
-int HasTransactionId(BNode *dict);
-int HasNodeId(BNode *dict);
 char GetMessageType(BNode *dict);
 
-Message *DecodeQuery(BNode *dict);
-Message *DecodeResponse(BNode *dict, struct PendingResponses *pending);
-Message *DecodeError(BNode *dict);
+int DecodeQuery(Message *message, BNode *dict);
+int DecodeResponse(Message *message, BNode *dict, struct PendingResponses *pending);
+int DecodeError(Message *message, BNode *dict);
 
 Message *Message_Decode(char *data, size_t len, struct PendingResponses *pending)
 {
     assert(data != NULL && "NULL data pointer");
 
-    Message *message = NULL;
-    BNode *dict = BDecode(data, len);
+    BNode *dict = NULL;
+    Message *message = calloc(1, sizeof(Message));
+    check_mem(message);
 
-    check(dict != NULL, "BDecode failed");
-    check(dict->type == BDictionary, "Wrong bencode type: %s", BType_Name(dict->type));
+    dict = BDecode(data, len);
 
-    check(HasTransactionId(dict), "Message missing transaction id");
+    if (dict == NULL || dict->type != BDictionary)
+    {
+        BNode_Destroy(dict);
+        message->type = MUnknown;
+        message->errors |= MERROR_UNKNOWN_TYPE;
+        return message;
+    }
 
     char y = GetMessageType(dict);
 
+    int rc = 0;
+
     switch(y)
     {
-    case 'q': message = DecodeQuery(dict);
+    case 'q':
+        rc = DecodeQuery(message, dict);
+        check(rc == 0, "DecodeQuery failed");
 	break;
-    case 'r': message = DecodeResponse(dict, pending);
+    case 'r':
+        rc = DecodeResponse(message, dict, pending);
+        check(rc == 0, "DecodeResponse failed");
 	break;
-    case 'e': message = DecodeError(dict);
+    case 'e':
+        rc = DecodeError(message, dict);
+        check(rc == 0, "DecodeError failed");
 	break;
-    default: sentinel("Invalid or missing message type");
+    default:
+        message->errors |= MERROR_UNKNOWN_TYPE;
 	break;
     }
 
     BNode_Destroy(dict);
-    return message;
 
+    return message;
 error:
     BNode_Destroy(dict);
     return NULL;
@@ -51,213 +64,205 @@ error:
 char GetMessageType(BNode *dict)
 {
     assert(dict != NULL && "NULL BNode pointer");
+    assert(dict->type == BDictionary && "Not a BDictionary");
 
     BNode *yVal = NULL;
 
-    check(dict->type == BDictionary, "Not a dictionary");
-
     yVal = BNode_GetValue(dict, "y", 1);
 
-    check(yVal != NULL, "No 'y' key");
-    check(yVal->type == BString, "Wrong 'y' value type");
-    check(yVal->count == 1, "Bad 'y' value length");
+    if (yVal == NULL || yVal->type != BString || yVal->count != 1)
+    {
+        return 0;
+    }
 
     return (char)*yVal->value.string;
-
-error:
-    return '\0';
 }    
 
-int HasTransactionId(BNode *dict)
+void SetQueryType(Message *message, BNode *dict);
+int SetTransactionId(Message *message, BNode *dict);
+void SetQueryId(Message *message, BNode *dict);
+int SetQueryData(Message *message, BNode *dict);
+
+int DecodeQuery(Message *message, BNode *dict)
 {
+    assert(message != NULL && "NULL Message pointer");
     assert(dict != NULL && "NULL BNode pointer");
-    assert(dict->type == BDictionary && "Wrong BNode type");
+    assert(dict->type == BDictionary && "Not a dictionary");
 
-    BNode *tValue = BNode_GetValue(dict, "t", 1);
+    SetQueryType(message, dict);
+    SetQueryId(message, dict);
 
-    return tValue != NULL
-	&& tValue->type == BString
-	&& tValue->count > 0;
-}    
+    int rc = SetTransactionId(message, dict);
+    check(rc == 0, "SetTransactionId failed");
 
-int HasNodeId(BNode *dict)
-{
-    assert(dict != NULL && "NULL BNode pointer");
-    assert(dict->type == BDictionary && "Wrong BNode type");
+    rc = SetQueryData(message, dict);
+    check(rc == 0, "SetQueryData failed");
 
-    BNode *arguments = BNode_GetValue(dict, "a", 1);
-
-    if (arguments == NULL || arguments->type != BDictionary)
-	return 0;
-
-    BNode *id = BNode_GetValue(arguments, "id", 2);
-
-    return id != NULL
-	&& id->type == BString
-	&& id->count == 20;
-}
-
-int GetQueryType(BNode *dict, MessageType *type);
-int GetTransactionId(BNode *dict, char **t, size_t *t_len);
-int GetQueryId(BNode *dict, Hash *id);
-int GetQueryData(MessageType type, BNode *dict, Message *message);
-
-Message *DecodeQuery(BNode *dict)
-{
-    assert(dict != NULL && "NULL BNode pointer");
-
-    Message *message = calloc(1, sizeof(Message));
-    check_mem(message);
-
-    int rc = 0;
-
-    check(dict->type == BDictionary, "Not a dictionary");
-
-    rc = GetQueryType(dict, &message->type);
-    check(rc == 0, "Bad query type");
-
-    rc = GetTransactionId(dict, &message->t, &message->t_len);
-    check(rc == 0, "Bad transaction id");
-
-    rc = GetQueryId(dict, &message->id);
-    check(rc == 0, "Bad query node id");
-
-    rc = GetQueryData(message->type, dict, message);
-    check(rc == 0, "Bad query arguments");
-
-    return message;
+    return 0;
 error:
-    Message_Destroy(message);
-    return NULL;
+    return -1;
 }
 
-int GetQueryType(BNode *dict, MessageType *type)
+void SetQueryType(Message *message, BNode *dict)
 {
+    assert(message != NULL && "NULL Message pointer");
     assert(dict != NULL && "NULL BNode pointer");
-    assert(type != NULL && "NULL MessageType pointer");
-
-    check(dict->type == BDictionary, "Not a dictionary");
+    assert(dict->type == BDictionary && "Not a dictionary");
 
     BNode *qVal = BNode_GetValue(dict, "q", 1);
-    check(qVal != NULL, "No 'q' value");
-    check(qVal->type == BString, "Value not a BString");
+
+    if (qVal == NULL)
+    {
+        goto invalid;
+    }
 
     if (BNode_StringEquals("ping", qVal))
     {
-	*type = QPing;
-	return 0;
+	message->type = QPing;
+	return;
     }
 
     if (BNode_StringEquals("find_node", qVal))
     {
-	*type = QFindNode;
-	return 0;
+	message->type = QFindNode;
+	return;
     }
 
     if (BNode_StringEquals("get_peers", qVal))
     {
-	*type = QGetPeers;
-	return 0;
+	message->type = QGetPeers;
+	return;
     }
 
     if (BNode_StringEquals("announce_peer", qVal))
     {
-	*type = QAnnouncePeer;
-	return 0;
+	message->type = QAnnouncePeer;
+	return;
     }
 
-error:
-    return -1;
+invalid:
+    message->type = MUnknown;
+    message->errors |= MERROR_INVALID_QUERY_TYPE;
+    return;
 }    
 
-int GetTransactionId(BNode *dict, char **t, size_t *t_len)
+int SetTransactionId(Message *message, BNode *dict)
 {
+    assert(message != NULL && "NULL Message pointer");
     assert(dict != NULL && "NULL BNode dictionary pointer");
-    assert(t != NULL && "NULL pointer to transaction id pointer");
-    assert(t_len != NULL && "NULL pointer to transaction id length");
-
-    check(dict->type == BDictionary, "Not a dictionary");
+    assert(dict->type == BDictionary && "Not a dictionary");
 
     BNode *tVal = BNode_GetValue(dict, "t", 1);
-    check(tVal != NULL, "No 't' value");
 
-    char *tmp = BNode_CopyString(tVal);
-    check(tmp != NULL, "BString copy failed");
+    if (tVal == NULL || tVal->type != BString)
+    {
+        message->t = NULL;
+        message->t_len = 0;
+        message->errors |= MERROR_INVALID_TID;
 
-    *t = tmp;
-    *t_len = tVal->count;
+        return 0;
+    }
 
-    return 0;
-error:
-    return -1;
-}
-
-int GetQueryId(BNode *dict, Hash *id)
-{
-    assert(dict != NULL && "NULL BNode dictionary pointer");
-    assert(id != NULL && "NULL pointer to Hash");
-
-    check(dict->type == BDictionary, "Not a dictionary");
-
-    BNode *arguments = BNode_GetValue(dict, "a", 1);
-    check(arguments != NULL, "No arguments");
-    check(arguments->type == BDictionary, "Arguments not a dictionary");
-
-    BNode *idVal = BNode_GetValue(arguments, "id", 2);
-    check(idVal != NULL, "No id argument");
-    check(idVal->type == BString, "Wrong id type");
-    check(idVal->count == HASH_BYTES, "Wrong id length");
-
-    memcpy(id->value, idVal->value.string, HASH_BYTES);
+    message->t = BNode_CopyString(tVal);
+    check(message->t != NULL, "BString copy failed");
+    message->t_len = tVal->count;
 
     return 0;
 error:
     return -1;
 }
 
-int GetQueryFindNodeData(BNode *arguments, QFindNodeData *data);
-int GetQueryGetPeersData(BNode *arguments, QGetPeersData *data);
-int GetQueryAnnouncePeerData(BNode *arguments, QAnnouncePeerData *data);
-
-int GetQueryData(MessageType type, BNode *dict, Message *message)
+void SetQueryId(Message *message, BNode *dict)
 {
-    assert(dict != NULL && "NULL BNode dictionary pointer");
     assert(message != NULL && "NULL Message pointer");
-
-    if (type == QPing)
-	return 0;
+    assert(dict != NULL && "NULL BNode dictionary pointer");
+    assert(dict->type == BDictionary && "Not a dictionary");
 
     BNode *arguments = BNode_GetValue(dict, "a", 1);
 
     if (arguments == NULL || arguments->type != BDictionary)
-	return -1;
-
-    switch (type)
     {
-    case QFindNode:
-	return GetQueryFindNodeData(arguments, &message->data.qfindnode);
-    case QGetPeers:
-	return GetQueryGetPeersData(arguments, &message->data.qgetpeers);
-    case QAnnouncePeer:
-	return GetQueryAnnouncePeerData(arguments, &message->data.qannouncepeer);
-    default:
-	log_err("Bad query MessageType");
-	return -1;
+        message->errors |= MERROR_INVALID_NODE_ID;
+        return;
     }
+
+    BNode *idVal = BNode_GetValue(arguments, "id", 2);
+
+    if (idVal == NULL || idVal->type != BString || idVal->count != HASH_BYTES)
+    {
+        message->errors |= MERROR_INVALID_NODE_ID;
+        return;
+    }
+
+    memcpy(message->id.value, idVal->value.string, HASH_BYTES);
+
+    return;
 }
 
-int GetQueryFindNodeData(BNode *arguments, QFindNodeData *data)
+int SetQueryFindNodeData(Message *message, BNode *arguments);
+int SetQueryGetPeersData(Message *message, BNode *arguments);
+int SetQueryAnnouncePeerData(Message *message, BNode *arguments);
+
+int SetQueryData(Message *message, BNode *dict)
 {
+    assert(message != NULL && "NULL Message pointer");
+    assert(dict != NULL && "NULL BNode dictionary pointer");
+    assert(dict->type == BDictionary && "Not a dictionary");
+    assert(MessageType_IsQuery(message->type) && "Not a query");
+
+    if (message->errors)
+    {
+        return 0;
+    }
+
+    if (message->type == QPing)
+    {
+	return 0;
+    }
+
+    BNode *arguments = BNode_GetValue(dict, "a", 1);
+
+    if (arguments == NULL || arguments->type != BDictionary)
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
+
+    switch (message->type)
+    {
+    case QFindNode:
+	return SetQueryFindNodeData(message, arguments);
+        break;
+    case QGetPeers:
+	return SetQueryGetPeersData(message, arguments);
+        break;
+    case QAnnouncePeer:
+	return SetQueryAnnouncePeerData(message, arguments);
+        break;
+    default:
+        break;
+    }
+
+    log_err("Unhandled Query MessageType");
+    message->errors |= MERROR_INVALID_DATA;
+    return -1;
+}
+
+int SetQueryFindNodeData(Message *message, BNode *arguments)
+{
+    assert(message != NULL && "NULL Message pointer");
     assert(arguments != NULL && "NULL BNode dictionary pointer");
-    assert(data != NULL && "NULL QFindNodeData pointer");
+    assert(arguments->type == BDictionary && "Not a dictionary");
 
     BNode *target = BNode_GetValue(arguments, "target", 6);
 
-    check(target != NULL
-	  && target->type == BString
-	  && target->count == HASH_BYTES,
-	  "Missing or bad target id");
+    if (target == NULL || target->type != BString || target->count != HASH_BYTES)
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
 
+    QFindNodeData *data = &message->data.qfindnode;
     data->target = malloc(HASH_BYTES);
     check_mem(data->target);
 
@@ -268,17 +273,29 @@ error:
     return -1;
 }
 
-int GetQueryGetPeersData(BNode *arguments, QGetPeersData *data)
+int IsInfoHashNode(BNode *node)
 {
+    return node != NULL
+        && node->type == BString
+        && node->count == HASH_BYTES;
+}
+
+int SetQueryGetPeersData(Message *message, BNode *arguments)
+{
+    assert(message != NULL && "NULL Message pointer");
+    assert(message->type == QGetPeers && "Wrong Message type");
     assert(arguments != NULL && "NULL BNode dictionary pointer");
-    assert(data != NULL && "NULL QGetPeersData pointer");
+    assert(arguments->type == BDictionary && "Not a dictionary");
 
     BNode *info_hash = BNode_GetValue(arguments, "info_hash", 9);
 
-    check(info_hash != NULL
-	  && info_hash->type == BString
-	  && info_hash->count == HASH_BYTES,
-	  "Missing or bad info_hash id");
+    if (!IsInfoHashNode(info_hash))
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
+
+    QGetPeersData *data = &message->data.qgetpeers;
 
     data->info_hash = malloc(HASH_BYTES);
     check_mem(data->info_hash);
@@ -290,33 +307,41 @@ error:
     return -1;
 }
 
-int GetQueryAnnouncePeerData(BNode *arguments, QAnnouncePeerData *data)
+int SetQueryAnnouncePeerData(Message *message, BNode *arguments)
 {
+    assert(message != NULL && "NULL Message pointer");
+    assert(message->type == QAnnouncePeer && "Wrong Message type");
     assert(arguments != NULL && "NULL BNode dictionary pointer");
-    assert(data != NULL && "NULL QAnnouncePeerData pointer");
-
-    data->info_hash = NULL;
+    assert(arguments->type == BDictionary && "Not a dictionary");
 
     BNode *info_hash = BNode_GetValue(arguments, "info_hash", 9);
 
-    check(info_hash != NULL
-	  && info_hash->type == BString
-	  && info_hash->count == HASH_BYTES,
-	  "Missing or bad info_hash id");
+    if (!IsInfoHashNode(info_hash))
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
 
     BNode *port = BNode_GetValue(arguments, "port", 4);
 
-    check(port != NULL
-	  && port->type == BInteger
-	  && port->value.integer >= 0
-	  && port->value.integer <= 0xffff,
-	  "Missing or bad port");
+    if (port == NULL
+        || port->type != BInteger
+        || port->value.integer < 0
+        || port->value.integer > 0xffff)
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
 
     BNode *token = BNode_GetValue(arguments, "token", 5);
 
-    check(token != NULL
-	  && token->type == BString,
-	  "Missing or bad token");
+    if (token == NULL || token->type != BString)
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
+
+    QAnnouncePeerData *data = &message->data.qannouncepeer;
 
     data->info_hash = malloc(HASH_BYTES);
     check_mem(data->info_hash);
@@ -337,161 +362,201 @@ error:
     return -1;
 }
 
-int GetResponseData(MessageType type, BNode *dict, Message *message);
-int GetResponseId(BNode *dict, Hash *id);
+int SetResponseData(Message *message, BNode *dict);
+void SetResponseId(Message *message, BNode *dict);
 
-Message *DecodeResponse(BNode *dict, struct PendingResponses *pending)
+int DecodeResponse(Message *message, BNode *dict, struct PendingResponses *pending)
 {
+    assert(message != NULL && "NULL Message pointer");
     assert(dict != NULL && "NULL BNode pointer");
+    assert(dict->type == BDictionary && "Not a dictionary");
+    assert(pending != NULL && "NULL struct PendingResponses pointer");
 
-    Message *message = calloc(1, sizeof(Message));
-    check_mem(message);
+    int rc = SetTransactionId(message, dict);
+    check(rc == 0, "SetTransactionId failed");
 
-    int rc = 0;
+    if (message->t_len != sizeof(tid_t))
+    {
+        message->errors |= MERROR_INVALID_TID;
+    }
 
-    check(dict->type == BDictionary, "Not a dictionary");
-
-    rc = GetTransactionId(dict, &message->t, &message->t_len);
-    check(rc == 0, "Bad transaction id");
-    check(message->t_len == sizeof(tid_t), "Bad response transaction id length");
-
-    rc = GetResponseId(dict, &message->id);
-    check(rc == 0, "Bad response node id");
+    SetResponseId(message, dict);
 
     PendingResponse entry = pending->getPendingResponse(pending, message->t, &rc);
-    check(rc == 0, "getPendingResponse failed");
-    check(Hash_Equals(&message->id, &entry.id), "Wrong id from responding node");
 
-    message->type = entry.type;
-    message->context = entry.context;
+    if (rc == 0)
+    {
+        if (!Hash_Equals(&message->id, &entry.id))
+        {
+            message->errors |= MERROR_INVALID_NODE_ID;
+        }
 
-    rc = GetResponseData(message->type, dict, message);
-    check(rc == 0, "Bad response arguments");
+        message->type = entry.type;
+        message->context = entry.context;
+    }
+    else
+    {
+        message->errors |= MERROR_INVALID_TID;
+    }
 
-    return message;
-error:
-    Message_Destroy(message);
-    return NULL;
-}
-
-int GetResponseId(BNode *dict, Hash *id)
-{
-    assert(dict != NULL && "NULL BNode dictionary pointer");
-    assert(id != NULL && "NULL pointer to Hash");
-
-    check(dict->type == BDictionary, "Not a dictionary");
-
-    BNode *arguments = BNode_GetValue(dict, "r", 1);
-    check(arguments != NULL, "No response arguments");
-    check(arguments->type == BDictionary, "Arguments not a dictionary");
-
-    BNode *idVal = BNode_GetValue(arguments, "id", 2);
-    check(idVal != NULL, "No id argument");
-    check(idVal->type == BString, "Wrong id type");
-    check(idVal->count == HASH_BYTES, "Wrong id length");
-
-    memcpy(id->value, idVal->value.string, HASH_BYTES);
+    rc = SetResponseData(message, dict);
+    check(rc == 0, "SetResponseData failed");
 
     return 0;
 error:
     return -1;
 }
 
-int GetResponseFindNodeData(BNode *arguments, RFindNodeData *data);
-int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data);
-
-int GetResponseData(MessageType type, BNode *dict, Message *message)
+void SetResponseId(Message *message, BNode *dict)
 {
-    assert(dict != NULL && "NULL BNode dictionary pointer");
     assert(message != NULL && "NULL Message pointer");
-
-    if (type == RPing || type == RAnnouncePeer)
-	return 0;
+    assert(dict != NULL && "NULL BNode pointer");
+    assert(dict->type == BDictionary && "Not a dictionary");
 
     BNode *arguments = BNode_GetValue(dict, "r", 1);
 
     if (arguments == NULL || arguments->type != BDictionary)
-	return -1;
+    {
+        message->errors |= MERROR_INVALID_NODE_ID;
+        return;
+    }
 
-    switch (type)
+    BNode *idVal = BNode_GetValue(arguments, "id", 2);
+
+    if (idVal == NULL || idVal->type != BString || idVal->count != HASH_BYTES)
+    {
+        message->errors |= MERROR_INVALID_NODE_ID;
+        return;
+    }
+
+    memcpy(message->id.value, idVal->value.string, HASH_BYTES);
+
+    return;
+}
+
+int SetResponseFindNodeData(Message *message, BNode *arguments);
+int SetResponseGetPeersData(Message *message, BNode *arguments);
+
+int SetResponseData(Message *message, BNode *dict)
+{
+    assert(message != NULL && "NULL Message pointer");
+    assert(MessageType_IsReply(message->type) && "Not a reply");
+    assert(dict != NULL && "NULL BNode pointer");
+    assert(dict->type == BDictionary && "Not a dictionary");
+
+    if (message->type == RPing || message->type == RAnnouncePeer)
+    {
+        message->errors |= MERROR_INVALID_DATA;
+	return 0;
+    }
+
+    BNode *arguments = BNode_GetValue(dict, "r", 1);
+
+    if (arguments == NULL || arguments->type != BDictionary)
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
+
+    switch (message->type)
     {
     case RFindNode:
-	return GetResponseFindNodeData(arguments, &message->data.rfindnode);
+	return SetResponseFindNodeData(message, arguments);
     case RGetPeers:
-	return GetResponseGetPeersData(arguments, &message->data.rgetpeers);
-    default: return -1;
+	return SetResponseGetPeersData(message, arguments);
+    default:
+        log_err("Unhandled response message type %d", message->type);
+        return -1;
     }
 }
 
-Node **GetCompactNodeInfo(BNode *string, size_t *count);
+int SetCompactNodeInfo(Message *message, BNode *string);
 
-int GetResponseFindNodeData(BNode *arguments, RFindNodeData *data)
+int SetResponseFindNodeData(Message *message, BNode *arguments)
 {
-    assert(arguments != NULL && "NULL BNode dictionary pointer");
-    assert(data != NULL && "NULL RFindNodeData pointer");
+    assert(message != NULL && "NULL Message pointer");
+    assert(message->type == RFindNode && "Wrong message type");
+    assert(arguments != NULL && "NULL BNode pointer");
+    assert(arguments->type == BDictionary && "Not a dictionary");
 
     BNode *nodes = BNode_GetValue(arguments, "nodes", 5);
 
-    check(nodes != NULL, "Missing nodes");
+    if (nodes == NULL || nodes->type != BString)
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
 
-    data->nodes = GetCompactNodeInfo(nodes, &data->count);
-    check(data->nodes != NULL, "Error reading compact node info");
-
-    return 0;
-error:
-    return -1;
+    return SetCompactNodeInfo(message, nodes);
 }
 
 #define COMPACTNODE_BYTES (HASH_BYTES + sizeof(uint32_t) + sizeof(uint16_t))
 
-Node **GetCompactNodeInfo(BNode *string, size_t *count)
+int SetCompactNodeInfo(Message *message, BNode *string)
 {
+    assert(message != NULL && "NULL Message pointer");
+    assert((message->type == RFindNode || message->type == RGetPeers)
+           && "Wrong message type");
     assert(string != NULL && "NULL BNode string pointer");
-    assert(count != NULL && "NULL pointer to size_t count");
+    assert(string->type == BString && "Not a BString");
 
-    Node **nodes = NULL;
-
-    check(string->type == BString, "Not a BString");
-    check(string->count % COMPACTNODE_BYTES == 0, "Bad compact node info length");
-    
-    *count = string->count / COMPACTNODE_BYTES;
-    nodes = calloc(*count, sizeof(Node));
-    check_mem(nodes);
-    
-    char *data = string->value.string;
-
-    unsigned int i = 0;
-    for (i = 0; i < *count; i++)
+    if (string->count % COMPACTNODE_BYTES != 0)
     {
-
-        nodes[i] = Node_Create((Hash *)data);
-        check_mem(nodes[i]);
-        nodes[i]->addr.s_addr = ntohl(*(uint32_t *)(data + HASH_BYTES));
-	nodes[i]->port = ntohs(*(uint16_t *)(data + HASH_BYTES + sizeof(uint32_t)));
-
-	data += COMPACTNODE_BYTES;
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
     }
 
-    return nodes;
+    RFindNodeData *data = &message->data.rfindnode;
+    char *nodes = string->value.string;
+    
+    data->count = string->count / COMPACTNODE_BYTES;
+    data->nodes = calloc(data->count, sizeof(Node *));
+    check_mem(data->nodes);
+
+    unsigned int i = 0;
+    for (i = 0; i < data->count; i++, nodes += COMPACTNODE_BYTES)
+    {
+        data->nodes[i] = Node_Create((Hash *)nodes);
+        check_mem(data->nodes[i]);
+        data->nodes[i]->addr.s_addr = ntohl(*(uint32_t *)(nodes
+                                                         + HASH_BYTES));
+	data->nodes[i]->port = ntohs(*(uint16_t *)(nodes
+                                                  + HASH_BYTES
+                                                  + sizeof(uint32_t)));
+    }
+
+    return 0;
 error:
-    if (nodes != NULL)
-        Node_DestroyBlock(nodes, string->count);
+    if (data->nodes != NULL)
+    {
+        Node_DestroyBlock(data->nodes, string->count);
+        free(nodes);
+        data->nodes = NULL;
+    }
 
-    free(nodes);
+    data->count = 0;
 
-    return NULL;
+    return -1;
 }
 
-int GetCompactPeerInfo(BNode *list, Peer **values, size_t *count);
+int SetCompactPeerInfo(Message *message, BNode *list);
 
-int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
+int SetResponseGetPeersData(Message *message, BNode *arguments)
 {
+    assert(message != NULL && "NULL Message pointer");
+    assert(message->type == RGetPeers && "Wrong message type");
     assert(arguments != NULL && "NULL BNode dictionary pointer");
-    assert(data != NULL && "NULL RGetPeersData pointer");
+    assert(arguments->type == BDictionary && "Not a dictionary");
 
     BNode *token = BNode_GetValue(arguments, "token", 5);
-    check(token != NULL, "Missing token");
-    check(token->type == BString, "Bad token type");
+
+    if (token == NULL || token->type != BString)
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
+
+    RGetPeersData *data = &message->data.rgetpeers;
 
     data->token = BNode_CopyString(token);
     check(data->token != NULL, "Failed to copy token");
@@ -508,23 +573,20 @@ int GetResponseGetPeersData(BNode *arguments, RGetPeersData *data)
 
     if (values != NULL && nodes != NULL)
     {
-	sentinel("Both values and nodes in response");
+        message->errors |= MERROR_INVALID_DATA;
     }
-    else if (values != NULL)
+    else if (values != NULL && values->type == BList)
     {
-	int rc = GetCompactPeerInfo(values,
-                                    &data->values,
-                                    &data->count);
-	check(rc == 0, "Failed to get peer values compact info");
+	return SetCompactPeerInfo(message, values);
     }
-    else if (nodes != NULL)
+    else if (nodes != NULL && nodes->type == BString)
     {
-	data->nodes = GetCompactNodeInfo(nodes, &data->count);
-	check(data->nodes != NULL, "Failed to get compact node info");
+        int rc = SetCompactNodeInfo(message, nodes);
+	check(rc == 0, "Failed to get compact node info");
     }
     else
     {
-	sentinel("Missing values or nodes");
+	message->errors |= MERROR_INVALID_DATA;
     }
 
     return 0;
@@ -537,75 +599,89 @@ error:
 
 #define COMPACTPEER_BYTES (sizeof(uint32_t) + sizeof(uint16_t))
 
-int GetCompactPeerInfo(BNode *list, Peer **peers, size_t *count)
+int SetCompactPeerInfo(Message *message, BNode *list)
 {
+    assert(message != NULL && "NULL Message pointer");
+    assert(message->type == RGetPeers && "Wrong Message type");
     assert(list != NULL && "NULL BNode string pointer");
-    assert(peers != NULL && "NULL pointer to Peer pointer");
-    assert(count != NULL && "NULL pointer to size_t count");
+    assert(list->type == BList && "Not a BList");
 
-    *peers = NULL;
+    RGetPeersData *data = &message->data.rgetpeers;
 
-    check(list->type == BList, "Not a BList");
+    data->count = list->count;
+    data->values = calloc(data->count, sizeof(Peer));
+    check_mem(data->values);
 
-    *count = list->count;
-    *peers = calloc(*count, sizeof(Peer));
-    check_mem(*peers);
-
-    Peer *peer = *peers;
+    Peer *peer = data->values;
     size_t i = 0;
 
-    for (i = 0; i < *count; i++)
+    for (i = 0; i < data->count; i++, peer++)
     {
 	BNode *string = list->value.nodes[i];
 
-	check(string->type == BString, "Wrong peer type");
-	check(string->count == COMPACTPEER_BYTES, "Bad compact peer info length");
+        if (string->type != BString || string->count != COMPACTPEER_BYTES)
+        {
+            message->errors |= MERROR_INVALID_DATA;
+            return 0;
+        }
+
 	peer->addr = ntohl(*(uint32_t *)string->value.string);
 	peer->port = ntohs(*(uint16_t *)(string->value.string + sizeof(uint32_t)));
-
-	peer++;
     }
 
     return 0;
 error:
-    free(*peers);
-    *peers = NULL;
-    *count = 0;
+    free(data->values);
+    data->values = NULL;
+    data->count = 0;
 
     return -1;
 }
 
-Message *DecodeError(BNode *dict)
+int DecodeError(Message *message, BNode *dict)
 {
-    assert(dict != NULL && "NULL BNode dict pointer");
-
-    Message *message = calloc(1, sizeof(Message));
-    check_mem(message);
+    assert(message != NULL && "NULL Message pointer");
+    assert(dict != NULL && "NULL BNode pointer");
+    assert(dict->type == BDictionary && "Not a dictionary");
 
     message->type = RError;
 
-    check(dict->type == BDictionary, "Not a dictionary");
-
-    int rc = GetTransactionId(dict, &message->t, &message->t_len);
-    check(rc == 0, "Bad transaction id");
+    int rc = SetTransactionId(message, dict);
+    check(rc == 0, "SetTransactionId failed");
 
     BNode *eVal = BNode_GetValue(dict, "e", 1);
     check(eVal != NULL, "No 'e' value");
     check(eVal->type == BList, "Value not a BList");
 
-    check(eVal->count == 2, "Wrong size 'e' list");
+    if (eVal == NULL || eVal->type != BList || eVal->count != 2)
+    {
+        message->errors |= MERROR_INVALID_DATA;
+        return 0;
+    }
 
-    BNode *code = eVal->value.nodes[0], *error_msg = eVal->value.nodes[1];
+    BNode *code = eVal->value.nodes[0],
+        *error_msg = eVal->value.nodes[1];
 
-    check(code->type == BInteger, "Wrong type in error code position");
-    message->data.rerror.code = code->value.integer;
+    if (code->type == BInteger)
+    {
+        message->data.rerror.code = code->value.integer;
+    }
+    else
+    {
+        message->errors |= MERROR_INVALID_DATA;
+    }
 
-    check(error_msg->type == BString, "Wrong type in error message position");
-    message->data.rerror.message = BNode_bstring(error_msg);
-    check(message->data.rerror.message != NULL, "Failed to create bstring");
+    if (error_msg->type == BString)
+    {
+        message->data.rerror.message = BNode_bstring(error_msg);
+        check(message->data.rerror.message != NULL, "Failed to create bstring");
+    }
+    else
+    {
+        message->errors |= MERROR_INVALID_DATA;
+    }
 
-    return message;
+    return 0;
 error:
-    Message_Destroy(message);
-    return NULL;
+    return -1;
 }
