@@ -9,24 +9,24 @@
 #define BUCKET_K 8
 #define BUCKET_LAST_BITS 3
 
-typedef struct DhtBucket {
+typedef struct Bucket {
     int index;
     int count;
     time_t change_time;
     DhtNode *nodes[BUCKET_K];
-} DhtBucket;
+} Bucket;
 
-DhtBucket *DhtBucket_Create();
-void DhtBucket_Destroy(DhtBucket *bucket);
+Bucket *Bucket_Create();
+void Bucket_Destroy(Bucket *bucket);
 
-int DhtBucket_ContainsNode(DhtBucket *bucket, DhtNode *node);
-int DhtBucket_IsFull(DhtBucket *bucket);
+int Bucket_ContainsNode(Bucket *bucket, DhtNode *node);
+int Bucket_IsFull(Bucket *bucket);
 
-DhtNode *DhtBucket_ReplaceBad(DhtBucket *bucket, DhtNode *node);
-DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node);
+DhtNode *Bucket_ReplaceBad(Bucket *bucket, DhtNode *node);
+DhtNode *Bucket_ReplaceQuestionable(Bucket *bucket, DhtNode *node);
 
-int DhtBucket_AddNode(DhtBucket *bucket, DhtNode *node);
+int Bucket_AddNode(Bucket *bucket, DhtNode *node);
 
-int DhtBucket_GatherGoodNodes(DhtBucket *bucket, DArray *found);
+int Bucket_GatherGoodNodes(Bucket *bucket, DArray *found);
 
 #endif

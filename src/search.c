@@ -46,8 +46,8 @@ int Search_CopyTable(Search *search, DhtTable *source)
     assert(dest->end == 1 && "Expected a single bucket");
     assert(dest->buckets[0]->count == 0 && "Expected an empty bucket");
 
-    DhtBucket *last = DhtTable_FindBucket(source, &dest->id);
-    DhtBucket **bucket = source->buckets;
+    Bucket *last = DhtTable_FindBucket(source, &dest->id);
+    Bucket **bucket = source->buckets;
     DhtNode *copy = NULL;
     DhtTable_InsertNodeResult result = { 0 };
     do

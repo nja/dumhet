@@ -66,7 +66,7 @@ char *test_Search_CopyTable()
 
         for (i = 0; i < shared; i++)
         {
-            DhtBucket *bucket = table->buckets[i];
+            Bucket *bucket = table->buckets[i];
 
             int j = 0;
             for (j = 0; j < BUCKET_K; j++)

@@ -9,7 +9,7 @@
 
 typedef struct DhtTable {
     DhtHash id;
-    DhtBucket *buckets[MAX_TABLE_BUCKETS];
+    Bucket *buckets[MAX_TABLE_BUCKETS];
     int end;
 } DhtTable;
 
@@ -19,8 +19,8 @@ void DhtTable_DestroyNodes(DhtTable *table);
 
 int DhtTable_ForEachNode(DhtTable *table, void *context, NodeOp op);
 
-DhtBucket *DhtTable_AddBucket(DhtTable *table);
-DhtBucket *DhtTable_FindBucket(DhtTable *table, DhtHash *id);
+Bucket *DhtTable_AddBucket(DhtTable *table);
+Bucket *DhtTable_FindBucket(DhtTable *table, DhtHash *id);
 
 DhtNode *DhtTable_FindNode(DhtTable *table, DhtHash *id);
 
@@ -32,7 +32,7 @@ DArray *DhtTable_GatherClosest(DhtTable *table, DhtHash *id);
 
 typedef struct DhtTable_InsertNodeResult {
     enum DhtTable_InsertNodeResultRc rc;
-    DhtBucket *bucket;
+    Bucket *bucket;
     DhtNode *replaced;
 } DhtTable_InsertNodeResult;
 

@@ -5,9 +5,9 @@
 #include <dht/node.h>
 #include <lcthw/dbg.h>
 
-DhtBucket *DhtBucket_Create()
+Bucket *Bucket_Create()
 {
-    DhtBucket *bucket = calloc(1, sizeof(DhtBucket));
+    Bucket *bucket = calloc(1, sizeof(Bucket));
     check_mem(bucket);
 
     bucket->change_time = time(NULL);
@@ -17,14 +17,14 @@ error:
     return NULL;
 }
 
-void DhtBucket_Destroy(DhtBucket *bucket)
+void Bucket_Destroy(Bucket *bucket)
 {
     free(bucket);
 }
 
-int DhtBucket_ContainsNode(DhtBucket *bucket, DhtNode *node)
+int Bucket_ContainsNode(Bucket *bucket, DhtNode *node)
 {
-    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(bucket != NULL && "NULL Bucket pointer");
     assert(node != NULL && "NULL DhtNode pointer");
 
     DhtNode **bucket_node = bucket->nodes;
@@ -44,9 +44,9 @@ int DhtBucket_ContainsNode(DhtBucket *bucket, DhtNode *node)
 }
 
 /* Returns the replaced node, or NULL when no bad was found */
-DhtNode *DhtBucket_ReplaceBad(DhtBucket *bucket, DhtNode *node)
+DhtNode *Bucket_ReplaceBad(Bucket *bucket, DhtNode *node)
 {
-    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(bucket != NULL && "NULL Bucket pointer");
     assert(node != NULL && "NULL DhtNode pointer");
 
     time_t now = time(NULL);
@@ -70,9 +70,9 @@ DhtNode *DhtBucket_ReplaceBad(DhtBucket *bucket, DhtNode *node)
     return NULL;
 }
 
-DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node)
+DhtNode *Bucket_ReplaceQuestionable(Bucket *bucket, DhtNode *node)
 {
-    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(bucket != NULL && "NULL Bucket pointer");
     assert(node != NULL && "NULL DhtNode pointer");
 
     time_t now = time(NULL), oldest_time = now;
@@ -110,23 +110,23 @@ DhtNode *DhtBucket_ReplaceQuestionable(DhtBucket *bucket, DhtNode *node)
     return NULL;
 }
 
-int DhtBucket_IsFull(DhtBucket *bucket)
+int Bucket_IsFull(Bucket *bucket)
 {
-    assert(bucket != NULL && "NULL DhtBucket pointer");
-    assert(bucket->count >= 0 && "Negative DhtBucket count");
-    assert(bucket->count <= BUCKET_K && "Too large DhtBucket count");
+    assert(bucket != NULL && "NULL Bucket pointer");
+    assert(bucket->count >= 0 && "Negative Bucket count");
+    assert(bucket->count <= BUCKET_K && "Too large Bucket count");
 
     return BUCKET_K == bucket->count;
 }
 
-int DhtBucket_AddNode(DhtBucket *bucket, DhtNode *node)
+int Bucket_AddNode(Bucket *bucket, DhtNode *node)
 {
-    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(bucket != NULL && "NULL Bucket pointer");
     assert(node != NULL && "NULL DhtNode pointer");
-    assert(bucket->count >= 0 && "Negative DhtBucket count");
-    assert(bucket->count <= BUCKET_K && "Too large DhtBucket count");
+    assert(bucket->count >= 0 && "Negative Bucket count");
+    assert(bucket->count <= BUCKET_K && "Too large Bucket count");
 
-    check(!DhtBucket_IsFull(bucket), "Bucket full");
+    check(!Bucket_IsFull(bucket), "Bucket full");
 
     int i = 0;
     for (i = 0; i < BUCKET_K; i++)
@@ -137,7 +137,7 @@ int DhtBucket_AddNode(DhtBucket *bucket, DhtNode *node)
             bucket->count++;
             bucket->change_time = time(NULL);
 
-            assert(bucket->count <= BUCKET_K && "Too large DhtBucket count");
+            assert(bucket->count <= BUCKET_K && "Too large Bucket count");
 
             return 0;
         }
@@ -148,9 +148,9 @@ error:
     return -1;
 }
 
-int DhtBucket_GatherGoodNodes(DhtBucket *bucket, DArray *found)
+int Bucket_GatherGoodNodes(Bucket *bucket, DArray *found)
 {
-    assert(bucket != NULL && "NULL DhtBucket pointer");
+    assert(bucket != NULL && "NULL Bucket pointer");
     assert(found != NULL && "NULL DArray pointer");
 
     DhtNode **node = bucket->nodes;
