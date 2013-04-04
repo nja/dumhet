@@ -5,9 +5,9 @@
 #include <dht/node.h>
 #include <lcthw/dbg.h>
 
-DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)
+NodeStatus Node_Status(Node *node, time_t time)
 {
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
 
     if (node->reply_time != 0)
     {
@@ -29,11 +29,11 @@ DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)
     return Bad;
 }
 
-DhtNode *DhtNode_Create(DhtHash *id)
+Node *Node_Create(Hash *id)
 {
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
-    DhtNode *node = calloc(1, sizeof(DhtNode));
+    Node *node = calloc(1, sizeof(Node));
     check_mem(node);
 
     node->id = *id;
@@ -43,9 +43,9 @@ error:
     return NULL;
 }
 
-DhtNode *DhtNode_Copy(DhtNode *source)
+Node *Node_Copy(Node *source)
 {
-    DhtNode *copy = DhtNode_Create(&source->id);
+    Node *copy = Node_Create(&source->id);
     check_mem(copy);
 
     copy->addr = source->addr;
@@ -56,12 +56,12 @@ error:
     return NULL;
 }
 
-void DhtNode_Destroy(DhtNode *node)
+void Node_Destroy(Node *node)
 {
     free(node);
 }
 
-int DhtNode_DestroyOp(void *context, DhtNode *node)
+int Node_DestroyOp(void *context, Node *node)
 {
     (void)(context);
     free(node);
@@ -69,7 +69,7 @@ int DhtNode_DestroyOp(void *context, DhtNode *node)
     return 0;
 }
 
-void DhtNode_DestroyBlock(DhtNode **nodes, size_t count)
+void Node_DestroyBlock(Node **nodes, size_t count)
 {
     assert(((nodes == NULL && count == 0)
 	    || (nodes != NULL && count > 0)) && "Bad count for block");
@@ -77,18 +77,18 @@ void DhtNode_DestroyBlock(DhtNode **nodes, size_t count)
     unsigned int i = 0;
     for (i = 0; i < count; i++)
     {
-        DhtNode_Destroy(nodes[i]);
+        Node_Destroy(nodes[i]);
         nodes[i] = NULL;
     }
 }
 
-int DhtNode_Same(DhtNode *a, DhtNode *b)
+int Node_Same(Node *a, Node *b)
 {
-    assert(a != NULL && "NULL DhtNode pointer");
-    assert(b != NULL && "NULL DhtNode pointer");
+    assert(a != NULL && "NULL Node pointer");
+    assert(b != NULL && "NULL Node pointer");
 
     return a->addr.s_addr == b->addr.s_addr
         && a->port == b->port
-        && DhtHash_Equals(&a->id, &b->id);
+        && Hash_Equals(&a->id, &b->id);
 }
 

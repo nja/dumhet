@@ -4,15 +4,15 @@
 #include <dht/table.h>
 #include <lcthw/dbg.h>
 
-Search *Search_Create(DhtHash *id)
+Search *Search_Create(Hash *id)
 {
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     Search *search = calloc(1, sizeof(Search));
     check_mem(search);
 
-    search->table = DhtTable_Create(id);
-    check(search->table != NULL, "DhtTable_Create failed");
+    search->table = Table_Create(id);
+    check(search->table != NULL, "Table_Create failed");
 
     search->peers = Peers_Create(id);
     check(search->peers != NULL, "Peers_Create failed");
@@ -30,39 +30,39 @@ void Search_Destroy(Search *search)
         return;
     }
 
-    DhtTable_Destroy(search->table);
+    Table_Destroy(search->table);
     Peers_Destroy(search->peers);
     free(search);
 }
 
-int Search_CopyTable(Search *search, DhtTable *source)
+int Search_CopyTable(Search *search, Table *source)
 {
     assert(search != NULL && "NULL Search pointer");
-    assert(source != NULL && "NULL DhtTable pointer");
+    assert(source != NULL && "NULL Table pointer");
 
-    DhtTable *dest = search->table;
+    Table *dest = search->table;
 
-    assert(dest != NULL && "NULL DhtTable pointer");
+    assert(dest != NULL && "NULL Table pointer");
     assert(dest->end == 1 && "Expected a single bucket");
     assert(dest->buckets[0]->count == 0 && "Expected an empty bucket");
 
-    DhtBucket *last = DhtTable_FindBucket(source, &dest->id);
-    DhtBucket **bucket = source->buckets;
-    DhtNode *copy = NULL;
-    DhtTable_InsertNodeResult result = { 0 };
+    Bucket *last = Table_FindBucket(source, &dest->id);
+    Bucket **bucket = source->buckets;
+    Node *copy = NULL;
+    Table_InsertNodeResult result = { 0 };
     do
     {
-        DhtNode **node = (*bucket)->nodes;
+        Node **node = (*bucket)->nodes;
 
         while (node < &(*bucket)->nodes[BUCKET_K])
         {
             if (*node != NULL)
             {
-                copy = DhtNode_Copy(*node);
+                copy = Node_Copy(*node);
                 check_mem(copy);
 
-                result = DhtTable_InsertNode(dest, copy);
-                check(result.rc == OKAdded, "DhtTable_InsertNode failed");
+                result = Table_InsertNode(dest, copy);
+                check(result.rc == OKAdded, "Table_InsertNode failed");
             }
 
             node++;
@@ -71,12 +71,12 @@ int Search_CopyTable(Search *search, DhtTable *source)
 
     return 0;
 error:
-    DhtNode_Destroy(copy);
-    DhtNode_Destroy(result.replaced);
+    Node_Destroy(copy);
+    Node_Destroy(result.replaced);
     return -1;
 }
 
-int ShouldQuery(DhtNode *node, time_t time);
+int ShouldQuery(Node *node, time_t time);
 
 struct QueryNodesContext
 {
@@ -84,11 +84,11 @@ struct QueryNodesContext
     DArray *nodes;
 };
 
-int AddIfQueryable(void *vcontext, DhtNode *node)
+int AddIfQueryable(void *vcontext, Node *node)
 {
     struct QueryNodesContext *context = (struct QueryNodesContext *)vcontext;
     assert(context != NULL && "NULL QueryNodesContext pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
     assert(context->nodes != NULL && "NULL DArray pointer in QueryNodesContext");
 
     if (ShouldQuery(node, context->time))
@@ -111,17 +111,17 @@ int Search_NodesToQuery(Search *search, DArray *nodes, time_t time)
     context.time = time;
     context.nodes = nodes;
 
-    int rc = DhtTable_ForEachNode(search->table, &context, AddIfQueryable);
-    check(rc == 0, "DhtTable_ForEachNode failed");
+    int rc = Table_ForEachNode(search->table, &context, AddIfQueryable);
+    check(rc == 0, "Table_ForEachNode failed");
 
     return 0;
 error:
     return -1;
 }
 
-int ShouldQuery(DhtNode *node, time_t time)
+int ShouldQuery(Node *node, time_t time)
 {
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
 
     if (node->reply_time != 0)
         return 0;

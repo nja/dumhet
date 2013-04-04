@@ -1,9 +1,9 @@
 #include <dht/client.h>
 #include <dht/message.h>
 
-Message *Message_CreateQuery(DhtClient *client, MessageType type)
+Message *Message_CreateQuery(Client *client, MessageType type)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client != NULL && "NULL Client pointer");
     assert(MessageType_IsQuery(type) && "MessageType not a query");
 
     Message *message = calloc(1, sizeof(Message));
@@ -23,15 +23,15 @@ error:
     return NULL;
 }    
 
-Message *Message_CreateQPing(DhtClient *client)
+Message *Message_CreateQPing(Client *client)
 {
     return Message_CreateQuery(client, QPing);
 }
 
-Message *Message_CreateQFindNode(DhtClient *client, DhtHash *id)
+Message *Message_CreateQFindNode(Client *client, Hash *id)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(client != NULL && "NULL Client pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     Message *message = Message_CreateQuery(client, QFindNode);
     check(message != NULL, "Message_Create failed");
@@ -46,10 +46,10 @@ error:
     return NULL;
 }
 
-Message *Message_CreateQGetPeers(DhtClient *client, DhtHash *info_hash)
+Message *Message_CreateQGetPeers(Client *client, Hash *info_hash)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(client != NULL && "NULL Client pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
 
     Message *message = Message_CreateQuery(client, QGetPeers);
     check(message != NULL, "Message_Create failed");
@@ -64,12 +64,12 @@ error:
     return NULL;
 }
 
-Message *Message_CreateQAnnouncePeer(DhtClient *client,
-                                     DhtHash *info_hash,
+Message *Message_CreateQAnnouncePeer(Client *client,
+                                     Hash *info_hash,
                                      Token *token)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(client != NULL && "NULL Client pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
     assert(token != NULL && "NULL Token pointer");
 
     QAnnouncePeerData data = { 0 };
@@ -98,9 +98,9 @@ error:
     return NULL;
 }
 
-Message *Message_CreateResponse(DhtClient *client, Message *query, MessageType type)
+Message *Message_CreateResponse(Client *client, Message *query, MessageType type)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client != NULL && "NULL Client pointer");
     assert(query != NULL && "NULL Message pointer");
     assert(query->t != NULL && "NULL char token pointer in query");
     assert(query->t_len > 0 && "Bad t_len in query");
@@ -126,9 +126,9 @@ error:
 
 /* This does not copy the found nodes, so the message must be sent before
  * they can be destroyed. */
-Message *Message_CreateRFindNode(DhtClient *client, Message *query, DArray *found)
+Message *Message_CreateRFindNode(Client *client, Message *query, DArray *found)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client != NULL && "NULL Client pointer");
     assert(query != NULL && "NULL Message pointer");
     assert(found != NULL && "NULL DArray pointer");
 
@@ -137,7 +137,7 @@ Message *Message_CreateRFindNode(DhtClient *client, Message *query, DArray *foun
 
     RFindNodeData data;
     data.count = DArray_count(found);
-    data.nodes = malloc(data.count * sizeof(DhtNode *));
+    data.nodes = malloc(data.count * sizeof(Node *));
 
     unsigned int i = 0;
     for (i = 0; i < data.count; i++)
@@ -150,25 +150,25 @@ error:
     return NULL;
 }
 
-Message *Message_CreateRPing(DhtClient *client, Message *query)
+Message *Message_CreateRPing(Client *client, Message *query)
 {
     return Message_CreateResponse(client, query, RPing);
 }
 
-Message *Message_CreateRAnnouncePeer(DhtClient *client, Message *query)
+Message *Message_CreateRAnnouncePeer(Client *client, Message *query)
 {
     return Message_CreateResponse(client, query, RAnnouncePeer);
 }
 
 /* This does not copy the found nodes, so the message must be sent before
  * they can be destroyed. */
-Message *Message_CreateRGetPeers(DhtClient *client,
+Message *Message_CreateRGetPeers(Client *client,
                                  Message *query,
                                  DArray *peers,
                                  DArray *nodes, 
                                  Token *token)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client != NULL && "NULL Client pointer");
     assert(query != NULL && "NULL Message pointer");
     assert(token != NULL && "NULL Token pointer");
 
@@ -201,7 +201,7 @@ Message *Message_CreateRGetPeers(DhtClient *client,
     else
     {
         data.count = DArray_count(nodes);
-        data.nodes = malloc(data.count * sizeof(DhtNode *));
+        data.nodes = malloc(data.count * sizeof(Node *));
         check_mem(data.nodes);
 
         for (i = 0; i < data.count; i++)
@@ -218,9 +218,9 @@ error:
     return NULL;
 }
 
-Message *Message_CreateRErrorBadToken(DhtClient *client, Message *query)
+Message *Message_CreateRErrorBadToken(Client *client, Message *query)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client != NULL && "NULL Client pointer");
     assert(query != NULL && "NULL Message pointer");
 
     Message *message = Message_CreateResponse(client, query, RError);

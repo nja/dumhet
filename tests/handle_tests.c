@@ -13,9 +13,9 @@ int SameT(Message *a, Message *b)
     return memcmp(a->t, b->t, a->t_len) == 0;
 }
 
-int HasRecentQuery(DhtTable *table, DhtHash id)
+int HasRecentQuery(Table *table, Hash id)
 {
-    DhtNode *node = DhtTable_FindNode(table, &id);
+    Node *node = Table_FindNode(table, &id);
     check(node != NULL, "No node in client table");
 
     return node->query_time > 0;
@@ -23,9 +23,9 @@ error:
     return 0;
 }
 
-int HasRecentReply(DhtTable *table, DhtHash id)
+int HasRecentReply(Table *table, Hash id)
 {
-    DhtNode *node = DhtTable_FindNode(table, &id);
+    Node *node = Table_FindNode(table, &id);
     check(node != NULL, "No node in table");
 
     return node->reply_time > 0;
@@ -35,11 +35,11 @@ error:
 
 char *test_HandleQPing()
 {
-    DhtHash id = { "client id" }, from_id = { "from id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 1, 1);
+    Hash id = { "client id" }, from_id = { "from id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 1, 1);
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     Message *qping = Message_CreateQPing(from);
 
@@ -50,8 +50,8 @@ char *test_HandleQPing()
     mu_assert(SameT(qping, reply), "Wrong t");
     mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
+    Client_Destroy(client);
+    Client_Destroy(from);
     Message_Destroy(qping);
     Message_Destroy(reply);
 
@@ -60,13 +60,13 @@ char *test_HandleQPing()
 
 char *test_HandleQGetPeers_nodes()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 1, 1);
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 1, 1);
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     Message *qgetpeers = Message_CreateQGetPeers(from, &target_id);
 
@@ -76,17 +76,17 @@ char *test_HandleQGetPeers_nodes()
     mu_assert(reply->type == RGetPeers, "Wrong type");
     mu_assert(SameT(qgetpeers, reply), "Wrong t");
     mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
-    mu_assert(DhtClient_IsValidToken(client,
-                                     &from->node,
-                                     reply->data.rgetpeers.token,
-                                     reply->data.rgetpeers.token_len),
+    mu_assert(Client_IsValidToken(client,
+                                  &from->node,
+                                  reply->data.rgetpeers.token,
+                                  reply->data.rgetpeers.token_len),
               "Invalid token");
     mu_assert(reply->data.rgetpeers.nodes != NULL, "No nodes");
     mu_assert(reply->data.rgetpeers.count == 1, "Wrong count");
     mu_assert(reply->data.rgetpeers.values == NULL, "Unwanted peers");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
+    Client_Destroy(client);
+    Client_Destroy(from);
     Message_Destroy(qgetpeers);
     Message_Destroy(reply);
 
@@ -95,15 +95,15 @@ char *test_HandleQGetPeers_nodes()
 
 char *test_HandleQGetPeers_peers()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 1, 1);
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 1, 1);
     Peer peer = { .addr = 2, .port = 3 };
 
-    DhtTable_InsertNode(client->table, &from->node);
-    DhtClient_AddPeer(client, &target_id, &peer);
+    Table_InsertNode(client->table, &from->node);
+    Client_AddPeer(client, &target_id, &peer);
 
     Message *qgetpeers = Message_CreateQGetPeers(from, &target_id);
 
@@ -113,17 +113,17 @@ char *test_HandleQGetPeers_peers()
     mu_assert(reply->type == RGetPeers, "Wrong type");
     mu_assert(SameT(qgetpeers, reply), "Wrong t");
     mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
-    mu_assert(DhtClient_IsValidToken(client,
-                                     &from->node,
-                                     reply->data.rgetpeers.token,
-                                     reply->data.rgetpeers.token_len),
+    mu_assert(Client_IsValidToken(client,
+                                  &from->node,
+                                  reply->data.rgetpeers.token,
+                                  reply->data.rgetpeers.token_len),
               "Invalid token");
     mu_assert(reply->data.rgetpeers.values != NULL, "No peers");
     mu_assert(reply->data.rgetpeers.count == 1, "Wrong count");
     mu_assert(reply->data.rgetpeers.nodes == NULL, "Unwanted nodes");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
+    Client_Destroy(client);
+    Client_Destroy(from);
     Message_Destroy(qgetpeers);
     Message_Destroy(reply);
 
@@ -132,14 +132,14 @@ char *test_HandleQGetPeers_peers()
 
 char *test_HandleQAnnouncePeer()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtTable_InsertNode(client->table, &from->node);
-    Token token = DhtClient_MakeToken(client, &from->node);
+    Table_InsertNode(client->table, &from->node);
+    Token token = Client_MakeToken(client, &from->node);
 
     Message *query = Message_CreateQAnnouncePeer(from, &target_id, &token);
 
@@ -152,8 +152,8 @@ char *test_HandleQAnnouncePeer()
 
     DArray *peers = NULL;
 
-    int rc = DhtClient_GetPeers(client, &target_id, &peers);
-    mu_assert(rc == 0, "DhtClient_GetPeers failed");
+    int rc = Client_GetPeers(client, &target_id, &peers);
+    mu_assert(rc == 0, "Client_GetPeers failed");
     mu_assert(peers != NULL, "NULL DArray");
     mu_assert(DArray_count(peers) == 1, "Wrong peers count");
 
@@ -162,8 +162,8 @@ char *test_HandleQAnnouncePeer()
     mu_assert(peer->addr == from->node.addr.s_addr, "Wrong peer addr");
     mu_assert(peer->port == from->peer_port, "Wrong peer port");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
+    Client_Destroy(client);
+    Client_Destroy(from);
     Message_Destroy(query);
     Message_Destroy(reply);
     DArray_destroy(peers);
@@ -173,13 +173,13 @@ char *test_HandleQAnnouncePeer()
 
 char *test_HandleQAnnouncePeer_badtoken()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
     Token token = { "bad token" };
 
     Message *query = Message_CreateQAnnouncePeer(from, &target_id, &token);
@@ -192,8 +192,8 @@ char *test_HandleQAnnouncePeer_badtoken()
     mu_assert(SameT(query, reply), "Wrong t");
     mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
+    Client_Destroy(client);
+    Client_Destroy(from);
     Message_Destroy(query);
     Message_Destroy(reply);
 
@@ -202,13 +202,13 @@ char *test_HandleQAnnouncePeer_badtoken()
 
 char *test_HandleQFindNode()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     Message *query = Message_CreateQFindNode(from, &target_id);
 
@@ -221,8 +221,8 @@ char *test_HandleQFindNode()
     mu_assert(SameT(query, reply), "Wrong t");
     mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
+    Client_Destroy(client);
+    Client_Destroy(from);
     Message_Destroy(query);
     Message_Destroy(reply);
 
@@ -231,27 +231,27 @@ char *test_HandleQFindNode()
 
 char *test_HandleRFindNode()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
-    DhtNode found_node = { .id = { "found id" },
-                           .addr = { .s_addr = 2345 },
-                           .port = 2345};
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 2, 3);
+    Node found_node = { .id = { "found id" },
+                        .addr = { .s_addr = 2345 },
+                        .port = 2345};
 
-    DArray *found = DArray_create(sizeof(DhtNode *), 2);
+    DArray *found = DArray_create(sizeof(Node *), 2);
     DArray_push(found, &found_node);
 
     Search *search = Search_Create(&target_id);
 
     /* Insert to tables so replies can be marked by handle */
-    DhtNode *client_from_node = DhtNode_Copy(&from->node);
+    Node *client_from_node = Node_Copy(&from->node);
     client_from_node->pending_queries = 1;
-    DhtTable_InsertNode(client->table, client_from_node);
-    DhtNode *search_from_node = DhtNode_Copy(&from->node);
+    Table_InsertNode(client->table, client_from_node);
+    Node *search_from_node = Node_Copy(&from->node);
     search_from_node->pending_queries = 1;
-    DhtTable_InsertNode(search->table, search_from_node);
+    Table_InsertNode(search->table, search_from_node);
 
     Message *query = Message_CreateQFindNode(client, &target_id);
 
@@ -270,10 +270,10 @@ char *test_HandleRFindNode()
 
     DArray_destroy(found);
     Search_Destroy(search);
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
-    DhtNode_Destroy(client_from_node);
-    DhtNode_Destroy(search_from_node);
+    Client_Destroy(client);
+    Client_Destroy(from);
+    Node_Destroy(client_from_node);
+    Node_Destroy(search_from_node);
     Message_Destroy(query);
     Message_Destroy(rfindnode);
 
@@ -282,14 +282,14 @@ char *test_HandleRFindNode()
 
 char *test_HandleRPing()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtNode *from_node = DhtNode_Copy(&from->node);
+    Node *from_node = Node_Copy(&from->node);
     from_node->pending_queries = 1;
-    DhtTable_InsertNode(client->table, from_node);
+    Table_InsertNode(client->table, from_node);
 
     Message *query = Message_CreateQPing(client);
 
@@ -302,9 +302,9 @@ char *test_HandleRPing()
     mu_assert(reply->type == RPing, "Wrong type");
     mu_assert(SameT(query, reply), "Wrong t");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
-    DhtNode_Destroy(from_node);
+    Client_Destroy(client);
+    Client_Destroy(from);
+    Node_Destroy(from_node);
     Message_Destroy(query);
     Message_Destroy(reply);
 
@@ -313,17 +313,17 @@ char *test_HandleRPing()
 
 char *test_HandleRAnnouncePeer()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash info_hash = { "info_hash" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 2, 3);
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash info_hash = { "info_hash" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtNode *from_node = DhtNode_Copy(&from->node);
+    Node *from_node = Node_Copy(&from->node);
     from_node->pending_queries = 1;
-    DhtTable_InsertNode(client->table, from_node);
+    Table_InsertNode(client->table, from_node);
 
-    Token token = DhtClient_MakeToken(client, &from->node);
+    Token token = Client_MakeToken(client, &from->node);
 
     Message *query = Message_CreateQAnnouncePeer(client, &info_hash, &token);
 
@@ -336,9 +336,9 @@ char *test_HandleRAnnouncePeer()
     mu_assert(reply->type == RAnnouncePeer, "Wrong type");
     mu_assert(SameT(query, reply), "Wrong t");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
-    DhtNode_Destroy(from_node);
+    Client_Destroy(client);
+    Client_Destroy(from);
+    Node_Destroy(from_node);
     Message_Destroy(query);
     Message_Destroy(reply);
 
@@ -347,24 +347,24 @@ char *test_HandleRAnnouncePeer()
 
 char *test_HandleRGetPeers_nodes()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 1, 1);
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 1, 1);
     const int nodes_count = 3;
-    DhtNode *found_nodes[nodes_count];
+    Node *found_nodes[nodes_count];
 
     from->node.pending_queries = 1;
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     int i = 0;
     for (i = 0; i < nodes_count; i++)
     {
-        DhtHash id = { "  found node id" };
+        Hash id = { "  found node id" };
         id.value[0] = '0' + i;
-        found_nodes[i] = DhtNode_Create(&id);
-        DhtTable_InsertNode(from->table, found_nodes[i]);
+        found_nodes[i] = Node_Create(&id);
+        Table_InsertNode(from->table, found_nodes[i]);
     }
 
     Message *qgetpeers = Message_CreateQGetPeers(client, &target_id);
@@ -380,12 +380,12 @@ char *test_HandleRGetPeers_nodes()
     mu_assert(search->table->buckets[0]->count == nodes_count, "Found nodes missing.");
     mu_assert(search->peers->count == 0, "No peers expected");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
+    Client_Destroy(client);
+    Client_Destroy(from);
 
     for (i = 0; i < nodes_count; i++)
     {
-        DhtNode_Destroy(found_nodes[i]);
+        Node_Destroy(found_nodes[i]);
     }
 
     Message_Destroy(qgetpeers);
@@ -397,21 +397,21 @@ char *test_HandleRGetPeers_nodes()
 
 char *test_HandleRGetPeers_peers()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
-    DhtClient *from = DhtClient_Create(from_id, 1, 1, 1);
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
+    Client *client = Client_Create(id, 0, 0, 0);
+    Client *from = Client_Create(from_id, 1, 1, 1);
     const int peers_count = 3;
 
     from->node.pending_queries = 1;
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     int i = 0;
     for (i = 0; i < peers_count; i++)
     {
         Peer peer = { .addr = 100 + i, .port = 100 + i };
-        DhtClient_AddPeer(from, &target_id, &peer);
+        Client_AddPeer(from, &target_id, &peer);
     }
 
     Message *qgetpeers = Message_CreateQGetPeers(client, &target_id);
@@ -427,8 +427,8 @@ char *test_HandleRGetPeers_peers()
     mu_assert(search->table->buckets[0]->count == 0, "No nodes expected.");
     mu_assert(search->peers->count == peers_count, "Missing peers");
 
-    DhtClient_Destroy(client);
-    DhtClient_Destroy(from);
+    Client_Destroy(client);
+    Client_Destroy(from);
     Message_Destroy(qgetpeers);
     Message_Destroy(rgetpeers);
     Search_Destroy(search);

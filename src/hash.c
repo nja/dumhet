@@ -4,14 +4,14 @@
 #include <dht/hash.h>
 #include <lcthw/dbg.h>
 
-/* DhtHash */
+/* Hash */
 
-DhtHash *DhtHash_Clone(DhtHash *hash)
+Hash *Hash_Clone(Hash *hash)
 {
-    assert(hash != NULL && "NULL DhtHash hash pointer");
+    assert(hash != NULL && "NULL Hash hash pointer");
     assert(HASH_BYTES % sizeof(int32_t) == 0 && "Size confusion");
 
-    DhtHash *clone = malloc(sizeof(DhtHash));
+    Hash *clone = malloc(sizeof(Hash));
     check_mem(clone);
 
     unsigned int i = 0;
@@ -31,15 +31,15 @@ error:
     return NULL;
 }
 
-void DhtHash_Destroy(DhtHash *hash)
+void Hash_Destroy(Hash *hash)
 {
     free(hash);
 }
 
-int DhtHash_Random(RandomState *rs, DhtHash *hash)
+int Hash_Random(RandomState *rs, Hash *hash)
 {
     assert(rs != NULL && "NULL RandomState pointer");
-    assert(hash != NULL && "NULL DhtHash pointer");
+    assert(hash != NULL && "NULL Hash pointer");
 
     int rc = Random_Fill(rs, (char *)hash->value, HASH_BYTES);
     check(rc == 0, "Random_Fill failed");
@@ -49,10 +49,10 @@ error:
     return -1;
 }
 
-int DhtHash_Prefix(DhtHash *hash, DhtHash *prefix, unsigned int prefix_len)
+int Hash_Prefix(Hash *hash, Hash *prefix, unsigned int prefix_len)
 {
-    assert(hash != NULL && "NULL DhtHash hash pointer");
-    assert(prefix != NULL && "NULL DhtHash prefix pointer");
+    assert(hash != NULL && "NULL Hash hash pointer");
+    assert(prefix != NULL && "NULL Hash prefix pointer");
 
     check(prefix_len <= HASH_BITS, "Bad prefix_len");
 
@@ -92,34 +92,34 @@ error:
     return -1;
 }
 
-int DhtHash_PrefixedRandom(RandomState *rs, DhtHash *hash, DhtHash *prefix, int prefix_len)
+int Hash_PrefixedRandom(RandomState *rs, Hash *hash, Hash *prefix, int prefix_len)
 {
     assert(rs != NULL && "NULL RandomState pointer");
-    assert(hash != NULL && "NULL DhtHash hash pointer");
-    assert(prefix != NULL && "NULL DhtHash prefix pointer");
+    assert(hash != NULL && "NULL Hash hash pointer");
+    assert(prefix != NULL && "NULL Hash prefix pointer");
 
     check(0 <= prefix_len && prefix_len <= HASH_BITS, "Bad prefix_len");
 
-    int rc = DhtHash_Random(rs, hash);
-    check(rc == 0, "DhtHash_Random failed");
+    int rc = Hash_Random(rs, hash);
+    check(rc == 0, "Hash_Random failed");
 
-    rc = DhtHash_Prefix(hash, prefix, prefix_len);
-    check(rc == 0, "DhtHash_Prefix failed");
+    rc = Hash_Prefix(hash, prefix, prefix_len);
+    check(rc == 0, "Hash_Prefix failed");
 
     return 0;
 error:
     return -1;
 }
 
-int DhtHash_Equals(DhtHash *a, DhtHash *b)
+int Hash_Equals(Hash *a, Hash *b)
 {
-    assert(a != NULL && "NULL DhtHash pointer");
-    assert(b != NULL && "NULL DhtHash pointer");
+    assert(a != NULL && "NULL Hash pointer");
+    assert(b != NULL && "NULL Hash pointer");
 
     return memcmp(a->value, b->value, HASH_BYTES) == 0;
 }
 
-int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)
+int Hash_SharedPrefix(Hash *a, Hash *b)
 {
     unsigned int hi = 0;
 
@@ -167,7 +167,7 @@ done:
     return bi;
 }
 
-void DhtHash_Invert(DhtHash *hash)
+void Hash_Invert(Hash *hash)
 {
     assert(HASH_BYTES % sizeof(int) == 0 && "Byte confusion");
     assert(HASH_BYTES % sizeof(int32_t) == 0 && "Size confusion");
@@ -185,13 +185,13 @@ void DhtHash_Invert(DhtHash *hash)
     }
 }
 
-/* DhtDistance */
+/* Distance */
 
-DhtDistance DhtHash_Distance(DhtHash *a, DhtHash *b)
+Distance Hash_Distance(Hash *a, Hash *b)
 {
-    assert(a != NULL && b != NULL && "NULL DhtHash pointer");
+    assert(a != NULL && b != NULL && "NULL Hash pointer");
 
-    DhtDistance distance;
+    Distance distance;
 
     int i = 0;
 
@@ -203,9 +203,9 @@ DhtDistance DhtHash_Distance(DhtHash *a, DhtHash *b)
     return distance;
 }
 
-int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
+int Distance_Compare(Distance *a, Distance *b)
 {
-    assert(a != NULL && b != NULL && "NULL DhtDistance pointer");
+    assert(a != NULL && b != NULL && "NULL Distance pointer");
 
     return memcmp(a->value, b->value, HASH_BYTES);
 }
@@ -213,7 +213,7 @@ int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
 #define STRBUFLEN (HASH_BYTES * 2 + 1)
 static char strbuf[STRBUFLEN];
 
-const char *DhtHash_Str(DhtHash *hash)
+const char *Hash_Str(Hash *hash)
 {
     char *src = hash->value;
     char *dst = strbuf;
@@ -233,9 +233,9 @@ const char *DhtHash_Str(DhtHash *hash)
     return strbuf;
 }
 
-uint32_t DhtHash_Hash(DhtHash *dht)
+uint32_t Hash_Hash(Hash *dht)
 {
-    assert(dht != NULL && "NULL DhtHash pointer");
+    assert(dht != NULL && "NULL Hash pointer");
     assert(HASH_BYTES % sizeof(uint32_t) == 0 && "Size confusion");
 
     uint32_t *data = (uint32_t *)dht->value;

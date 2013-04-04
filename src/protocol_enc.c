@@ -314,7 +314,7 @@ int NodesLen(size_t nodes_count)
     return SLen("5:nodes") + BStringLen(nodes_count * COMPACTNODEBYTES);
 }
 
-void NodesCpy(char **dest, DhtNode **nodes, size_t count)
+void NodesCpy(char **dest, Node **nodes, size_t count)
 {
     SCpy(*dest, "5:nodes");
 

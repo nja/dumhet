@@ -6,14 +6,14 @@
 #include <dht/table.h>
 
 typedef struct Search {
-    DhtTable *table;
+    Table *table;
     Peers *peers;
 } Search;
 
-Search *Search_Create(DhtHash *id);
+Search *Search_Create(Hash *id);
 void Search_Destroy(Search *search);
 
-int Search_CopyTable(Search *search, DhtTable *source);
+int Search_CopyTable(Search *search, Table *source);
 
 #define SEARCH_RESPITE 3
 #define SEARCH_MAX_PENDING 2

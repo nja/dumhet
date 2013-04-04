@@ -4,22 +4,22 @@
 #include <dht/client.h>
 #include <dht/message.h>
 
-Message *Message_CreateQPing(DhtClient *client);
-Message *Message_CreateQFindNode(DhtClient *client, DhtHash *id);
-Message *Message_CreateQGetPeers(DhtClient *client, DhtHash *info_hash);
-Message *Message_CreateQAnnouncePeer(DhtClient *client,
-                                     DhtHash *info_hash,
+Message *Message_CreateQPing(Client *client);
+Message *Message_CreateQFindNode(Client *client, Hash *id);
+Message *Message_CreateQGetPeers(Client *client, Hash *info_hash);
+Message *Message_CreateQAnnouncePeer(Client *client,
+                                     Hash *info_hash,
                                      Token *token);
 
-Message *Message_CreateRFindNode(DhtClient *client, Message *query, DArray *found);
-Message *Message_CreateRPing(DhtClient *client, Message *query);
-Message *Message_CreateRAnnouncePeer(DhtClient *client, Message *query);
-Message *Message_CreateRGetPeers(DhtClient *client,
+Message *Message_CreateRFindNode(Client *client, Message *query, DArray *found);
+Message *Message_CreateRPing(Client *client, Message *query);
+Message *Message_CreateRAnnouncePeer(Client *client, Message *query);
+Message *Message_CreateRGetPeers(Client *client,
                                  Message *query,
                                  DArray *peers,
                                  DArray *nodes,
                                  Token *token);
 
-Message *Message_CreateRErrorBadToken(DhtClient *client, Message *query);
+Message *Message_CreateRErrorBadToken(Client *client, Message *query);
 
 #endif

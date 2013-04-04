@@ -6,11 +6,11 @@
 
 struct CloseNode
 {
-    DhtNode *node;
-    DhtDistance distance;
+    Node *node;
+    Distance distance;
 };
 
-CloseNodes *CloseNodes_Create(DhtHash *id)
+CloseNodes *CloseNodes_Create(Hash *id)
 {
     CloseNodes *nodes = malloc(sizeof(CloseNodes));
     check_mem(nodes);
@@ -43,7 +43,7 @@ DArray *CloseNodes_GetNodes(CloseNodes *close)
 {
     assert(close != NULL && "NULL CloseNodes pointer");
 
-    DArray *nodes = DArray_create(sizeof(DhtNode *),
+    DArray *nodes = DArray_create(sizeof(Node *),
                                   DArray_max(close->close_nodes));
     check(nodes != NULL, "DArray_create failed");
 
@@ -52,7 +52,7 @@ DArray *CloseNodes_GetNodes(CloseNodes *close)
     {
         struct CloseNode *close_node = DArray_get(close->close_nodes, i);
         check(close_node != NULL, "NULL CloseNodes entry");
-        check(close_node->node != NULL, "NULL DhtNode pointer in CloseNodes entry");
+        check(close_node->node != NULL, "NULL Node pointer in CloseNodes entry");
 
         int rc = DArray_push(nodes, close_node->node);
         check(rc == 0, "DArray_push failed");
@@ -64,15 +64,15 @@ error:
     return NULL;
 }
 
-int FindIndex(DArray *close, DhtDistance *distance);
+int FindIndex(DArray *close, Distance *distance);
 void ShiftFrom(DArray *close, int i);
 
-int CloseNodes_Add(CloseNodes *close, DhtNode *node)
+int CloseNodes_Add(CloseNodes *close, Node *node)
 {
     assert(close != NULL && "NULL CloseNodes pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
 
-    DhtDistance distance = DhtHash_Distance(&close->id, &node->id);
+    Distance distance = Hash_Distance(&close->id, &node->id);
     int i = FindIndex(close->close_nodes, &distance);
 
     if (i < 0)
@@ -95,10 +95,10 @@ error:
     return -1;
 }
 
-int FindIndex(DArray *close, DhtDistance *distance)
+int FindIndex(DArray *close, Distance *distance)
 {
     assert(close != NULL && "NULL DArray pointer");
-    assert(distance != NULL && "NULL DhtDistance pointer");
+    assert(distance != NULL && "NULL Distance pointer");
 
     int i = 0;
     while (i < BUCKET_K)
@@ -108,7 +108,7 @@ int FindIndex(DArray *close, DhtDistance *distance)
 
         struct CloseNode *other = DArray_get(close, i);
 
-        if (DhtDistance_Compare(distance, &other->distance) <= 0)
+        if (Distance_Compare(distance, &other->distance) <= 0)
             return i;
 
         i++;

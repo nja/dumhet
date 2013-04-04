@@ -1,5 +1,5 @@
-#ifndef _dhtclient_h
-#define _dhtclient_h
+#ifndef _client_h
+#define _client_h
 
 #include <dht/table.h>
 #include <dht/protocol.h>
@@ -7,32 +7,34 @@
 
 #define SECRETS_LEN 2
 
-typedef DhtHash Token;
+typedef Hash Token;
 
-typedef struct DhtClient {
-    DhtNode node;
-    DhtTable *table;
+typedef struct Client {
+    Node node;
+    Table *table;
     int socket;
     uint16_t peer_port;
     struct PendingResponses *pending;
     char *buf;
     int next_t;
-    DhtHash secrets[SECRETS_LEN];
+    Hash secrets[SECRETS_LEN];
     Hashmap *peers;
-} DhtClient;
+} Client;
 
-DhtClient *DhtClient_Create(DhtHash id,
-                            uint32_t addr,
-                            uint16_t port,
-                            uint16_t peer_port);
-void DhtClient_Destroy(DhtClient *client);
+Client *Client_Create(Hash id,
+                      uint32_t addr,
+                      uint16_t port,
+                      uint16_t peer_port);
+void Client_Destroy(Client *client);
 
-Token DhtClient_MakeToken(DhtClient *client, DhtNode *from);
-int DhtClient_IsValidToken(DhtClient *client, DhtNode *from,
-                           char *token, size_t token_len);
-int DhtClient_NewSecret(DhtClient *client);
+Token Client_MakeToken(Client *client, Node *from);
+int Client_IsValidToken(Client *client,
+                        Node *from,
+                        char *token,
+                        size_t token_len);
+int Client_NewSecret(Client *client);
 
-int DhtClient_GetPeers(DhtClient *client, DhtHash *info_hash, DArray **peers);
-int DhtClient_AddPeer(DhtClient *client, DhtHash *info_hash, Peer *peer);
+int Client_GetPeers(Client *client, Hash *info_hash, DArray **peers);
+int Client_AddPeer(Client *client, Hash *info_hash, Peer *peer);
 
 #endif

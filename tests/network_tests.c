@@ -9,9 +9,9 @@
 
 char *test_NetworkUpDown()
 {
-    DhtHash id;
+    Hash id;
 
-    DhtClient *client = DhtClient_Create(id, 0, TESTPORT, 0);
+    Client *client = Client_Create(id, 0, TESTPORT, 0);
 
     int rc = NetworkUp(client);
     mu_assert(rc == 0, "NetworkUp failed");
@@ -19,15 +19,15 @@ char *test_NetworkUpDown()
     rc = NetworkDown(client);
     mu_assert(rc == 0, "NetworkDown failed");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
 
     return NULL;
 }
 
 char *test_NetworkSendReceive()
 {
-    DhtHash id;
-    DhtClient *client = DhtClient_Create(id, htonl(INADDR_LOOPBACK), TESTPORT, 0);
+    Hash id;
+    Client *client = Client_Create(id, htonl(INADDR_LOOPBACK), TESTPORT, 0);
   
     int rc = NetworkUp(client);
     mu_assert(rc == 0, "NetworkUp failed");
@@ -35,7 +35,7 @@ char *test_NetworkSendReceive()
     const size_t len = 3;
     char send[] = "foo";
     char recv[UDPBUFLEN];
-    DhtNode recvnode = {{{ 0 }}};
+    Node recvnode = {{{ 0 }}};
 
     rc = Send(client, &client->node, send, len);
     mu_assert(rc == 0, "Send failed");
@@ -50,16 +50,16 @@ char *test_NetworkSendReceive()
     rc = NetworkDown(client);
     mu_assert(rc == 0, "NetworkDown failed");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
 
     return NULL;
 }
 
 char *test_NetworkSendReceiveMessage()
 {
-    DhtHash ids = { "foo" }, idr = { "bar" };
-    DhtClient *sender = DhtClient_Create(ids, htonl(INADDR_LOOPBACK), TESTPORT, 0);
-    DhtClient *recver = DhtClient_Create(idr, htonl(INADDR_LOOPBACK), TESTPORT + 1, 0);
+    Hash ids = { "foo" }, idr = { "bar" };
+    Client *sender = Client_Create(ids, htonl(INADDR_LOOPBACK), TESTPORT, 0);
+    Client *recver = Client_Create(idr, htonl(INADDR_LOOPBACK), TESTPORT + 1, 0);
 
     int rc = NetworkUp(sender);
     mu_assert(rc == 0, "NetworkUp failed");
@@ -71,14 +71,14 @@ char *test_NetworkSendReceiveMessage()
     rc = SendMessage(sender, send, &recver->node);
     mu_assert(rc == 0, "SendMessage failed");
 
-    DhtNode from = {{{ 0 }}};
+    Node from = {{{ 0 }}};
 
     Message *recv = ReceiveMessage(recver, &from);
     mu_assert(recv != NULL, "ReceiveMessage failed");
     mu_assert(recv->type == QPing, "Received wrong type");
     mu_assert(recv->t_len == sizeof(tid_t), "Received wrong t_len");
     mu_assert(*(tid_t *)recv->t == *(tid_t *)send->t, "Received wrong t");
-    mu_assert(DhtDistance_Compare(&send->id, &recv->id) == 0, "Received wrong id");
+    mu_assert(Distance_Compare(&send->id, &recv->id) == 0, "Received wrong id");
 
     mu_assert(from.addr.s_addr == sender->node.addr.s_addr, "Wrong from addr");
     mu_assert(from.port == sender->node.port, "Wrong from port");
@@ -86,8 +86,8 @@ char *test_NetworkSendReceiveMessage()
     Message_Destroy(send);
     Message_Destroy(recv);
 
-    DhtClient_Destroy(sender);
-    DhtClient_Destroy(recver);
+    Client_Destroy(sender);
+    Client_Destroy(recver);
 
     return NULL;
 }
