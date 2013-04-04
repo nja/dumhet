@@ -1,5 +1,5 @@
-#ifndef _network_h
-#define _network_h
+#ifndef _dht_network_h
+#define _dht_network_h
 
 #include <dht/client.h>
 

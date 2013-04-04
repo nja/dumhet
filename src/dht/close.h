@@ -1,5 +1,5 @@
-#ifndef _close_h
-#define _close_h
+#ifndef _dht_close_h
+#define _dht_close_h
 
 #include <lcthw/darray.h>
 #include <dht/hash.h>

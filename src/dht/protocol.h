@@ -1,5 +1,5 @@
-#ifndef _protocol_h
-#define _protocol_h
+#ifndef _dht_protocol_h
+#define _dht_protocol_h
 
 #include <dht/bencode.h>
 #include <dht/message.h>

@@ -1,5 +1,5 @@
-#ifndef _search_h
-#define _search_h
+#ifndef _dht_search_h
+#define _dht_search_h
 
 #include <lcthw/darray.h>
 #include <dht/peers.h>

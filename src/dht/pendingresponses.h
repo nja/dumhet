@@ -1,5 +1,5 @@
-#ifndef _pendingresponses_h
-#define _pendingresponses_h
+#ifndef _dht_pendingresponses_h
+#define _dht_pendingresponses_h
 
 #include <dht/protocol.h>
 #include <dht/search.h>

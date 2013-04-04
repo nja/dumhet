@@ -1,5 +1,5 @@
-#ifndef _message_h
-#define _message_h
+#ifndef _dht_message_h
+#define _dht_message_h
 
 #include <dht/node.h>
 #include <lcthw/bstrlib.h>

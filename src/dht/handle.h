@@ -1,5 +1,5 @@
-#ifndef _handle_h
-#define _handle_h
+#ifndef _dht_handle_h
+#define _dht_handle_h
 
 int HandleReply(Client *client, Message *reply);
 int HandleRFindNode(Client *client, Message *reply);

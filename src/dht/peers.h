@@ -1,5 +1,5 @@
-#ifndef _peers_h
-#define _peers_h
+#ifndef _dht_peers_h
+#define _dht_peers_h
 
 #include <dht/hash.h>
 #include <dht/message.h>

@@ -1,5 +1,5 @@
-#ifndef _dht_h
-#define _dht_h
+#ifndef _dht_table_h
+#define _dht_table_h
 
 #include <dht/bucket.h>
 #include <dht/hash.h>

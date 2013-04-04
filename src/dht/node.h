@@ -1,5 +1,5 @@
-#ifndef _node_h
-#define _node_h
+#ifndef _dht_node_h
+#define _dht_node_h
 
 #include <netinet/in.h>
 

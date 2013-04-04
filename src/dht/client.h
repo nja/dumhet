@@ -1,5 +1,5 @@
-#ifndef _client_h
-#define _client_h
+#ifndef _dht_client_h
+#define _dht_client_h
 
 #include <dht/table.h>
 #include <dht/protocol.h>

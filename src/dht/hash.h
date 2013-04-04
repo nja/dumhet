@@ -1,5 +1,5 @@
-#ifndef _hash_h
-#define _hash_h
+#ifndef _dht_hash_h
+#define _dht_hash_h
 
 #define HASH_BYTES 20
 #define HASH_BITS (HASH_BYTES * 8)

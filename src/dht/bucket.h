@@ -1,5 +1,5 @@
-#ifndef _bucket_h
-#define _bucket_h
+#ifndef _dht_bucket_h
+#define _dht_bucket_h
 
 #include <time.h>
 

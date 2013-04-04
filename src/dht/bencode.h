@@ -1,5 +1,5 @@
-#ifndef _bencode_h
-#define _bencode_h
+#ifndef _dht_bencode_h
+#define _dht_bencode_h
 
 #include <stdint.h>
 #include <stdlib.h>
