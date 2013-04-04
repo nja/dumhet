@@ -185,13 +185,13 @@ void Hash_Invert(Hash *hash)
     }
 }
 
-/* DhtDistance */
+/* Distance */
 
-DhtDistance Hash_Distance(Hash *a, Hash *b)
+Distance Hash_Distance(Hash *a, Hash *b)
 {
     assert(a != NULL && b != NULL && "NULL Hash pointer");
 
-    DhtDistance distance;
+    Distance distance;
 
     int i = 0;
 
@@ -203,9 +203,9 @@ DhtDistance Hash_Distance(Hash *a, Hash *b)
     return distance;
 }
 
-int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
+int Distance_Compare(Distance *a, Distance *b)
 {
-    assert(a != NULL && b != NULL && "NULL DhtDistance pointer");
+    assert(a != NULL && b != NULL && "NULL Distance pointer");
 
     return memcmp(a->value, b->value, HASH_BYTES);
 }

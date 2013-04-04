@@ -132,7 +132,7 @@ int FreePeersHashmapEntry(void *context, HashmapNode *node)
 Hashmap *PeersHashmap_Create()
 {
     Hashmap *hashmap = Hashmap_create(
-        (Hashmap_compare)DhtDistance_Compare,
+        (Hashmap_compare)Distance_Compare,
         (Hashmap_hash)Hash_Hash);
     check_mem(hashmap);
 

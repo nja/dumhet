@@ -23,13 +23,13 @@ int Hash_SharedPrefix(Hash *a, Hash *b);
 
 const char *Hash_Str(Hash *hash);
 
-typedef Hash DhtDistance;
+typedef Hash Distance;
 
-#define DhtDistance_Destroy(D) Hash_Destroy((D))
+#define Distance_Destroy(D) Hash_Destroy((D))
 
-DhtDistance Hash_Distance(Hash *a, Hash *b);
+Distance Hash_Distance(Hash *a, Hash *b);
 
-int DhtDistance_Compare(DhtDistance *a, DhtDistance *b);
+int Distance_Compare(Distance *a, Distance *b);
 
 uint32_t Hash_Hash(Hash *hash);
 

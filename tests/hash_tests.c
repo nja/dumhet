@@ -15,7 +15,7 @@ char *test_Hash_Clone()
     mu_assert(clone != NULL, "Hash_Clone failed");
     mu_assert(clone != orig, "Not cloned");
 
-    int cmp = DhtDistance_Compare(orig, clone);
+    int cmp = Distance_Compare(orig, clone);
     mu_assert(cmp == 0, "Clone different from original");
 
     Hash_Destroy(orig);
@@ -116,20 +116,20 @@ char *test_Hash_PrefixedRandom()
 char *test_Hash_Distance()
 {
     Hash ha = {{0}}, hb = {{0}}, hc = {{0}};
-    DhtDistance zero_d = {{0}};
+    Distance zero_d = {{0}};
 
-    DhtDistance daa = Hash_Distance(&ha, &ha);
+    Distance daa = Hash_Distance(&ha, &ha);
 
-    mu_assert(DhtDistance_Compare(&zero_d, &daa) == 0, "Wrong distance");
+    mu_assert(Distance_Compare(&zero_d, &daa) == 0, "Wrong distance");
 
     hb.value[0] = 0xE0;
     hc.value[0] = 0xF0;
 
-    DhtDistance dab = Hash_Distance(&ha, &hb);
-    DhtDistance dac = Hash_Distance(&ha, &hc);
+    Distance dab = Hash_Distance(&ha, &hb);
+    Distance dac = Hash_Distance(&ha, &hc);
 
-    mu_assert(DhtDistance_Compare(&daa, &dab) < 0, "Wrong distance");
-    mu_assert(DhtDistance_Compare(&dab, &dac) < 0, "Wrong distance");
+    mu_assert(Distance_Compare(&daa, &dab) < 0, "Wrong distance");
+    mu_assert(Distance_Compare(&dab, &dac) < 0, "Wrong distance");
 
     return NULL;
 }
