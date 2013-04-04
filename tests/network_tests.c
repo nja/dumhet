@@ -66,22 +66,19 @@ char *test_NetworkSendReceiveMessage()
     rc = NetworkUp(recver);
     mu_assert(rc == 0, "NetworkUp failed");
 
-    Message *send = Message_CreateQPing(sender);
+    Message *send = Message_CreateQPing(sender, &recver->node);
 
-    rc = SendMessage(sender, send, &recver->node);
+    rc = SendMessage(sender, send);
     mu_assert(rc == 0, "SendMessage failed");
 
-    Node from = {{{ 0 }}};
-
-    Message *recv = ReceiveMessage(recver, &from);
+    Message *recv = ReceiveMessage(recver);
     mu_assert(recv != NULL, "ReceiveMessage failed");
     mu_assert(recv->type == QPing, "Received wrong type");
     mu_assert(recv->t_len == sizeof(tid_t), "Received wrong t_len");
     mu_assert(*(tid_t *)recv->t == *(tid_t *)send->t, "Received wrong t");
     mu_assert(Distance_Compare(&send->id, &recv->id) == 0, "Received wrong id");
 
-    mu_assert(from.addr.s_addr == sender->node.addr.s_addr, "Wrong from addr");
-    mu_assert(from.port == sender->node.port, "Wrong from port");
+    mu_assert(Node_Same(&sender->node, &recv->node), "Wrong node");
 
     Message_Destroy(send);
     Message_Destroy(recv);

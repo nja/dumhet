@@ -156,17 +156,16 @@ error:
     return NULL;
 }
 
-Message *HandleQAnnouncePeer(Client *client, Message *query, Node *from)
+Message *HandleQAnnouncePeer(Client *client, Message *query)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(query != NULL && "NULL Message pointer");
     assert(query->type == QAnnouncePeer && "Wrong message type");
-    assert(from != NULL && "NULL Node pointer");
 
     Table_MarkQuery(client->table, &query->id);
 
     if (!Client_IsValidToken(client,
-                             from,
+                             &query->node,
                              query->data.qannouncepeer.token,
                              query->data.qannouncepeer.token_len))
     {
@@ -175,7 +174,8 @@ Message *HandleQAnnouncePeer(Client *client, Message *query, Node *from)
         return error;
     }
 
-    Peer peer = { .addr = from->addr.s_addr, .port = query->data.qannouncepeer.port };
+    Peer peer = { .addr = query->node.addr.s_addr,
+                  .port = query->data.qannouncepeer.port };
 
     int rc = Client_AddPeer(client, query->data.qannouncepeer.info_hash, &peer);
     check(rc == 0, "Client_AddPeer failed");
@@ -188,12 +188,11 @@ error:
     return NULL;
 }
 
-Message *HandleQGetPeers(Client *client, Message *query, Node *from)
+Message *HandleQGetPeers(Client *client, Message *query)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(query != NULL && "NULL Message pointer");
     assert(query->type == QGetPeers && "Wrong message type");
-    assert(from != NULL && "NULL Node pointer");
 
     Table_MarkQuery(client->table, &query->id);
 
@@ -213,7 +212,7 @@ Message *HandleQGetPeers(Client *client, Message *query, Node *from)
         check(nodes != NULL, "Table_GatherClosest failed");
     }
 
-    Token token = Client_MakeToken(client, from);
+    Token token = Client_MakeToken(client, &query->node);
 
     Message *reply = Message_CreateRGetPeers(client, query, peers, nodes, &token);
     check(reply != NULL, "Message_CreateRGetPeers failed");

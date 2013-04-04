@@ -61,6 +61,7 @@ typedef struct RErrorData {
 
 typedef struct Message {
     MessageType type;
+    Node node;
     char *t;
     size_t t_len;
     Hash id;

@@ -27,8 +27,9 @@ char *test_MaxPeersInRGetPeersEncoded()
 {
     Hash id = { "id" };
     Client *client = Client_Create(id, 0, 0, 0);
+    Node to = {{ "node id" }, {1234}};
 
-    Message *query = Message_CreateQGetPeers(client, &id);
+    Message *query = Message_CreateQGetPeers(client, &to, &id);
     Token token = {{ 0 }};
 
     char buffer[UDPBUFLEN];

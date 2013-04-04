@@ -7,7 +7,7 @@ int HandleRGetPeers(Client *client, Message *reply);
 
 Message *HandleQFindNode(Client *client, Message *query);
 Message *HandleQPing(Client *client, Message *query);
-Message *HandleQAnnouncePeer(Client *client, Message *query, Node *from);
-Message *HandleQGetPeers(Client *client, Message *query, Node *from);
+Message *HandleQAnnouncePeer(Client *client, Message *query);
+Message *HandleQGetPeers(Client *client, Message *query);
 
 #endif

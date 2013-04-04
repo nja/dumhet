@@ -36,12 +36,12 @@ error:
 char *test_HandleQPing()
 {
     Hash id = { "client id" }, from_id = { "from id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 1, 1);
 
     Table_InsertNode(client->table, &from->node);
 
-    Message *qping = Message_CreateQPing(from);
+    Message *qping = Message_CreateQPing(from, &client->node);
 
     Message *reply = HandleQPing(client, qping);
 
@@ -63,14 +63,14 @@ char *test_HandleQGetPeers_nodes()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash target_id = { "target id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 1, 1);
 
     Table_InsertNode(client->table, &from->node);
 
-    Message *qgetpeers = Message_CreateQGetPeers(from, &target_id);
+    Message *qgetpeers = Message_CreateQGetPeers(from, &from->node, &target_id);
 
-    Message *reply = HandleQGetPeers(client, qgetpeers, &from->node);
+    Message *reply = HandleQGetPeers(client, qgetpeers);
 
     mu_assert(reply != NULL, "HandleQGetPeers failed");
     mu_assert(reply->type == RGetPeers, "Wrong type");
@@ -98,16 +98,16 @@ char *test_HandleQGetPeers_peers()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash target_id = { "target id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 1, 1);
-    Peer peer = { .addr = 2, .port = 3 };
+    Peer peer = { .addr = 23, .port = 32 };
 
     Table_InsertNode(client->table, &from->node);
     Client_AddPeer(client, &target_id, &peer);
 
-    Message *qgetpeers = Message_CreateQGetPeers(from, &target_id);
+    Message *qgetpeers = Message_CreateQGetPeers(from, &from->node, &target_id);
 
-    Message *reply = HandleQGetPeers(client, qgetpeers, &from->node);
+    Message *reply = HandleQGetPeers(client, qgetpeers);
 
     mu_assert(reply != NULL, "HandleQGetPeers failed");
     mu_assert(reply->type == RGetPeers, "Wrong type");
@@ -135,15 +135,18 @@ char *test_HandleQAnnouncePeer()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash target_id = { "target id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
     Table_InsertNode(client->table, &from->node);
     Token token = Client_MakeToken(client, &from->node);
 
-    Message *query = Message_CreateQAnnouncePeer(from, &target_id, &token);
+    Message *query = Message_CreateQAnnouncePeer(from,
+                                                 &from->node,
+                                                 &target_id,
+                                                 &token);
 
-    Message *reply = HandleQAnnouncePeer(client, query, &from->node);
+    Message *reply = HandleQAnnouncePeer(client, query);
 
     mu_assert(reply != NULL, "HandleQAnnouncePeer failed");
     mu_assert(reply->type == RAnnouncePeer, "Wrong type");
@@ -176,15 +179,18 @@ char *test_HandleQAnnouncePeer_badtoken()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash target_id = { "target id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
     Table_InsertNode(client->table, &from->node);
     Token token = { "bad token" };
 
-    Message *query = Message_CreateQAnnouncePeer(from, &target_id, &token);
+    Message *query = Message_CreateQAnnouncePeer(from,
+                                                 &client->node,
+                                                 &target_id,
+                                                 &token);
 
-    Message *reply = HandleQAnnouncePeer(client, query, &from->node);
+    Message *reply = HandleQAnnouncePeer(client, query);
 
     mu_assert(reply != NULL, "HandleQAnnouncePeer failed");
     mu_assert(reply->type == RError, "Wrong type");
@@ -205,12 +211,12 @@ char *test_HandleQFindNode()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash target_id = { "target id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
     Table_InsertNode(client->table, &from->node);
 
-    Message *query = Message_CreateQFindNode(from, &target_id);
+    Message *query = Message_CreateQFindNode(from, &client->node, &target_id);
 
     Message *reply = HandleQFindNode(client, query);
 
@@ -234,7 +240,7 @@ char *test_HandleRFindNode()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash target_id = { "target id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
     Node found_node = { .id = { "found id" },
                         .addr = { .s_addr = 2345 },
@@ -253,7 +259,7 @@ char *test_HandleRFindNode()
     search_from_node->pending_queries = 1;
     Table_InsertNode(search->table, search_from_node);
 
-    Message *query = Message_CreateQFindNode(client, &target_id);
+    Message *query = Message_CreateQFindNode(client, &from->node, &target_id);
 
     Message *rfindnode = Message_CreateRFindNode(from, query, found);
     rfindnode->context = search; /* Would be set when decoding */
@@ -284,14 +290,14 @@ char *test_HandleRPing()
 {
     Hash id = { "client id" };
     Hash from_id = { "from id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
     Node *from_node = Node_Copy(&from->node);
     from_node->pending_queries = 1;
     Table_InsertNode(client->table, from_node);
 
-    Message *query = Message_CreateQPing(client);
+    Message *query = Message_CreateQPing(client, &from->node);
 
     Message *reply = Message_CreateRPing(from, query);
 
@@ -316,7 +322,7 @@ char *test_HandleRAnnouncePeer()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash info_hash = { "info_hash" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
     Node *from_node = Node_Copy(&from->node);
@@ -325,7 +331,10 @@ char *test_HandleRAnnouncePeer()
 
     Token token = Client_MakeToken(client, &from->node);
 
-    Message *query = Message_CreateQAnnouncePeer(client, &info_hash, &token);
+    Message *query = Message_CreateQAnnouncePeer(client,
+                                                 &from->node,
+                                                 &info_hash,
+                                                 &token);
 
     Message *reply = Message_CreateRAnnouncePeer(from, query);
 
@@ -350,7 +359,7 @@ char *test_HandleRGetPeers_nodes()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash target_id = { "target id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 1, 1);
     const int nodes_count = 3;
     Node *found_nodes[nodes_count];
@@ -367,9 +376,11 @@ char *test_HandleRGetPeers_nodes()
         Table_InsertNode(from->table, found_nodes[i]);
     }
 
-    Message *qgetpeers = Message_CreateQGetPeers(client, &target_id);
+    Message *qgetpeers = Message_CreateQGetPeers(client,
+                                                 &from->node,
+                                                 &target_id);
 
-    Message *rgetpeers = HandleQGetPeers(from, qgetpeers, &from->node);
+    Message *rgetpeers = HandleQGetPeers(from, qgetpeers);
 
     Search *search = Search_Create(&target_id);
     rgetpeers->context = search;
@@ -400,7 +411,7 @@ char *test_HandleRGetPeers_peers()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash target_id = { "target id" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 1, 1);
     const int peers_count = 3;
 
@@ -414,9 +425,11 @@ char *test_HandleRGetPeers_peers()
         Client_AddPeer(from, &target_id, &peer);
     }
 
-    Message *qgetpeers = Message_CreateQGetPeers(client, &target_id);
+    Message *qgetpeers = Message_CreateQGetPeers(client,
+                                                 &from->node,
+                                                 &target_id);
 
-    Message *rgetpeers = HandleQGetPeers(from, qgetpeers, &from->node);
+    Message *rgetpeers = HandleQGetPeers(from, qgetpeers);
 
     Search *search = Search_Create(&target_id);
     rgetpeers->context = search;
