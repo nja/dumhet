@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <string.h>
 
 #include <dht/hash.h>
 #include <lcthw/dbg.h>
@@ -114,26 +115,8 @@ int DhtHash_Equals(DhtHash *a, DhtHash *b)
 {
     assert(a != NULL && "NULL DhtHash pointer");
     assert(b != NULL && "NULL DhtHash pointer");
-    assert(HASH_BYTES % sizeof(int32_t) == 0 && "Size confusion");
 
-    if (a == b)
-        return 1;
-
-    unsigned int i = 0;
-
-    for (i = 0; i <= HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
-    {
-        if (*(int_fast32_t *)&a->value[i] != *(int_fast32_t *)&b->value[i])
-            return 0;
-    }
-
-    for (; i <= HASH_BYTES - sizeof(int32_t); i += sizeof(int32_t))
-    {
-        if (*(int32_t *)&a->value[i] != *(int32_t *)&b->value[i])
-            return 0;
-    }
-
-    return 1;
+    return memcmp(a->value, b->value, HASH_BYTES) == 0;
 }
 
 int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b)
@@ -224,24 +207,7 @@ int DhtDistance_Compare(DhtDistance *a, DhtDistance *b)
 {
     assert(a != NULL && b != NULL && "NULL DhtDistance pointer");
 
-    unsigned int i = 0;
-
-    for (i = 0; i < HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
-    {
-        if (*(int_fast32_t *)&a->value[i] != *(int_fast32_t *)&b->value[i])
-            break;
-    }
-
-    for (; i < HASH_BYTES; i++)
-    {
-	if ((unsigned char)a->value[i] < (unsigned char)b->value[i])
-	    return -1;
-
-	if ((unsigned char)b->value[i] < (unsigned char)a->value[i])
-	    return 1;
-    }
-
-    return 0;
+    return memcmp(a->value, b->value, HASH_BYTES);
 }
 
 #define STRBUFLEN (HASH_BYTES * 2 + 1)

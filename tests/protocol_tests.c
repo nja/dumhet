@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <string.h>
 
 #include "minunit.h"
 #include <dht/bucket.h>
@@ -9,27 +10,13 @@
 int same_bytes(char *expected, char *data)
 {
     int len = strlen(expected);
-    int i = 0;
-    
-    for (i = 0; i < len; i++)
-    {
-	if (expected[i] != data[i])
-	{
-	    return 0;
-	}
-    }
 
-    return 1;
+    return memcmp(expected, data, len) == 0;
 }
 
 int same_bytes_len(char *expected, char *data, size_t len)
 {
-    if (strlen(expected) != len)
-    {
-	return 0;
-    }
-
-    return same_bytes(expected, data);
+    return strlen(expected) == len && same_bytes(expected, data);
 }
 
 char *check_Message(Message *message, MessageType type)

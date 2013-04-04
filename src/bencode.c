@@ -234,29 +234,21 @@ error:
 
 int compare_keys(char *a, const size_t a_len, char *b, const size_t b_len)
 {
-    size_t i = 0, min_len = a_len < b_len ? a_len : b_len;
+    size_t min_len = a_len < b_len ? a_len : b_len;
 
-    for (i = 0; i < min_len; i++)
+    int cmp = memcmp(a, b, min_len);
+
+    if (cmp != 0)
     {
-	if (a[i] < b[i])
-	    return -1;
-
-	if (b[i] < a[i])
-	    return 1;
+        return cmp;
     }
 
-    if (a_len < b_len)
-	return -1;
-
-    if (b_len < a_len)
-	return 1;
-
-    return 0;
+    return a_len < b_len ? -1 : b_len < a_len;
 }    
 
 int is_less_than(char *a, const size_t a_len, char *b, const size_t b_len)
 {
-    return compare_keys(a, a_len, b, b_len) == -1;
+    return compare_keys(a, a_len, b, b_len) < 0;
 }
 
 int all_string_keys(BNode *nodes, size_t count)

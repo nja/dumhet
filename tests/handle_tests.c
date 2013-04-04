@@ -10,14 +10,7 @@ int SameT(Message *a, Message *b)
     if (a->t_len != b->t_len)
         return 0;
 
-    unsigned int i = 0;
-    for (i = 0; i < a->t_len; i++)
-    {
-        if (a->t[i] != b->t[i])
-            return 0;
-    }
-
-    return 1;
+    return memcmp(a->t, b->t, a->t_len) == 0;
 }
 
 int HasRecentQuery(DhtTable *table, DhtHash id)

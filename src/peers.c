@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include <dht/hash.h>
 #include <dht/peers.h>
 #include <lcthw/dbg.h>
@@ -7,16 +9,7 @@ int Peer_Compare(Peer *a, Peer *b)
     assert(a != NULL && "NULL Peer pointer");
     assert(b != NULL && "NULL Peer pointer");
 
-    if (a->addr < b->addr)
-        return -1;
-    else if (b->addr < a->addr)
-        return 1;
-    else if (a->port < b->port)
-        return -1;
-    else if (b->port < a->port)
-        return 1;
-    else
-        return 0;
+    return memcmp(a, b, sizeof(Peer));
 }
 
 uint32_t Peer_Hash(void *key)
