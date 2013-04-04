@@ -43,12 +43,13 @@ typedef struct RFindNodeData {
     size_t count;
 } RFindNodeData;
 
+/* May be cast as RFindNodeData */
 typedef struct RGetPeersData {
+    Node **nodes;
+    size_t count;
     char *token;
     size_t token_len;
     Peer *values;
-    Node **nodes;
-    size_t count;
 } RGetPeersData;
 
 typedef struct RAnnouncePeerData {
