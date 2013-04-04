@@ -12,6 +12,6 @@ int Send(Client *client, Node *node, char *buf, size_t len);
 int Receive(Client *client, Node *node, char *buf, size_t len);
 
 int SendMessage(Client *client, Message *msg, Node *node);
-Message *ReceiveMessage(Client *client, Node *node);
+int ReceiveMessage(Client *client, Node *node, Message **message);
 
 #endif

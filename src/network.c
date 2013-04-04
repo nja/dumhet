@@ -87,14 +87,21 @@ int Receive(Client *client, Node *node, char *buf, size_t len)
     struct sockaddr_in srcaddr = { 0 };
     socklen_t addrlen = sizeof(srcaddr);
 
+    errno = 0;
     int rc = recvfrom(client->socket,
                       buf,
                       len,
-                      0,
+                      MSG_DONTWAIT,
                       (struct sockaddr *) &srcaddr,
                       &addrlen);
 
     assert(addrlen == sizeof(srcaddr) && "Unexpected addrlen from recvfrom");
+
+    if (rc == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+    {
+        *node = (Node){{{ 0 }}};
+        return 0;
+    }
 
     check(rc >= 0, "Receive failed");
 
@@ -132,20 +139,26 @@ error:
     return -1;
 }
 
-Message *ReceiveMessage(Client *client, Node *node)
+int ReceiveMessage(Client *client, Node *node, Message **message)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(node != NULL && "NULL Node pointer");
 
     int len = Receive(client, node, client->buf, UDPBUFLEN);
-    check(len > 0, "Receive failed");
+    check(len >= 0, "Receive failed");
 
-    Message *message = Message_Decode(client->buf,
+    if (len == 0)
+    {
+        *message = NULL;
+        return 0;
+    }
+
+    *message = Message_Decode(client->buf,
                                       len,
                                       (struct PendingResponses *)client->pending);
-    check(message != NULL, "Message_Decode failed");
+    check(*message != NULL, "Message_Decode failed");
 
-    return message;
+    return 1;
 error:
-    return NULL;
+    return -1;
 }

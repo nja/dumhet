@@ -73,8 +73,10 @@ char *test_NetworkSendReceiveMessage()
 
     Node from = {{{ 0 }}};
 
-    Message *recv = ReceiveMessage(recver, &from);
-    mu_assert(recv != NULL, "ReceiveMessage failed");
+    Message *recv = NULL;
+    rc = ReceiveMessage(recver, &from, &recv);
+    mu_assert(rc == 1, "ReceiveMessage failed");
+    mu_assert(recv != NULL, "No message");
     mu_assert(recv->type == QPing, "Received wrong type");
     mu_assert(recv->t_len == sizeof(tid_t), "Received wrong t_len");
     mu_assert(*(tid_t *)recv->t == *(tid_t *)send->t, "Received wrong t");
@@ -92,6 +94,27 @@ char *test_NetworkSendReceiveMessage()
     return NULL;
 }
 
+char *test_NetworkReceiveNonBlocking()
+{
+    Hash id = { "foo" };
+    Client *client = Client_Create(id, htonl(INADDR_LOOPBACK), TESTPORT, 0);
+
+    int rc = NetworkUp(client);
+    mu_assert(rc == 0, "NetworkUp failed");
+
+    Message empty = { 0 };
+    Message *message = &empty;
+    Node from = {{{ 0 }}};
+
+    rc = ReceiveMessage(client, &from, &message);
+    mu_assert(rc == 0, "Wrong rc");
+    mu_assert(message == NULL, "Wrong message");
+
+    Client_Destroy(client);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -99,6 +122,7 @@ char *all_tests()
     mu_run_test(test_NetworkUpDown);
     mu_run_test(test_NetworkSendReceive);
     mu_run_test(test_NetworkSendReceiveMessage);
+    mu_run_test(test_NetworkReceiveNonBlocking);
 
     return NULL;
 }
