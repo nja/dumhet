@@ -365,6 +365,7 @@ char *all_tests()
 
     mu_run_test(test_HandleRFindNode);
     mu_run_test(test_HandleRPing);
+    mu_run_test(test_HandleRAnnouncePeer);
 
     return NULL;
 }
