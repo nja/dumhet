@@ -14,6 +14,7 @@ char *BType_Name(BType type)
     case BDictionary: return "BDictionary";
     }
 
+    log_err("Unhandled BType value %d", type);
     return NULL;
 }
 
@@ -56,6 +57,8 @@ char *find_integer_end(char *data, size_t len)
 
 BNode *BDecode_integer(char *data, size_t len)
 {
+    assert(data != NULL && "NULL char pointer");
+
     char *expected_end = find_integer_end(data, len);
     check(expected_end != NULL, "Integer not properly delimited");
 
@@ -97,6 +100,10 @@ error:
 
 BNode **add_to_list(BNode *node, BNode **nodes, size_t *count, size_t *capacity)
 {
+    assert(node != NULL && "NULL BNode pointer");
+    assert(count != NULL && "NULL size_t pointer");
+    assert(capacity != NULL && "NULL size_t pointer");
+
     const size_t InitialCapacity = 8;
 
     if (*count == *capacity)
@@ -123,6 +130,8 @@ error:
 
 BNode *BDecode_list_or_dict(char *data, size_t len, char head_ch, BType type)
 {
+    assert(data != NULL && "NULL char pointer");
+
     BNode *node = NULL;
     BNode **nodes = NULL;
     size_t count = 0, capacity = 0, i = 0;
@@ -202,6 +211,8 @@ char *find_string_length_end(char *data, size_t len)
 
 BNode *BDecode_string(char *data, size_t len)
 {
+    assert(data != NULL && "NULL char pointer");
+
     char *expected_length_end = find_string_length_end(data, len);
     check(expected_length_end != NULL, "Missing string length end");
 
@@ -234,6 +245,9 @@ error:
 
 int compare_keys(char *a, const size_t a_len, char *b, const size_t b_len)
 {
+    assert(a != NULL && "NULL char pointer");
+    assert(b != NULL && "NULL char pointer");
+
     size_t min_len = a_len < b_len ? a_len : b_len;
 
     int cmp = memcmp(a, b, min_len);
@@ -248,11 +262,16 @@ int compare_keys(char *a, const size_t a_len, char *b, const size_t b_len)
 
 int is_less_than(char *a, const size_t a_len, char *b, const size_t b_len)
 {
+    assert(a != NULL && "NULL char pointer");
+    assert(b != NULL && "NULL char pointer");
+
     return compare_keys(a, a_len, b, b_len) < 0;
 }
 
 int all_string_keys(BNode *nodes, size_t count)
 {
+    assert(nodes != NULL && "NULL BNode pointer");
+
     size_t i = 0;
 
     for (i = 0; i < count; i += 2)
@@ -266,6 +285,8 @@ int all_string_keys(BNode *nodes, size_t count)
 
 BNode *BDecode_dictionary(char *data, size_t len)
 {
+    assert(data != NULL && "NULL char pointer");
+
     BNode *node = BDecode_list_or_dict(data, len, 'd', BDictionary);
     check(node != NULL, "List decoding for dictionary failed");
     check(node->count % 2 == 0, "Odd number of dict list nodes");
@@ -360,6 +381,9 @@ void BNode_Destroy(BNode *node)
 
 BNode *BNode_GetValue(BNode *dict, char *key, size_t key_len)
 {
+    assert(dict != NULL && "NULL BNode pointer");
+
+    check(dict->type == BDictionary, "Not a dictionary");\
     check(dict->count % 2 == 0, "Odd number of dict list nodes");
 
     size_t l = 0, r = dict->count / 2;

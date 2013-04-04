@@ -37,8 +37,8 @@ void Message_Destroy(Message *message)
     case RError:
 	bdestroy(message->data.rerror.message);
 	break;
-    default:
-	log_err("Destroying message of unknown type");
+    case MUnknown:
+        break;
     }
 
     free(message);
@@ -52,30 +52,13 @@ void Message_DestroyNodes(Message *message)
     switch (message->type)
     {
     case RFindNode:
-        Node_DestroyBlock(message->data.rfindnode.nodes,
-                          message->data.rfindnode.count);
-        break;
     case RGetPeers:
-        if (message->data.rgetpeers.nodes != NULL)
+        if (message->data.rfindnode.nodes != NULL)
         {
-            Node_DestroyBlock(message->data.rgetpeers.nodes,
-                              message->data.rgetpeers.count);
+            Node_DestroyBlock(message->data.rfindnode.nodes,
+                              message->data.rfindnode.count);
         }
         break;
     default: break;
-    }
-}
-
-int MessageType_IsQuery(MessageType type)
-{
-    switch (type)
-    {
-    case QPing:
-    case QFindNode:
-    case QGetPeers:
-    case QAnnouncePeer:
-        return 1;
-    default:
-        return 0;
     }
 }
