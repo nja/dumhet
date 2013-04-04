@@ -5,13 +5,13 @@
 
 #define UDPBUFLEN (0xFFFF -8 -20)
 
-int NetworkUp(DhtClient *client);
-int NetworkDown(DhtClient *client);
+int NetworkUp(Client *client);
+int NetworkDown(Client *client);
 
-int Send(DhtClient *client, DhtNode *node, char *buf, size_t len);
-int Receive(DhtClient *client, DhtNode *node, char *buf, size_t len);
+int Send(Client *client, DhtNode *node, char *buf, size_t len);
+int Receive(Client *client, DhtNode *node, char *buf, size_t len);
 
-int SendMessage(DhtClient *client, Message *msg, DhtNode *node);
-Message *ReceiveMessage(DhtClient *client, DhtNode *node);
+int SendMessage(Client *client, Message *msg, DhtNode *node);
+Message *ReceiveMessage(Client *client, DhtNode *node);
 
 #endif

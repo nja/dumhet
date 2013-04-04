@@ -6,7 +6,7 @@
 char *test_CreateDestroy_QPing()
 {
     DhtHash id = { "qping" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 0, 0, 0);
 
     Message *message = Message_CreateQPing(client);
 
@@ -16,7 +16,7 @@ char *test_CreateDestroy_QPing()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
     Message_Destroy(message);
 
     return NULL;
@@ -26,7 +26,7 @@ char *test_CreateDestroy_QFindNode()
 {
     DhtHash id = { "qfindnode" };
     DhtHash target = { "target" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 0, 0, 0);
 
     Message *message = Message_CreateQFindNode(client, &target);
 
@@ -38,7 +38,7 @@ char *test_CreateDestroy_QFindNode()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
     Message_Destroy(message);
 
     return NULL;
@@ -48,7 +48,7 @@ char *test_CreateDestroy_QGetPeers()
 {
     DhtHash id = { "qgetpeers" };
     DhtHash info_hash = { "info_hash" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 0, 0, 0);
 
     Message *message = Message_CreateQGetPeers(client, &info_hash);
 
@@ -60,7 +60,7 @@ char *test_CreateDestroy_QGetPeers()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
     Message_Destroy(message);
 
     return NULL;
@@ -71,10 +71,10 @@ char *test_CreateDestroy_QAnnouncePeer()
     const int peer_port = 1234;
     DhtHash id = { "qannouncepeer" };
     DhtHash info_hash = { "info_hash" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, peer_port);
+    Client *client = Client_Create(id, 0, 0, peer_port);
     DhtNode from = {{{ 0 }}};
 
-    Token token = DhtClient_MakeToken(client, &from);
+    Token token = Client_MakeToken(client, &from);
 
     Message *message = Message_CreateQAnnouncePeer(client, &info_hash, &token);
 
@@ -90,7 +90,7 @@ char *test_CreateDestroy_QAnnouncePeer()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
     Message_Destroy(message);
 
     return NULL;
@@ -125,7 +125,7 @@ error:
 char *test_CreateDestroy_RPing()
 {
     DhtHash id = { "rping" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 0, 0, 0);
 
     Message *query = CreateTestQuery(QPing);
     Message *message = Message_CreateRPing(client, query);
@@ -137,7 +137,7 @@ char *test_CreateDestroy_RPing()
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(SameT(query, message), "Wrong t");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
     Message_Destroy(query);
     Message_Destroy(message);
 
@@ -147,7 +147,7 @@ char *test_CreateDestroy_RPing()
 char *test_CreateDestroy_RFindNode()
 {
     DhtHash id = { "rfindnode" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 0, 0, 0);
     Message *query = CreateTestQuery(RFindNode);
 
     int i = 0;
@@ -194,7 +194,7 @@ char *test_CreateDestroy_RFindNode()
     }
 
     Message_Destroy(query);
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
 
     return NULL;
 }
@@ -202,7 +202,7 @@ char *test_CreateDestroy_RFindNode()
 char *test_CreateDestroy_RAnnouncePeer()
 {
     DhtHash id = { "rAnnounceData" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 0, 0, 0);
 
     Message *query = CreateTestQuery(RAnnouncePeer);
     Message *message = Message_CreateRAnnouncePeer(client, query);
@@ -214,7 +214,7 @@ char *test_CreateDestroy_RAnnouncePeer()
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(SameT(query, message), "Wrong t");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
     Message_Destroy(query);
     Message_Destroy(message);
 
@@ -224,7 +224,7 @@ char *test_CreateDestroy_RAnnouncePeer()
 char *test_CreateDestroy_RGetPeers_Nodes()
 {
     DhtHash id = { "rgetpeers_nodes" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 0, 0, 0);
     Message *query = CreateTestQuery(RGetPeers);
 
     int i = 0;
@@ -283,7 +283,7 @@ char *test_CreateDestroy_RGetPeers_Nodes()
         DArray_destroy(found);
     }
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
     Message_Destroy(query);
 
     return NULL;
@@ -293,7 +293,7 @@ char *test_CreateDestroy_RGetPeers_Nodes()
 char *test_CreateDestroy_RGetPeers_Peers()
 {
     DhtHash id = { "rgetpeers_peers" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 0, 0, 0);
     Message *query = CreateTestQuery(RGetPeers);
 
     int i = 0;
@@ -351,7 +351,7 @@ char *test_CreateDestroy_RGetPeers_Peers()
         DArray_destroy(found);
     }
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
     Message_Destroy(query);
 
     return NULL;
@@ -360,7 +360,7 @@ char *test_CreateDestroy_RGetPeers_Peers()
 char *test_CreateDestroy_RError()
 {
     DhtHash id = { "rerror" };
-    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 0, 0, 0);
     Message *query = CreateTestQuery(RAnnouncePeer);
 
     Message *message = Message_CreateRErrorBadToken(client, query);
@@ -374,7 +374,7 @@ char *test_CreateDestroy_RError()
     mu_assert(message->data.rerror.code == RERROR_PROTOCOL, "Wrong error code");
     mu_assert(blength(message->data.rerror.message) != 0, "No message");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
     Message_Destroy(query);
     Message_Destroy(message);
 

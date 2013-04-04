@@ -11,7 +11,7 @@ char *test_NetworkUpDown()
 {
     DhtHash id;
 
-    DhtClient *client = DhtClient_Create(id, 0, TESTPORT, 0);
+    Client *client = Client_Create(id, 0, TESTPORT, 0);
 
     int rc = NetworkUp(client);
     mu_assert(rc == 0, "NetworkUp failed");
@@ -19,7 +19,7 @@ char *test_NetworkUpDown()
     rc = NetworkDown(client);
     mu_assert(rc == 0, "NetworkDown failed");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
 
     return NULL;
 }
@@ -27,7 +27,7 @@ char *test_NetworkUpDown()
 char *test_NetworkSendReceive()
 {
     DhtHash id;
-    DhtClient *client = DhtClient_Create(id, htonl(INADDR_LOOPBACK), TESTPORT, 0);
+    Client *client = Client_Create(id, htonl(INADDR_LOOPBACK), TESTPORT, 0);
   
     int rc = NetworkUp(client);
     mu_assert(rc == 0, "NetworkUp failed");
@@ -50,7 +50,7 @@ char *test_NetworkSendReceive()
     rc = NetworkDown(client);
     mu_assert(rc == 0, "NetworkDown failed");
 
-    DhtClient_Destroy(client);
+    Client_Destroy(client);
 
     return NULL;
 }
@@ -58,8 +58,8 @@ char *test_NetworkSendReceive()
 char *test_NetworkSendReceiveMessage()
 {
     DhtHash ids = { "foo" }, idr = { "bar" };
-    DhtClient *sender = DhtClient_Create(ids, htonl(INADDR_LOOPBACK), TESTPORT, 0);
-    DhtClient *recver = DhtClient_Create(idr, htonl(INADDR_LOOPBACK), TESTPORT + 1, 0);
+    Client *sender = Client_Create(ids, htonl(INADDR_LOOPBACK), TESTPORT, 0);
+    Client *recver = Client_Create(idr, htonl(INADDR_LOOPBACK), TESTPORT + 1, 0);
 
     int rc = NetworkUp(sender);
     mu_assert(rc == 0, "NetworkUp failed");
@@ -86,8 +86,8 @@ char *test_NetworkSendReceiveMessage()
     Message_Destroy(send);
     Message_Destroy(recv);
 
-    DhtClient_Destroy(sender);
-    DhtClient_Destroy(recver);
+    Client_Destroy(sender);
+    Client_Destroy(recver);
 
     return NULL;
 }

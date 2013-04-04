@@ -10,10 +10,10 @@
 #include <dht/network.h>
 #include <lcthw/dbg.h>
 
-int NetworkUp(DhtClient *client)
+int NetworkUp(Client *client)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
-    assert(client->socket != -1 && "Invalid DhtClient socket");
+    assert(client != NULL && "NULL Client pointer");
+    assert(client->socket != -1 && "Invalid Client socket");
 
     struct sockaddr_in sockaddr = { 0 };
 
@@ -31,10 +31,10 @@ error:
     return -1;
 }
 
-int NetworkDown(DhtClient *client)
+int NetworkDown(Client *client)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
-    assert(client->socket != -1 && "Invalid DhtClient socket");
+    assert(client != NULL && "NULL Client pointer");
+    assert(client->socket != -1 && "Invalid Client socket");
 
     int rc;
 
@@ -52,9 +52,9 @@ error:
     return -1;
 }
 
-int Send(DhtClient *client, DhtNode *node, char *buf, size_t len)
+int Send(Client *client, DhtNode *node, char *buf, size_t len)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client != NULL && "NULL Client pointer");
     assert(node != NULL && "NULL DhtNode pointer");
     assert(buf != NULL && "NULL buf pointer");
     assert(len <= UDPBUFLEN && "buf too large for UDP");
@@ -77,9 +77,9 @@ error:
     return -1;
 }
 
-int Receive(DhtClient *client, DhtNode *node, char *buf, size_t len)
+int Receive(Client *client, DhtNode *node, char *buf, size_t len)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client != NULL && "NULL Client pointer");
     assert(node != NULL && "NULL DhtNode pointer");
     assert(buf != NULL && "NULL buf pointer");
     assert(len >= UDPBUFLEN && "buf too small for UDP");
@@ -106,9 +106,9 @@ error:
     return -1;
 }
 
-int SendMessage(DhtClient *client, Message *msg, DhtNode *node)
+int SendMessage(Client *client, Message *msg, DhtNode *node)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client != NULL && "NULL Client pointer");
     assert(msg != NULL && "NULL Message pointer");
     assert(node != NULL && "NULL DhtNode pointer");
     assert(msg->t_len == sizeof(tid_t) && "Wrong outgoing t");
@@ -132,9 +132,9 @@ error:
     return -1;
 }
 
-Message *ReceiveMessage(DhtClient *client, DhtNode *node)
+Message *ReceiveMessage(Client *client, DhtNode *node)
 {
-    assert(client != NULL && "NULL DhtClient pointer");
+    assert(client != NULL && "NULL Client pointer");
     assert(node != NULL && "NULL DhtNode pointer");
 
     int len = Receive(client, node, client->buf, UDPBUFLEN);
