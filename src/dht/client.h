@@ -10,7 +10,7 @@
 typedef Hash Token;
 
 typedef struct Client {
-    DhtNode node;
+    Node node;
     DhtTable *table;
     int socket;
     uint16_t peer_port;
@@ -27,9 +27,9 @@ Client *Client_Create(Hash id,
                       uint16_t peer_port);
 void Client_Destroy(Client *client);
 
-Token Client_MakeToken(Client *client, DhtNode *from);
+Token Client_MakeToken(Client *client, Node *from);
 int Client_IsValidToken(Client *client,
-                        DhtNode *from,
+                        Node *from,
                         char *token,
                         size_t token_len);
 int Client_NewSecret(Client *client);

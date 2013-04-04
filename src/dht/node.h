@@ -5,31 +5,31 @@
 
 #include <dht/hash.h>
 
-typedef struct DhtNode {
+typedef struct Node {
     Hash id;
     struct in_addr addr;
     uint16_t port;              /* network byte order */
     time_t reply_time;
     time_t query_time;
     int pending_queries;
-} DhtNode;
+} Node;
 
-DhtNode *DhtNode_Create(Hash *id);
-DhtNode *DhtNode_Copy(DhtNode *node);
-void DhtNode_Destroy(DhtNode *node);
-void DhtNode_DestroyBlock(DhtNode **node, size_t count);
+Node *Node_Create(Hash *id);
+Node *Node_Copy(Node *node);
+void Node_Destroy(Node *node);
+void Node_DestroyBlock(Node **node, size_t count);
 
-int DhtNode_Same(DhtNode *a, DhtNode *b);
+int Node_Same(Node *a, Node *b);
 
-int DhtNode_DestroyOp(void *ignore, DhtNode *node);
+int Node_DestroyOp(void *ignore, Node *node);
 
-typedef enum DhtNodeStatus { Unknown, Good, Questionable, Bad } DhtNodeStatus;
+typedef enum NodeStatus { Unknown, Good, Questionable, Bad } NodeStatus;
 
 #define NODE_RESPITE (15 * 60)
 #define NODE_MAX_PENDING 2
 
-DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time);
+NodeStatus Node_Status(Node *node, time_t time);
 
-typedef int (*NodeOp)(void *context, DhtNode *node);
+typedef int (*NodeOp)(void *context, Node *node);
 
 #endif

@@ -22,12 +22,12 @@ void Bucket_Destroy(Bucket *bucket)
     free(bucket);
 }
 
-int Bucket_ContainsNode(Bucket *bucket, DhtNode *node)
+int Bucket_ContainsNode(Bucket *bucket, Node *node)
 {
     assert(bucket != NULL && "NULL Bucket pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
 
-    DhtNode **bucket_node = bucket->nodes;
+    Node **bucket_node = bucket->nodes;
 
     while (bucket_node < bucket->nodes + BUCKET_K)
     {
@@ -44,10 +44,10 @@ int Bucket_ContainsNode(Bucket *bucket, DhtNode *node)
 }
 
 /* Returns the replaced node, or NULL when no bad was found */
-DhtNode *Bucket_ReplaceBad(Bucket *bucket, DhtNode *node)
+Node *Bucket_ReplaceBad(Bucket *bucket, Node *node)
 {
     assert(bucket != NULL && "NULL Bucket pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
 
     time_t now = time(NULL);
 
@@ -57,9 +57,9 @@ DhtNode *Bucket_ReplaceBad(Bucket *bucket, DhtNode *node)
         if (bucket->nodes[i] == NULL)
             continue;
 
-	if (DhtNode_Status(bucket->nodes[i], now) == Bad)
+	if (Node_Status(bucket->nodes[i], now) == Bad)
 	{
-	    DhtNode *replaced = bucket->nodes[i];
+	    Node *replaced = bucket->nodes[i];
 	    bucket->nodes[i] = node;
 	    bucket->change_time = now;
 
@@ -70,10 +70,10 @@ DhtNode *Bucket_ReplaceBad(Bucket *bucket, DhtNode *node)
     return NULL;
 }
 
-DhtNode *Bucket_ReplaceQuestionable(Bucket *bucket, DhtNode *node)
+Node *Bucket_ReplaceQuestionable(Bucket *bucket, Node *node)
 {
     assert(bucket != NULL && "NULL Bucket pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
 
     time_t now = time(NULL), oldest_time = now;
     int oldest_i = -1, i = 0;
@@ -83,7 +83,7 @@ DhtNode *Bucket_ReplaceQuestionable(Bucket *bucket, DhtNode *node)
         if (bucket->nodes[i] == NULL)
             continue;
 
-	if (DhtNode_Status(bucket->nodes[i], now) == Questionable)
+	if (Node_Status(bucket->nodes[i], now) == Questionable)
 	{
 	    if (bucket->nodes[i]->reply_time < oldest_time) {
 		oldest_time = bucket->nodes[i]->reply_time;
@@ -100,7 +100,7 @@ DhtNode *Bucket_ReplaceQuestionable(Bucket *bucket, DhtNode *node)
     if (oldest_i > -1)
     {
 	// TODO: ping before replacing
-	DhtNode *replaced = bucket->nodes[oldest_i];
+	Node *replaced = bucket->nodes[oldest_i];
 	bucket->nodes[oldest_i] = node;
 	bucket->change_time = now;
 
@@ -119,10 +119,10 @@ int Bucket_IsFull(Bucket *bucket)
     return BUCKET_K == bucket->count;
 }
 
-int Bucket_AddNode(Bucket *bucket, DhtNode *node)
+int Bucket_AddNode(Bucket *bucket, Node *node)
 {
     assert(bucket != NULL && "NULL Bucket pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
     assert(bucket->count >= 0 && "Negative Bucket count");
     assert(bucket->count <= BUCKET_K && "Too large Bucket count");
 
@@ -153,11 +153,11 @@ int Bucket_GatherGoodNodes(Bucket *bucket, DArray *found)
     assert(bucket != NULL && "NULL Bucket pointer");
     assert(found != NULL && "NULL DArray pointer");
 
-    DhtNode **node = bucket->nodes;
+    Node **node = bucket->nodes;
 
     while (DArray_count(found) < BUCKET_K && node < bucket->nodes + BUCKET_K)
     {
-        if (*node != NULL && DhtNode_Status(*node, time(NULL)) == Good)
+        if (*node != NULL && Node_Status(*node, time(NULL)) == Good)
         {
             int rc = DArray_push(found, *node);
             check(rc == 0, "DArray_push failed");

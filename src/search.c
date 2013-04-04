@@ -48,17 +48,17 @@ int Search_CopyTable(Search *search, DhtTable *source)
 
     Bucket *last = DhtTable_FindBucket(source, &dest->id);
     Bucket **bucket = source->buckets;
-    DhtNode *copy = NULL;
+    Node *copy = NULL;
     DhtTable_InsertNodeResult result = { 0 };
     do
     {
-        DhtNode **node = (*bucket)->nodes;
+        Node **node = (*bucket)->nodes;
 
         while (node < &(*bucket)->nodes[BUCKET_K])
         {
             if (*node != NULL)
             {
-                copy = DhtNode_Copy(*node);
+                copy = Node_Copy(*node);
                 check_mem(copy);
 
                 result = DhtTable_InsertNode(dest, copy);
@@ -71,12 +71,12 @@ int Search_CopyTable(Search *search, DhtTable *source)
 
     return 0;
 error:
-    DhtNode_Destroy(copy);
-    DhtNode_Destroy(result.replaced);
+    Node_Destroy(copy);
+    Node_Destroy(result.replaced);
     return -1;
 }
 
-int ShouldQuery(DhtNode *node, time_t time);
+int ShouldQuery(Node *node, time_t time);
 
 struct QueryNodesContext
 {
@@ -84,11 +84,11 @@ struct QueryNodesContext
     DArray *nodes;
 };
 
-int AddIfQueryable(void *vcontext, DhtNode *node)
+int AddIfQueryable(void *vcontext, Node *node)
 {
     struct QueryNodesContext *context = (struct QueryNodesContext *)vcontext;
     assert(context != NULL && "NULL QueryNodesContext pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
     assert(context->nodes != NULL && "NULL DArray pointer in QueryNodesContext");
 
     if (ShouldQuery(node, context->time))
@@ -119,9 +119,9 @@ error:
     return -1;
 }
 
-int ShouldQuery(DhtNode *node, time_t time)
+int ShouldQuery(Node *node, time_t time)
 {
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
 
     if (node->reply_time != 0)
         return 0;

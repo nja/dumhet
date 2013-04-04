@@ -423,7 +423,7 @@ int GetResponseData(MessageType type, BNode *dict, Message *message)
     }
 }
 
-DhtNode **GetCompactNodeInfo(BNode *string, size_t *count);
+Node **GetCompactNodeInfo(BNode *string, size_t *count);
 
 int GetResponseFindNodeData(BNode *arguments, RFindNodeData *data)
 {
@@ -444,18 +444,18 @@ error:
 
 #define COMPACTNODE_BYTES (HASH_BYTES + sizeof(uint32_t) + sizeof(uint16_t))
 
-DhtNode **GetCompactNodeInfo(BNode *string, size_t *count)
+Node **GetCompactNodeInfo(BNode *string, size_t *count)
 {
     assert(string != NULL && "NULL BNode string pointer");
     assert(count != NULL && "NULL pointer to size_t count");
 
-    DhtNode **nodes = NULL;
+    Node **nodes = NULL;
 
     check(string->type == BString, "Not a BString");
     check(string->count % COMPACTNODE_BYTES == 0, "Bad compact node info length");
     
     *count = string->count / COMPACTNODE_BYTES;
-    nodes = calloc(*count, sizeof(DhtNode));
+    nodes = calloc(*count, sizeof(Node));
     check_mem(nodes);
     
     char *data = string->value.string;
@@ -464,7 +464,7 @@ DhtNode **GetCompactNodeInfo(BNode *string, size_t *count)
     for (i = 0; i < *count; i++)
     {
 
-        nodes[i] = DhtNode_Create((Hash *)data);
+        nodes[i] = Node_Create((Hash *)data);
         check_mem(nodes[i]);
         nodes[i]->addr.s_addr = ntohl(*(uint32_t *)(data + HASH_BYTES));
 	nodes[i]->port = ntohs(*(uint16_t *)(data + HASH_BYTES + sizeof(uint32_t)));
@@ -475,7 +475,7 @@ DhtNode **GetCompactNodeInfo(BNode *string, size_t *count)
     return nodes;
 error:
     if (nodes != NULL)
-        DhtNode_DestroyBlock(nodes, string->count);
+        Node_DestroyBlock(nodes, string->count);
 
     free(nodes);
 

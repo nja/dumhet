@@ -15,7 +15,7 @@ int SameT(Message *a, Message *b)
 
 int HasRecentQuery(DhtTable *table, Hash id)
 {
-    DhtNode *node = DhtTable_FindNode(table, &id);
+    Node *node = DhtTable_FindNode(table, &id);
     check(node != NULL, "No node in client table");
 
     return node->query_time > 0;
@@ -25,7 +25,7 @@ error:
 
 int HasRecentReply(DhtTable *table, Hash id)
 {
-    DhtNode *node = DhtTable_FindNode(table, &id);
+    Node *node = DhtTable_FindNode(table, &id);
     check(node != NULL, "No node in table");
 
     return node->reply_time > 0;
@@ -236,20 +236,20 @@ char *test_HandleRFindNode()
     Hash target_id = { "target id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
-    DhtNode found_node = { .id = { "found id" },
-                           .addr = { .s_addr = 2345 },
-                           .port = 2345};
+    Node found_node = { .id = { "found id" },
+                        .addr = { .s_addr = 2345 },
+                        .port = 2345};
 
-    DArray *found = DArray_create(sizeof(DhtNode *), 2);
+    DArray *found = DArray_create(sizeof(Node *), 2);
     DArray_push(found, &found_node);
 
     Search *search = Search_Create(&target_id);
 
     /* Insert to tables so replies can be marked by handle */
-    DhtNode *client_from_node = DhtNode_Copy(&from->node);
+    Node *client_from_node = Node_Copy(&from->node);
     client_from_node->pending_queries = 1;
     DhtTable_InsertNode(client->table, client_from_node);
-    DhtNode *search_from_node = DhtNode_Copy(&from->node);
+    Node *search_from_node = Node_Copy(&from->node);
     search_from_node->pending_queries = 1;
     DhtTable_InsertNode(search->table, search_from_node);
 
@@ -272,8 +272,8 @@ char *test_HandleRFindNode()
     Search_Destroy(search);
     Client_Destroy(client);
     Client_Destroy(from);
-    DhtNode_Destroy(client_from_node);
-    DhtNode_Destroy(search_from_node);
+    Node_Destroy(client_from_node);
+    Node_Destroy(search_from_node);
     Message_Destroy(query);
     Message_Destroy(rfindnode);
 
@@ -287,7 +287,7 @@ char *test_HandleRPing()
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtNode *from_node = DhtNode_Copy(&from->node);
+    Node *from_node = Node_Copy(&from->node);
     from_node->pending_queries = 1;
     DhtTable_InsertNode(client->table, from_node);
 
@@ -304,7 +304,7 @@ char *test_HandleRPing()
 
     Client_Destroy(client);
     Client_Destroy(from);
-    DhtNode_Destroy(from_node);
+    Node_Destroy(from_node);
     Message_Destroy(query);
     Message_Destroy(reply);
 
@@ -319,7 +319,7 @@ char *test_HandleRAnnouncePeer()
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtNode *from_node = DhtNode_Copy(&from->node);
+    Node *from_node = Node_Copy(&from->node);
     from_node->pending_queries = 1;
     DhtTable_InsertNode(client->table, from_node);
 
@@ -338,7 +338,7 @@ char *test_HandleRAnnouncePeer()
 
     Client_Destroy(client);
     Client_Destroy(from);
-    DhtNode_Destroy(from_node);
+    Node_Destroy(from_node);
     Message_Destroy(query);
     Message_Destroy(reply);
 
@@ -353,7 +353,7 @@ char *test_HandleRGetPeers_nodes()
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 1, 1);
     const int nodes_count = 3;
-    DhtNode *found_nodes[nodes_count];
+    Node *found_nodes[nodes_count];
 
     from->node.pending_queries = 1;
     DhtTable_InsertNode(client->table, &from->node);
@@ -363,7 +363,7 @@ char *test_HandleRGetPeers_nodes()
     {
         Hash id = { "  found node id" };
         id.value[0] = '0' + i;
-        found_nodes[i] = DhtNode_Create(&id);
+        found_nodes[i] = Node_Create(&id);
         DhtTable_InsertNode(from->table, found_nodes[i]);
     }
 
@@ -385,7 +385,7 @@ char *test_HandleRGetPeers_nodes()
 
     for (i = 0; i < nodes_count; i++)
     {
-        DhtNode_Destroy(found_nodes[i]);
+        Node_Destroy(found_nodes[i]);
     }
 
     Message_Destroy(qgetpeers);

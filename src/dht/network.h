@@ -8,10 +8,10 @@
 int NetworkUp(Client *client);
 int NetworkDown(Client *client);
 
-int Send(Client *client, DhtNode *node, char *buf, size_t len);
-int Receive(Client *client, DhtNode *node, char *buf, size_t len);
+int Send(Client *client, Node *node, char *buf, size_t len);
+int Receive(Client *client, Node *node, char *buf, size_t len);
 
-int SendMessage(Client *client, Message *msg, DhtNode *node);
-Message *ReceiveMessage(Client *client, DhtNode *node);
+int SendMessage(Client *client, Message *msg, Node *node);
+Message *ReceiveMessage(Client *client, Node *node);
 
 #endif

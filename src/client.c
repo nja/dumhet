@@ -84,10 +84,10 @@ void Client_Destroy(Client *client)
 
 #define TOKEN_DATA_LEN (sizeof(Hash) + sizeof(in_addr_t))
 
-Token MakeToken(Client *client, DhtNode *from, int secret)
+Token MakeToken(Client *client, Node *from, int secret)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(from != NULL && "NULL DhtNode pointer");
+    assert(from != NULL && "NULL Node pointer");
     assert(0 <= secret && secret < SECRETS_LEN && "Bad secret");
 
     unsigned char data[TOKEN_DATA_LEN];
@@ -101,19 +101,19 @@ Token MakeToken(Client *client, DhtNode *from, int secret)
     return token;
 }
 
-Token Client_MakeToken(Client *client, DhtNode *from)
+Token Client_MakeToken(Client *client, Node *from)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(from != NULL && "NULL DhtNode pointer");
+    assert(from != NULL && "NULL Node pointer");
 
     return MakeToken(client, from, 0);
 }
 
-int Client_IsValidToken(Client *client, DhtNode *from,
+int Client_IsValidToken(Client *client, Node *from,
                         char *token, size_t token_len)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(from != NULL && "NULL DhtNode pointer");
+    assert(from != NULL && "NULL Node pointer");
     assert(token != NULL && "NULL token char pointer");
 
     if (token_len != HASH_BYTES)

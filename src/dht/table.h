@@ -22,7 +22,7 @@ int DhtTable_ForEachNode(DhtTable *table, void *context, NodeOp op);
 Bucket *DhtTable_AddBucket(DhtTable *table);
 Bucket *DhtTable_FindBucket(DhtTable *table, Hash *id);
 
-DhtNode *DhtTable_FindNode(DhtTable *table, Hash *id);
+Node *DhtTable_FindNode(DhtTable *table, Hash *id);
 
 enum DhtTable_InsertNodeResultRc {
     ERROR, OKAdded, OKReplaced, OKFull, OKAlreadyAdded
@@ -33,10 +33,10 @@ DArray *DhtTable_GatherClosest(DhtTable *table, Hash *id);
 typedef struct DhtTable_InsertNodeResult {
     enum DhtTable_InsertNodeResultRc rc;
     Bucket *bucket;
-    DhtNode *replaced;
+    Node *replaced;
 } DhtTable_InsertNodeResult;
 
-DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node);
+DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, Node *node);
 
 int DhtTable_MarkReply(DhtTable *table, Hash *id);
 void DhtTable_MarkQuery(DhtTable *table, Hash *id);

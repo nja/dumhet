@@ -137,7 +137,7 @@ Message *Message_CreateRFindNode(Client *client, Message *query, DArray *found)
 
     RFindNodeData data;
     data.count = DArray_count(found);
-    data.nodes = malloc(data.count * sizeof(DhtNode *));
+    data.nodes = malloc(data.count * sizeof(Node *));
 
     unsigned int i = 0;
     for (i = 0; i < data.count; i++)
@@ -201,7 +201,7 @@ Message *Message_CreateRGetPeers(Client *client,
     else
     {
         data.count = DArray_count(nodes);
-        data.nodes = malloc(data.count * sizeof(DhtNode *));
+        data.nodes = malloc(data.count * sizeof(Node *));
         check_mem(data.nodes);
 
         for (i = 0; i < data.count; i++)

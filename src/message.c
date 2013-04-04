@@ -52,14 +52,14 @@ void Message_DestroyNodes(Message *message)
     switch (message->type)
     {
     case RFindNode:
-        DhtNode_DestroyBlock(message->data.rfindnode.nodes,
-                             message->data.rfindnode.count);
+        Node_DestroyBlock(message->data.rfindnode.nodes,
+                          message->data.rfindnode.count);
         break;
     case RGetPeers:
         if (message->data.rgetpeers.nodes != NULL)
         {
-            DhtNode_DestroyBlock(message->data.rgetpeers.nodes,
-                                 message->data.rgetpeers.count);
+            Node_DestroyBlock(message->data.rgetpeers.nodes,
+                              message->data.rgetpeers.count);
         }
         break;
     default: break;

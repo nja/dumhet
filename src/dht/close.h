@@ -16,6 +16,6 @@ void CloseNodes_Destroy(CloseNodes *close);
 
 DArray *CloseNodes_GetNodes(CloseNodes *close);
 
-int CloseNodes_Add(CloseNodes *close, DhtNode *node);
+int CloseNodes_Add(CloseNodes *close, Node *node);
 
 #endif

@@ -31,8 +31,8 @@ char *test_Token()
 
     Client *client = Client_Create(id, addr, port, peer_port);
 
-    DhtNode node_a = {{{ 0 }}};
-    DhtNode node_b = {{{ 0 }}};
+    Node node_a = {{{ 0 }}};
+    Node node_b = {{{ 0 }}};
     node_a.addr.s_addr = 1;
     node_b.addr.s_addr = 2;
 

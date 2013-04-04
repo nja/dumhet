@@ -52,10 +52,10 @@ error:
     return -1;
 }
 
-int Send(Client *client, DhtNode *node, char *buf, size_t len)
+int Send(Client *client, Node *node, char *buf, size_t len)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
     assert(buf != NULL && "NULL buf pointer");
     assert(len <= UDPBUFLEN && "buf too large for UDP");
 
@@ -77,10 +77,10 @@ error:
     return -1;
 }
 
-int Receive(Client *client, DhtNode *node, char *buf, size_t len)
+int Receive(Client *client, Node *node, char *buf, size_t len)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
     assert(buf != NULL && "NULL buf pointer");
     assert(len >= UDPBUFLEN && "buf too small for UDP");
 
@@ -106,11 +106,11 @@ error:
     return -1;
 }
 
-int SendMessage(Client *client, Message *msg, DhtNode *node)
+int SendMessage(Client *client, Message *msg, Node *node)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(msg != NULL && "NULL Message pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
     assert(msg->t_len == sizeof(tid_t) && "Wrong outgoing t");
 
     int len = Message_Encode(msg, client->buf, UDPBUFLEN);
@@ -132,10 +132,10 @@ error:
     return -1;
 }
 
-Message *ReceiveMessage(Client *client, DhtNode *node)
+Message *ReceiveMessage(Client *client, Node *node)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
 
     int len = Receive(client, node, client->buf, UDPBUFLEN);
     check(len > 0, "Receive failed");

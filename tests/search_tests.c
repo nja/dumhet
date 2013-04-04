@@ -32,12 +32,12 @@ char *test_Search_CopyTable()
     for (i = 0; i < HASH_BITS - low_bits; i++)
     {
         DhtTable_InsertNodeResult result;
-        DhtNode *node;
+        Node *node;
 
         int j = 0;
         for (j = 0; j < BUCKET_K; j++)
         {
-            node = DhtNode_Create(&invid);
+            node = Node_Create(&invid);
 
             node->id.value[HASH_BYTES - 1] &= ~0 << low_bits;
             node->id.value[HASH_BYTES - 1] |= j;
@@ -71,19 +71,19 @@ char *test_Search_CopyTable()
             int j = 0;
             for (j = 0; j < BUCKET_K; j++)
             {
-                DhtNode *node = bucket->nodes[j];
+                Node *node = bucket->nodes[j];
 
                 if (node == NULL)
                 {
                     continue;
                 }
 
-                DhtNode *found = DhtTable_FindNode(search->table, &node->id);
+                Node *found = DhtTable_FindNode(search->table, &node->id);
                 mu_assert(found != NULL, "Missing node from original table");
             }
         }
 
-        DhtTable_ForEachNode(search->table, NULL, DhtNode_DestroyOp);
+        DhtTable_ForEachNode(search->table, NULL, Node_DestroyOp);
         Search_Destroy(search);
     }
 
@@ -99,23 +99,23 @@ char *test_Search_NodesToQuery()
     Hash id = { "foo" };
     Search *search = Search_Create(&id);
 
-    DhtNode *already_replied = DhtNode_Create(&id);
+    Node *already_replied = Node_Create(&id);
     already_replied->reply_time = now;
     already_replied->id.value[0] = 1;
 
-    DhtNode *max_pending = DhtNode_Create(&id);
+    Node *max_pending = Node_Create(&id);
     max_pending->pending_queries = SEARCH_MAX_PENDING;
     max_pending->id.value[0] = 2;
 
-    DhtNode *just_queried = DhtNode_Create(&id);
+    Node *just_queried = Node_Create(&id);
     just_queried->query_time = now;
     just_queried->id.value[0] = 3;
 
-    DhtNode *should_query_a = DhtNode_Create(&id);
+    Node *should_query_a = Node_Create(&id);
     should_query_a->pending_queries = 1;
     should_query_a->id.value[0] = 4;
 
-    DhtNode *should_query_b = DhtNode_Create(&id);
+    Node *should_query_b = Node_Create(&id);
     should_query_b->id.value[0] = 5;
 
     DhtTable_InsertNode(search->table, already_replied);
@@ -124,7 +124,7 @@ char *test_Search_NodesToQuery()
     DhtTable_InsertNode(search->table, just_queried);
     DhtTable_InsertNode(search->table, should_query_b);
 
-    DArray *nodes = DArray_create(sizeof(DhtNode *), 2);
+    DArray *nodes = DArray_create(sizeof(Node *), 2);
 
     int rc = Search_NodesToQuery(search, nodes, now);
     mu_assert(rc == 0, "Search_NodesToQuery failed");

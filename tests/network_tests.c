@@ -35,7 +35,7 @@ char *test_NetworkSendReceive()
     const size_t len = 3;
     char send[] = "foo";
     char recv[UDPBUFLEN];
-    DhtNode recvnode = {{{ 0 }}};
+    Node recvnode = {{{ 0 }}};
 
     rc = Send(client, &client->node, send, len);
     mu_assert(rc == 0, "Send failed");
@@ -71,7 +71,7 @@ char *test_NetworkSendReceiveMessage()
     rc = SendMessage(sender, send, &recver->node);
     mu_assert(rc == 0, "SendMessage failed");
 
-    DhtNode from = {{{ 0 }}};
+    Node from = {{{ 0 }}};
 
     Message *recv = ReceiveMessage(recver, &from);
     mu_assert(recv != NULL, "ReceiveMessage failed");

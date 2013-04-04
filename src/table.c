@@ -42,14 +42,14 @@ void DhtTable_Destroy(DhtTable *table)
 
 void DhtTable_DestroyNodes(DhtTable *table)
 {
-    DhtTable_ForEachNode(table, NULL, DhtNode_DestroyOp);
+    DhtTable_ForEachNode(table, NULL, Node_DestroyOp);
 }
 
-int DhtTable_HasShiftableNodes(Hash *id, Bucket *bucket, DhtNode *node)
+int DhtTable_HasShiftableNodes(Hash *id, Bucket *bucket, Node *node)
 {
     assert(id != NULL && "NULL Hash pointer");
     assert(bucket != NULL && "NULL Bucket pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
     assert(bucket->index < MAX_TABLE_BUCKETS && "Bad bucket index");
 
     if (bucket->index < Hash_SharedPrefix(id, &node->id))
@@ -60,7 +60,7 @@ int DhtTable_HasShiftableNodes(Hash *id, Bucket *bucket, DhtNode *node)
     int i = 0;
     for (i = 0; i < BUCKET_K; i++)
     {
-        DhtNode *current = bucket->nodes[i];
+        Node *current = bucket->nodes[i];
 	if (current != NULL
 	    && bucket->index < Hash_SharedPrefix(id, &current->id))
 	{
@@ -101,7 +101,7 @@ int DhtTable_ShiftBucketNodes(DhtTable *table, Bucket *bucket)
     int i = 0;
     for (i = 0; i < BUCKET_K && !Bucket_IsFull(next); i++)
     {
-	DhtNode *node = bucket->nodes[i];
+	Node *node = bucket->nodes[i];
 
 	if (node == NULL)
             continue;
@@ -123,10 +123,10 @@ error:
     return -1;
 }
 
-DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
+DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, Node *node)
 {
     assert(table != NULL && "NULL DhtTable pointer");
-    assert(node != NULL && "NULL DhtNode pointer");
+    assert(node != NULL && "NULL Node pointer");
 
     Bucket *bucket = DhtTable_FindBucket(table, &node->id);
     check(bucket != NULL, "Found no bucket for node");
@@ -140,7 +140,7 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, DhtNode *node)
 
     if (Bucket_IsFull(bucket))
     {
-	DhtNode *replaced = NULL;
+	Node *replaced = NULL;
 
 	if ((replaced = Bucket_ReplaceBad(bucket, node))) {
 	    return (DhtTable_InsertNodeResult)
@@ -220,7 +220,7 @@ int DhtTable_ForEachNode(DhtTable *table, void *context, NodeOp operate)
     Bucket **bucket = table->buckets;
     while (bucket < &table->buckets[table->end])
     {
-        DhtNode **node = (*bucket)->nodes;
+        Node **node = (*bucket)->nodes;
         while (node < &(*bucket)->nodes[BUCKET_K])
         {
             if (*node == NULL)
@@ -230,7 +230,7 @@ int DhtTable_ForEachNode(DhtTable *table, void *context, NodeOp operate)
             }
 
             int rc = operate(context, *node);
-            check(rc == 0, "Operation on DhtNode failed");
+            check(rc == 0, "Operation on Node failed");
             node++;
         }
 
@@ -242,13 +242,13 @@ error:
     return -1;
 }
 
-DhtNode *DhtTable_FindNode(DhtTable *table, Hash *id)
+Node *DhtTable_FindNode(DhtTable *table, Hash *id)
 {
     assert(table != NULL && "NULL DhtTable pointer");
     assert(id != NULL && "NULL Hash pointer");
 
     Bucket *bucket = DhtTable_FindBucket(table, id);
-    DhtNode **node = bucket->nodes;
+    Node **node = bucket->nodes;
 
     while (node < &bucket->nodes[BUCKET_K])
     {
@@ -263,7 +263,7 @@ DhtNode *DhtTable_FindNode(DhtTable *table, Hash *id)
     return NULL;
 }
 
-int CloseNodes_AddOp(void *close, DhtNode *node)
+int CloseNodes_AddOp(void *close, Node *node)
 {
     return CloseNodes_Add((CloseNodes *)close, node);
 }
@@ -295,7 +295,7 @@ int DhtTable_MarkReply(DhtTable *table, Hash *id)
     assert(table != NULL && "NULL DhtTable pointer");
     assert(id != NULL && "NULL Hash pointer");
 
-    DhtNode *node = DhtTable_FindNode(table, id);
+    Node *node = DhtTable_FindNode(table, id);
 
     if (node == NULL)
         return 0;
@@ -315,7 +315,7 @@ void DhtTable_MarkQuery(DhtTable *table, Hash *id)
     assert(table != NULL && "NULL DhtTable pointer");
     assert(id != NULL && "NULL Hash pointer");
 
-    DhtNode *node = DhtTable_FindNode(table, id);
+    Node *node = DhtTable_FindNode(table, id);
 
     if (node == NULL)
         return;

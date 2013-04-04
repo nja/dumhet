@@ -72,7 +72,7 @@ char *test_CreateDestroy_QAnnouncePeer()
     Hash id = { "qannouncepeer" };
     Hash info_hash = { "info_hash" };
     Client *client = Client_Create(id, 0, 0, peer_port);
-    DhtNode from = {{{ 0 }}};
+    Node from = {{{ 0 }}};
 
     Token token = Client_MakeToken(client, &from);
 
@@ -153,13 +153,13 @@ char *test_CreateDestroy_RFindNode()
     int i = 0;
     for (i = 0; i < BUCKET_K; i++)
     {
-        DArray *found = DArray_create(sizeof(DhtNode *), i + 1);
+        DArray *found = DArray_create(sizeof(Node *), i + 1);
 
         while (DArray_count(found) < i)
         {
             Hash found_id = { "found" };
             found_id.value[5] = i;
-            DhtNode *node = DhtNode_Create(&found_id);
+            Node *node = Node_Create(&found_id);
             node->addr.s_addr = i;
             node->port = ~i;
             DArray_push(found, node);
@@ -173,8 +173,8 @@ char *test_CreateDestroy_RFindNode()
         int j = 0;
         for (j = 0; j < DArray_count(found); j++)
         {
-            mu_assert(DhtNode_Same(DArray_get(found, j),
-                                   message->data.rfindnode.nodes[j]),
+            mu_assert(Node_Same(DArray_get(found, j),
+                                message->data.rfindnode.nodes[j]),
                       "Wrong node in message");
         }
 
@@ -188,7 +188,7 @@ char *test_CreateDestroy_RFindNode()
         Message_Destroy(message);
 
         while (DArray_count(found) > 0)
-            DhtNode_Destroy(DArray_pop(found));
+            Node_Destroy(DArray_pop(found));
 
         DArray_destroy(found);
     }
@@ -231,13 +231,13 @@ char *test_CreateDestroy_RGetPeers_Nodes()
 
     for (i = 0; i < BUCKET_K; i++)
     {
-        DArray *found = DArray_create(sizeof(DhtNode *), i + 1);
+        DArray *found = DArray_create(sizeof(Node *), i + 1);
 
         while (DArray_count(found) < i)
         {
             Hash found_id = { "found" };
             found_id.value[5] = i;
-            DhtNode *node = DhtNode_Create(&found_id);
+            Node *node = Node_Create(&found_id);
             node->addr.s_addr = i;
             node->port = ~i;
             DArray_push(found, node);
@@ -259,8 +259,8 @@ char *test_CreateDestroy_RGetPeers_Nodes()
         int j = 0;
         for (j = 0; j < DArray_count(found); j++)
         {
-            mu_assert(DhtNode_Same(DArray_get(found, j),
-                                   message->data.rgetpeers.nodes[j]),
+            mu_assert(Node_Same(DArray_get(found, j),
+                                message->data.rgetpeers.nodes[j]),
                       "Wrong node in message");
         }
 
@@ -278,7 +278,7 @@ char *test_CreateDestroy_RGetPeers_Nodes()
         Message_Destroy(message);
 
         while (DArray_count(found) > 0)
-            DhtNode_Destroy(DArray_pop(found));
+            Node_Destroy(DArray_pop(found));
 
         DArray_destroy(found);
     }

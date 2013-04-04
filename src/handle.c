@@ -21,7 +21,7 @@ error:
     return -1;
 }
 
-int AddSearchNodes(Search *search, DhtNode **nodes, size_t count);
+int AddSearchNodes(Search *search, Node **nodes, size_t count);
 
 int HandleRFindNode(Client *client, Message *message)
 {
@@ -89,13 +89,13 @@ error:
     return -1;
 }    
 
-int AddSearchNodes(Search *search, DhtNode **nodes, size_t count)
+int AddSearchNodes(Search *search, Node **nodes, size_t count)
 {
     assert(search != NULL && "NULL Search pointer");
-    assert(nodes != NULL && "NULL pointer to DhtNodes pointer");
+    assert(nodes != NULL && "NULL pointer to Nodes pointer");
 
-    DhtNode **node = nodes;
-    DhtNode **end = node + count;
+    Node **node = nodes;
+    Node **end = node + count;
 
     while (node < end)
     {
@@ -108,7 +108,7 @@ int AddSearchNodes(Search *search, DhtNode **nodes, size_t count)
             *node = NULL;      /* Don't free it later */
         }
 
-        DhtNode_Destroy(result.replaced);
+        Node_Destroy(result.replaced);
 
         node++;
     }
@@ -156,12 +156,12 @@ error:
     return NULL;
 }
 
-Message *HandleQAnnouncePeer(Client *client, Message *query, DhtNode *from)
+Message *HandleQAnnouncePeer(Client *client, Message *query, Node *from)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(query != NULL && "NULL Message pointer");
     assert(query->type == QAnnouncePeer && "Wrong message type");
-    assert(from != NULL && "NULL DhtNode pointer");
+    assert(from != NULL && "NULL Node pointer");
 
     DhtTable_MarkQuery(client->table, &query->id);
 
@@ -188,12 +188,12 @@ error:
     return NULL;
 }
 
-Message *HandleQGetPeers(Client *client, Message *query, DhtNode *from)
+Message *HandleQGetPeers(Client *client, Message *query, Node *from)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(query != NULL && "NULL Message pointer");
     assert(query->type == QGetPeers && "Wrong message type");
-    assert(from != NULL && "NULL DhtNode pointer");
+    assert(from != NULL && "NULL Node pointer");
 
     DhtTable_MarkQuery(client->table, &query->id);
 

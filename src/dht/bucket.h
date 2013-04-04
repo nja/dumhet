@@ -13,19 +13,19 @@ typedef struct Bucket {
     int index;
     int count;
     time_t change_time;
-    DhtNode *nodes[BUCKET_K];
+    Node *nodes[BUCKET_K];
 } Bucket;
 
 Bucket *Bucket_Create();
 void Bucket_Destroy(Bucket *bucket);
 
-int Bucket_ContainsNode(Bucket *bucket, DhtNode *node);
+int Bucket_ContainsNode(Bucket *bucket, Node *node);
 int Bucket_IsFull(Bucket *bucket);
 
-DhtNode *Bucket_ReplaceBad(Bucket *bucket, DhtNode *node);
-DhtNode *Bucket_ReplaceQuestionable(Bucket *bucket, DhtNode *node);
+Node *Bucket_ReplaceBad(Bucket *bucket, Node *node);
+Node *Bucket_ReplaceQuestionable(Bucket *bucket, Node *node);
 
-int Bucket_AddNode(Bucket *bucket, DhtNode *node);
+int Bucket_AddNode(Bucket *bucket, Node *node);
 
 int Bucket_GatherGoodNodes(Bucket *bucket, DArray *found);
 

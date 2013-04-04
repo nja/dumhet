@@ -8,7 +8,7 @@ char *test_DhtTable_AddBucket()
 {
     int i = 0;
     DhtTable table = {.id = {{0}}, .buckets = {0}, .end = 0};
-    DhtNode node = {.id = {{0}}, {0}};
+    Node node = {.id = {{0}}, {0}};
 
     for (i = 0; i < HASH_BYTES; i++)
     {
@@ -53,11 +53,11 @@ char *test_DhtTable_InsertNode()
     DhtTable *table = DhtTable_Create(&id);
 
     /* good and bad are near the id and shiftable to new buckets */
-    DhtNode *good_nodes = calloc(BUCKET_K + 1, sizeof(DhtNode));
-    DhtNode *bad_nodes = calloc(BUCKET_K + 1, sizeof(DhtNode));
+    Node *good_nodes = calloc(BUCKET_K + 1, sizeof(Node));
+    Node *bad_nodes = calloc(BUCKET_K + 1, sizeof(Node));
 
     /* far only fit in the first bucket */
-    DhtNode *far_nodes = calloc(BUCKET_K + 1, sizeof(DhtNode));
+    Node *far_nodes = calloc(BUCKET_K + 1, sizeof(Node));
     
     time_t now = time(NULL);
 
@@ -68,17 +68,17 @@ char *test_DhtTable_InsertNode()
 	good_nodes[i].id.value[0] = id.value[0];
 	good_nodes[i].id.value[1] = ~i;
 	good_nodes[i].reply_time = now;
-	mu_assert(DhtNode_Status(&good_nodes[i], now) == Good, "Wrong status");
+	mu_assert(Node_Status(&good_nodes[i], now) == Good, "Wrong status");
 
 	bad_nodes[i].id.value[0] = id.value[0];
 	bad_nodes[i].id.value[2] = ~i;
 	bad_nodes[i].pending_queries = NODE_MAX_PENDING;
-	mu_assert(DhtNode_Status(&bad_nodes[i], now) == Bad, "Wrong status");
+	mu_assert(Node_Status(&bad_nodes[i], now) == Bad, "Wrong status");
 
 	far_nodes[i].id.value[0] = ~id.value[0];
 	far_nodes[i].id.value[3] = ~i;
 	far_nodes[i].reply_time = now;
-	mu_assert(DhtNode_Status(&far_nodes[i], now) == Good, "Wrong status");
+	mu_assert(Node_Status(&far_nodes[i], now) == Good, "Wrong status");
     }
 
     DhtTable_InsertNodeResult result;
@@ -155,7 +155,7 @@ char *test_DhtTable_InsertNode_FullTable()
     
     DhtTable_InsertNodeResult result;
 
-    DhtNode *node = DhtNode_Create(&id);
+    Node *node = Node_Create(&id);
     result = DhtTable_InsertNode(table, node);
     mu_assert(result.rc == OKAdded, "Error adding id node");
 
@@ -168,7 +168,7 @@ char *test_DhtTable_InsertNode_FullTable()
         int j = 0;
         for (j = 0; j < BUCKET_K && j < 1 << shift; j++)
         {
-            node = DhtNode_Create(&inv);
+            node = Node_Create(&inv);
 
             node->id.value[HASH_BYTES - 1] &= ~0 << shift;
             node->id.value[HASH_BYTES - 1] |= j;
@@ -187,14 +187,14 @@ char *test_DhtTable_InsertNode_FullTable()
 
     for (i = 0; i < MAX_TABLE_BUCKETS - 2; i++)
     {
-        node = DhtNode_Create(&inv);
+        node = Node_Create(&inv);
         Hash_Prefix(&node->id, &id, i);
         node->id.value[HASH_BYTES - 1] &= 0xf0;
         
         result = DhtTable_InsertNode(table, node);
         mu_assert(result.rc == OKFull, "Should be full");
 
-        DhtNode_Destroy(node);
+        Node_Destroy(node);
     }
 
     DhtTable_DestroyNodes(table);
@@ -208,13 +208,13 @@ char *test_DhtTable_InsertNode_AddBucket()
     Hash id = {{ 0 }};
     DhtTable *table = DhtTable_Create(&id);
 
-    DhtNode *node;
+    Node *node;
     DhtTable_InsertNodeResult result;
 
     int i = 0;
     for (i = 0; i < BUCKET_K; i++)
     {
-        node = DhtNode_Create(&id);
+        node = Node_Create(&id);
         node->id.value[HASH_BYTES - 1] = i;
         result = DhtTable_InsertNode(table, node);
 
@@ -222,7 +222,7 @@ char *test_DhtTable_InsertNode_AddBucket()
         mu_assert(table->end == 1, "Added unnecessary bucket");
     }
 
-    node = DhtNode_Create(&id);
+    node = Node_Create(&id);
     node->id.value[HASH_BYTES - 1] = i;
     result = DhtTable_InsertNode(table, node);
 
@@ -241,9 +241,9 @@ char *test_DhtTable_InsertNode_AddBucket()
     return NULL;
 }
 
-DhtNode **MakeNodes(int count, char high)
+Node **MakeNodes(int count, char high)
 {
-    DhtNode **nodes = calloc(count, sizeof(DhtNode *));
+    Node **nodes = calloc(count, sizeof(Node *));
 
     int i = 0;
     for (i = 0; i < count; i++)
@@ -251,14 +251,14 @@ DhtNode **MakeNodes(int count, char high)
         Hash id = {{ 0 }};
         id.value[0] = high;
         id.value[2] = i + 1;
-        nodes[i] = DhtNode_Create(&id);
+        nodes[i] = Node_Create(&id);
         nodes[i]->reply_time = time(NULL);
     }
 
     return nodes;
 }
 
-int HasNode(DArray *nodes, DhtNode *node)
+int HasNode(DArray *nodes, Node *node)
 {
     int i = 0;
     for (i = 0; i < DArray_end(nodes); i++)
@@ -282,9 +282,9 @@ char *test_DhtTable_GatherClosest()
         int far = i;
         int close = BUCKET_K - i;
 
-        DhtNode **far_nodes = MakeNodes(far, 0x40);
-        DhtNode **close_nodes = MakeNodes(close, 0x20);
-        DhtNode **filler_nodes = MakeNodes(BUCKET_K, 0x80);
+        Node **far_nodes = MakeNodes(far, 0x40);
+        Node **close_nodes = MakeNodes(close, 0x20);
+        Node **filler_nodes = MakeNodes(BUCKET_K, 0x80);
 
         DhtTable_InsertNodeResult result;
         int j = 0;
@@ -320,7 +320,7 @@ char *test_DhtTable_GatherClosest()
         for (j = 0; j < close; j++)
             mu_assert(HasNode(found, close_nodes[j]), "Close node missing");
 
-        DhtTable_ForEachNode(table, NULL, DhtNode_DestroyOp);
+        DhtTable_ForEachNode(table, NULL, Node_DestroyOp);
         DhtTable_Destroy(table);
         DArray_destroy(found);
 
@@ -337,7 +337,7 @@ char *test_DhtTable_FindNode_EmptyBucket()
     Hash id = { "id" };
     DhtTable *table = DhtTable_Create(&id);
 
-    DhtNode *node = DhtTable_FindNode(table, &id);
+    Node *node = DhtTable_FindNode(table, &id);
     mu_assert(node == NULL, "Mystery node found");
 
     DhtTable_Destroy(table);
