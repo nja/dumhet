@@ -352,6 +352,97 @@ char *test_HandleRAnnouncePeer()
     return NULL;
 }
 
+char *test_HandleRGetPeers_nodes()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtHash target_id = { "target id" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 1, 1);
+    const int nodes_count = 3;
+    DhtNode *found_nodes[nodes_count];
+
+    from->node.pending_queries = 1;
+    DhtTable_InsertNode(client->table, &from->node);
+
+    int i = 0;
+    for (i = 0; i < nodes_count; i++)
+    {
+        DhtHash id = { "  found node id" };
+        id.value[0] = '0' + i;
+        found_nodes[i] = DhtNode_Create(&id);
+        DhtTable_InsertNode(from->table, found_nodes[i]);
+    }
+
+    Message *qgetpeers = Message_CreateQGetPeers(client, &target_id);
+
+    Message *rgetpeers = HandleQGetPeers(from, qgetpeers, &from->node);
+
+    Search *search = Search_Create(&target_id);
+    rgetpeers->context = search;
+
+    int rc = HandleRGetPeers(client, rgetpeers);
+
+    mu_assert(rc == 0, "HandleRGetPeers failed");
+    mu_assert(search->table->buckets[0]->count == nodes_count, "Found nodes missing.");
+    mu_assert(search->peers->count == 0, "No peers expected");
+
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+
+    for (i = 0; i < nodes_count; i++)
+    {
+        DhtNode_Destroy(found_nodes[i]);
+    }
+
+    Message_Destroy(qgetpeers);
+    Message_Destroy(rgetpeers);
+    Search_Destroy(search);
+
+    return NULL;
+}
+
+char *test_HandleRGetPeers_peers()
+{
+    DhtHash id = { "client id" };
+    DhtHash from_id = { "from id" };
+    DhtHash target_id = { "target id" };
+    DhtClient *client = DhtClient_Create(id, 0, 0, 0);
+    DhtClient *from = DhtClient_Create(from_id, 1, 1, 1);
+    const int peers_count = 3;
+
+    from->node.pending_queries = 1;
+    DhtTable_InsertNode(client->table, &from->node);
+
+    int i = 0;
+    for (i = 0; i < peers_count; i++)
+    {
+        Peer peer = { .addr = 100 + i, .port = 100 + i };
+        DhtClient_AddPeer(from, &target_id, &peer);
+    }
+
+    Message *qgetpeers = Message_CreateQGetPeers(client, &target_id);
+
+    Message *rgetpeers = HandleQGetPeers(from, qgetpeers, &from->node);
+
+    Search *search = Search_Create(&target_id);
+    rgetpeers->context = search;
+
+    int rc = HandleRGetPeers(client, rgetpeers);
+
+    mu_assert(rc == 0, "HandleRGetPeers failed");
+    mu_assert(search->table->buckets[0]->count == 0, "No nodes expected.");
+    mu_assert(search->peers->count == peers_count, "Missing peers");
+
+    DhtClient_Destroy(client);
+    DhtClient_Destroy(from);
+    Message_Destroy(qgetpeers);
+    Message_Destroy(rgetpeers);
+    Search_Destroy(search);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -366,6 +457,8 @@ char *all_tests()
     mu_run_test(test_HandleRFindNode);
     mu_run_test(test_HandleRPing);
     mu_run_test(test_HandleRAnnouncePeer);
+    mu_run_test(test_HandleRGetPeers_nodes);
+    mu_run_test(test_HandleRGetPeers_peers);
 
     return NULL;
 }
