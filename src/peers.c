@@ -19,9 +19,9 @@ uint32_t Peer_Hash(void *key)
     return ((Peer *)key)->addr;
 }
 
-Peers *Peers_Create(DhtHash *info_hash)
+Peers *Peers_Create(Hash *info_hash)
 {
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
 
     Peers *peers = malloc(sizeof(Peers));
     check_mem(peers);
@@ -133,7 +133,7 @@ Hashmap *PeersHashmap_Create()
 {
     Hashmap *hashmap = Hashmap_create(
         (Hashmap_compare)DhtDistance_Compare,
-        (Hashmap_hash)DhtHash_Hash);
+        (Hashmap_hash)Hash_Hash);
     check_mem(hashmap);
 
     return hashmap;
@@ -150,10 +150,10 @@ void PeersHashmap_Destroy(Hashmap *hashmap)
     Hashmap_destroy(hashmap);
 }
 
-Peers *PeersHashmap_GetSetPeers(Hashmap *hashmap, DhtHash *info_hash)
+Peers *PeersHashmap_GetSetPeers(Hashmap *hashmap, Hash *info_hash)
 {
     assert(hashmap != NULL && "NULL Hashmap pointer");
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
 
     Peers *peers = Hashmap_get(hashmap, info_hash);
     Peers *new_peers = NULL;
@@ -173,10 +173,10 @@ error:
     return NULL;
 }
 
-int PeersHashmap_GetPeers(Hashmap *hashmap, DhtHash *info_hash, DArray *result)
+int PeersHashmap_GetPeers(Hashmap *hashmap, Hash *info_hash, DArray *result)
 {
     assert(hashmap != NULL && "NULL Hashmap pointer");
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
     assert(result != NULL && "NULL DArray pointer");
 
     Peers *peers = PeersHashmap_GetSetPeers(hashmap, info_hash);
@@ -189,10 +189,10 @@ error:
     return -1;
 }
 
-int PeersHashmap_AddPeer(Hashmap *hashmap, DhtHash *info_hash, Peer *peer)
+int PeersHashmap_AddPeer(Hashmap *hashmap, Hash *info_hash, Peer *peer)
 {
     assert(hashmap != NULL && "NULL Hashmap pointer");
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
     assert(peer != NULL && "NULL Peer pointer");
 
     Peers *peers = PeersHashmap_GetSetPeers(hashmap, info_hash);

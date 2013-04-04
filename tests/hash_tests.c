@@ -1,9 +1,9 @@
 #include "minunit.h"
 #include <dht/hash.h>
 
-char *test_DhtHash_Clone()
+char *test_Hash_Clone()
 {
-    DhtHash *orig = malloc(sizeof(DhtHash));
+    Hash *orig = malloc(sizeof(Hash));
 
     int i = 0;
     for (i = 0; i < HASH_BYTES; i++)
@@ -11,48 +11,48 @@ char *test_DhtHash_Clone()
 	orig->value[i] = i;
     }
 
-    DhtHash *clone = DhtHash_Clone(orig);
-    mu_assert(clone != NULL, "DhtHash_Clone failed");
+    Hash *clone = Hash_Clone(orig);
+    mu_assert(clone != NULL, "Hash_Clone failed");
     mu_assert(clone != orig, "Not cloned");
 
     int cmp = DhtDistance_Compare(orig, clone);
     mu_assert(cmp == 0, "Clone different from original");
 
-    DhtHash_Destroy(orig);
-    DhtHash_Destroy(clone);
+    Hash_Destroy(orig);
+    Hash_Destroy(clone);
 
     return NULL;
 }
 
-char *test_DhtHash_Equals()
+char *test_Hash_Equals()
 {
-    DhtHash a = {{ 0 }};
-    DhtHash b = a;
+    Hash a = {{ 0 }};
+    Hash b = a;
 
-    mu_assert(DhtHash_Equals(&a, &a), "Should be equal");
-    mu_assert(DhtHash_Equals(&a, &b), "Should be equal");
-    mu_assert(DhtHash_Equals(&b, &a), "Should be equal");
+    mu_assert(Hash_Equals(&a, &a), "Should be equal");
+    mu_assert(Hash_Equals(&a, &b), "Should be equal");
+    mu_assert(Hash_Equals(&b, &a), "Should be equal");
 
-    DhtHash c = a;
+    Hash c = a;
     c.value[0] = 1;
 
-    mu_assert(!DhtHash_Equals(&a, &c), "Should not be equal");
-    mu_assert(!DhtHash_Equals(&c, &a), "Should not be equal");
+    mu_assert(!Hash_Equals(&a, &c), "Should not be equal");
+    mu_assert(!Hash_Equals(&c, &a), "Should not be equal");
 
-    DhtHash d = a;
+    Hash d = a;
     d.value[HASH_BYTES - 1] = 0x70;
 
-    mu_assert(!DhtHash_Equals(&a, &d), "Should not be equal");
-    mu_assert(!DhtHash_Equals(&d, &a), "Should not be equal");
+    mu_assert(!Hash_Equals(&a, &d), "Should not be equal");
+    mu_assert(!Hash_Equals(&d, &a), "Should not be equal");
 
     return NULL;
 }
 
-char *test_DhtHash_Invert()
+char *test_Hash_Invert()
 {
-    DhtHash hash = {{ 0 }};
+    Hash hash = {{ 0 }};
 
-    DhtHash_Invert(&hash);
+    Hash_Invert(&hash);
 
     int i = 0;
     for (i = 0; i < HASH_BYTES; i++)
@@ -63,31 +63,31 @@ char *test_DhtHash_Invert()
     return NULL;
 }
 
-char *test_DhtHash_Prefix()
+char *test_Hash_Prefix()
 {
-    DhtHash prefix = {{ "1234567890qwertyuio" }};
-    DhtHash inv = prefix;
+    Hash prefix = {{ "1234567890qwertyuio" }};
+    Hash inv = prefix;
 
-    DhtHash_Invert(&inv);
+    Hash_Invert(&inv);
 
     int i = 0;
     for (i = 0; i <= HASH_BITS; i++)
     {
-	DhtHash result = inv;
+	Hash result = inv;
 
-        int rc = DhtHash_Prefix(&result, &prefix, i);
-        mu_assert(rc == 0, "DhtHash_Prefix failed");
+        int rc = Hash_Prefix(&result, &prefix, i);
+        mu_assert(rc == 0, "Hash_Prefix failed");
 
-	int shared = DhtHash_SharedPrefix(&result, &prefix);
+	int shared = Hash_SharedPrefix(&result, &prefix);
 	mu_assert(shared == i, "Wrong prefix");
     }
 
     return NULL;
 }
 
-char *test_DhtHash_PrefixedRandom()
+char *test_Hash_PrefixedRandom()
 {
-    DhtHash prefix = {{ 0 }};
+    Hash prefix = {{ 0 }};
     
     int i = 0;
     for (i = 0; i < HASH_BYTES; i++)
@@ -99,12 +99,12 @@ char *test_DhtHash_PrefixedRandom()
 
     for (i = 0; i <= HASH_BITS; i++)
     {
-	DhtHash random = {{ 0 }};
+	Hash random = {{ 0 }};
 
-        int rc = DhtHash_PrefixedRandom(rs, &random, &prefix, i);
-        mu_assert(rc == 0, "DhtHash_PrefixedRandom failed");
+        int rc = Hash_PrefixedRandom(rs, &random, &prefix, i);
+        mu_assert(rc == 0, "Hash_PrefixedRandom failed");
 
-	int shared = DhtHash_SharedPrefix(&prefix, &random);
+	int shared = Hash_SharedPrefix(&prefix, &random);
 
 	mu_assert(shared >= i, "Wrong prefix");
     }
@@ -113,20 +113,20 @@ char *test_DhtHash_PrefixedRandom()
     return NULL;
 }
 
-char *test_DhtHash_Distance()
+char *test_Hash_Distance()
 {
-    DhtHash ha = {{0}}, hb = {{0}}, hc = {{0}};
+    Hash ha = {{0}}, hb = {{0}}, hc = {{0}};
     DhtDistance zero_d = {{0}};
 
-    DhtDistance daa = DhtHash_Distance(&ha, &ha);
+    DhtDistance daa = Hash_Distance(&ha, &ha);
 
     mu_assert(DhtDistance_Compare(&zero_d, &daa) == 0, "Wrong distance");
 
     hb.value[0] = 0xE0;
     hc.value[0] = 0xF0;
 
-    DhtDistance dab = DhtHash_Distance(&ha, &hb);
-    DhtDistance dac = DhtHash_Distance(&ha, &hc);
+    DhtDistance dab = Hash_Distance(&ha, &hb);
+    DhtDistance dac = Hash_Distance(&ha, &hc);
 
     mu_assert(DhtDistance_Compare(&daa, &dab) < 0, "Wrong distance");
     mu_assert(DhtDistance_Compare(&dab, &dac) < 0, "Wrong distance");
@@ -134,44 +134,44 @@ char *test_DhtHash_Distance()
     return NULL;
 }
 
-char *test_DhtHash_Str()
+char *test_Hash_Str()
 {
-    DhtHash id = {{ 0 }};
+    Hash id = {{ 0 }};
     const int expected_len = HASH_BYTES * 2;
 
-    int len = strlen(DhtHash_Str(&id));
-    mu_assert(len == expected_len, "Wrong length string from DhtHash_Str");
+    int len = strlen(Hash_Str(&id));
+    mu_assert(len == expected_len, "Wrong length string from Hash_Str");
 
-    DhtHash_Invert(&id);
+    Hash_Invert(&id);
 
-    len = strlen(DhtHash_Str(&id));
-    mu_assert(len == expected_len, "Wrong length string from DhtHash_Str");
+    len = strlen(Hash_Str(&id));
+    mu_assert(len == expected_len, "Wrong length string from Hash_Str");
 
     RandomState *rs = RandomState_Create(0);
-    int rc = DhtHash_Random(rs, &id);
-    mu_assert(rc == 0, "DhtHash_Random failed");
-    len = strlen(DhtHash_Str(&id));
-    mu_assert(len == expected_len, "Wrong length string from DhtHash_Str");
+    int rc = Hash_Random(rs, &id);
+    mu_assert(rc == 0, "Hash_Random failed");
+    len = strlen(Hash_Str(&id));
+    mu_assert(len == expected_len, "Wrong length string from Hash_Str");
 
-    debug("hashrandom %s", DhtHash_Str(&id));
+    debug("hashrandom %s", Hash_Str(&id));
 
     RandomState_Destroy(rs);
 
     return NULL;
 }
 
-char *test_DhtHash_Hash()
+char *test_Hash_Hash()
 {
-    DhtHash id = {{ 0 }};
+    Hash id = {{ 0 }};
 
-    uint32_t prev = DhtHash_Hash(&id);
+    uint32_t prev = Hash_Hash(&id);
 
     int i = 0;
     for (i = 0; i < HASH_BYTES; i++)
     {
         id.value[i] = 1 << i % 8;
-        uint32_t hash = DhtHash_Hash(&id);
-        debug("%s %x", DhtHash_Str(&id), hash);
+        uint32_t hash = Hash_Hash(&id);
+        debug("%s %x", Hash_Str(&id), hash);
         mu_assert(prev != hash, "Unchanged hash");
         prev = hash;
     }
@@ -183,14 +183,14 @@ char *all_tests()
 {
     mu_suite_start();
 
-    mu_run_test(test_DhtHash_Clone);
-    mu_run_test(test_DhtHash_Equals);
-    mu_run_test(test_DhtHash_Invert);
-    mu_run_test(test_DhtHash_Prefix);
-    mu_run_test(test_DhtHash_PrefixedRandom);
-    mu_run_test(test_DhtHash_Distance);
-    mu_run_test(test_DhtHash_Str);
-    mu_run_test(test_DhtHash_Hash);
+    mu_run_test(test_Hash_Clone);
+    mu_run_test(test_Hash_Equals);
+    mu_run_test(test_Hash_Invert);
+    mu_run_test(test_Hash_Prefix);
+    mu_run_test(test_Hash_PrefixedRandom);
+    mu_run_test(test_Hash_Distance);
+    mu_run_test(test_Hash_Str);
+    mu_run_test(test_Hash_Hash);
 
     return NULL;
 }

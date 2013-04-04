@@ -7,7 +7,7 @@
 char *test_DhtNode_Status()
 {
     time_t now = time(NULL);
-    DhtHash id = {{ 0 }};
+    Hash id = {{ 0 }};
 
     DhtNode *node = DhtNode_Create(&id);
 

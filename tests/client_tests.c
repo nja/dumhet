@@ -3,7 +3,7 @@
 
 char *test_Client_CreateDestroy()
 {
-    DhtHash id = { "abcdeABCDEabcdeABCD" };
+    Hash id = { "abcdeABCDEabcdeABCD" };
     uint32_t addr = 0x10203040;
     uint16_t port = 0x5060;
     uint16_t peer_port = 0x0506;
@@ -24,7 +24,7 @@ char *test_Client_CreateDestroy()
 
 char *test_Token()
 {
-    DhtHash id = { "foobar" };
+    Hash id = { "foobar" };
     uint32_t addr = 0x10203040;
     uint16_t port = 0x5060;
     uint16_t peer_port = 0x0506;
@@ -43,27 +43,27 @@ char *test_Token()
     while (i++ < SECRETS_LEN)
     {
         mu_assert(Client_IsValidToken(client, &node_a,
-                                         token_a.value, HASH_BYTES),
+                                      token_a.value, HASH_BYTES),
                   "Token should be valid");
         mu_assert(Client_IsValidToken(client, &node_b,
-                                         token_b.value, HASH_BYTES),
+                                      token_b.value, HASH_BYTES),
                   "Token should be valid");
 
         mu_assert(!Client_IsValidToken(client, &node_b,
-                                          token_a.value, HASH_BYTES),
+                                       token_a.value, HASH_BYTES),
                   "Token should be invalid");
         mu_assert(!Client_IsValidToken(client, &node_a,
-                                          token_b.value, HASH_BYTES),
+                                       token_b.value, HASH_BYTES),
                   "Token should be invalid");
 
         Client_NewSecret(client);
     }
 
     mu_assert(!Client_IsValidToken(client, &node_a,
-                                      token_a.value, HASH_BYTES),
+                                   token_a.value, HASH_BYTES),
               "Token should now be invalid");
     mu_assert(!Client_IsValidToken(client, &node_b,
-                                      token_b.value, HASH_BYTES),
+                                   token_b.value, HASH_BYTES),
               "Token should now be invalid");
 
     Client_Destroy(client);

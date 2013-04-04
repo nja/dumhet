@@ -10,7 +10,7 @@ struct CloseNode
     DhtDistance distance;
 };
 
-CloseNodes *CloseNodes_Create(DhtHash *id)
+CloseNodes *CloseNodes_Create(Hash *id)
 {
     CloseNodes *nodes = malloc(sizeof(CloseNodes));
     check_mem(nodes);
@@ -72,7 +72,7 @@ int CloseNodes_Add(CloseNodes *close, DhtNode *node)
     assert(close != NULL && "NULL CloseNodes pointer");
     assert(node != NULL && "NULL DhtNode pointer");
 
-    DhtDistance distance = DhtHash_Distance(&close->id, &node->id);
+    DhtDistance distance = Hash_Distance(&close->id, &node->id);
     int i = FindIndex(close->close_nodes, &distance);
 
     if (i < 0)

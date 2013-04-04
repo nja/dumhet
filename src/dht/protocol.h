@@ -9,7 +9,7 @@ typedef uint16_t tid_t;
 typedef struct PendingResponse {
     MessageType type;
     tid_t tid;
-    DhtHash id;
+    Hash id;
     void *context;
 } PendingResponse;
 

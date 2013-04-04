@@ -13,7 +13,7 @@ int SameT(Message *a, Message *b)
     return memcmp(a->t, b->t, a->t_len) == 0;
 }
 
-int HasRecentQuery(DhtTable *table, DhtHash id)
+int HasRecentQuery(DhtTable *table, Hash id)
 {
     DhtNode *node = DhtTable_FindNode(table, &id);
     check(node != NULL, "No node in client table");
@@ -23,7 +23,7 @@ error:
     return 0;
 }
 
-int HasRecentReply(DhtTable *table, DhtHash id)
+int HasRecentReply(DhtTable *table, Hash id)
 {
     DhtNode *node = DhtTable_FindNode(table, &id);
     check(node != NULL, "No node in table");
@@ -35,7 +35,7 @@ error:
 
 char *test_HandleQPing()
 {
-    DhtHash id = { "client id" }, from_id = { "from id" };
+    Hash id = { "client id" }, from_id = { "from id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 1, 1);
 
@@ -60,9 +60,9 @@ char *test_HandleQPing()
 
 char *test_HandleQGetPeers_nodes()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 1, 1);
 
@@ -95,9 +95,9 @@ char *test_HandleQGetPeers_nodes()
 
 char *test_HandleQGetPeers_peers()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 1, 1);
     Peer peer = { .addr = 2, .port = 3 };
@@ -132,9 +132,9 @@ char *test_HandleQGetPeers_peers()
 
 char *test_HandleQAnnouncePeer()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
@@ -173,9 +173,9 @@ char *test_HandleQAnnouncePeer()
 
 char *test_HandleQAnnouncePeer_badtoken()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
@@ -202,9 +202,9 @@ char *test_HandleQAnnouncePeer_badtoken()
 
 char *test_HandleQFindNode()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
@@ -231,9 +231,9 @@ char *test_HandleQFindNode()
 
 char *test_HandleRFindNode()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
     DhtNode found_node = { .id = { "found id" },
@@ -282,8 +282,8 @@ char *test_HandleRFindNode()
 
 char *test_HandleRPing()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
@@ -313,9 +313,9 @@ char *test_HandleRPing()
 
 char *test_HandleRAnnouncePeer()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash info_hash = { "info_hash" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash info_hash = { "info_hash" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
@@ -347,9 +347,9 @@ char *test_HandleRAnnouncePeer()
 
 char *test_HandleRGetPeers_nodes()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 1, 1);
     const int nodes_count = 3;
@@ -361,7 +361,7 @@ char *test_HandleRGetPeers_nodes()
     int i = 0;
     for (i = 0; i < nodes_count; i++)
     {
-        DhtHash id = { "  found node id" };
+        Hash id = { "  found node id" };
         id.value[0] = '0' + i;
         found_nodes[i] = DhtNode_Create(&id);
         DhtTable_InsertNode(from->table, found_nodes[i]);
@@ -397,9 +397,9 @@ char *test_HandleRGetPeers_nodes()
 
 char *test_HandleRGetPeers_peers()
 {
-    DhtHash id = { "client id" };
-    DhtHash from_id = { "from id" };
-    DhtHash target_id = { "target id" };
+    Hash id = { "client id" };
+    Hash from_id = { "from id" };
+    Hash target_id = { "target id" };
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 1, 1);
     const int peers_count = 3;

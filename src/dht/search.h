@@ -10,7 +10,7 @@ typedef struct Search {
     Peers *peers;
 } Search;
 
-Search *Search_Create(DhtHash *id);
+Search *Search_Create(Hash *id);
 void Search_Destroy(Search *search);
 
 int Search_CopyTable(Search *search, DhtTable *source);

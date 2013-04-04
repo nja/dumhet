@@ -69,7 +69,7 @@ struct MockResponses {
     GetPendingResponse_fp getPendingReponse;
     char *tid;
     MessageType type;
-    DhtHash id;
+    Hash id;
     int check_tid;
 };
 
@@ -88,7 +88,7 @@ PendingResponse GetMockResponseType(void *responses, char *tid, int *rc)
     return (PendingResponse) { mock->type, *(tid_t *)tid, mock->id, NULL };
 }
 
-struct MockResponses *GetMockResponses(char *tid, MessageType type, DhtHash id, int check_tid)
+struct MockResponses *GetMockResponses(char *tid, MessageType type, Hash id, int check_tid)
 {
     struct MockResponses *responses = malloc(sizeof(struct MockResponses));
     check_mem(responses);
@@ -104,13 +104,13 @@ error:
     return NULL;
 }
 
-DhtHash ID(char *data)
+Hash ID(char *data)
 {
     char *id20 = "id20:";
     char *ch = strstr(data, id20) + strlen(id20);
     char *end = ch + 20;
 
-    DhtHash id;
+    Hash id;
     char *v = id.value;
 
     while (ch < end)
@@ -549,7 +549,7 @@ char *test_Decode_JunkResponse()
 	NULL
     };
 
-    DhtHash id = ID(junk[0]);
+    Hash id = ID(junk[0]);
 
     void *gettype[] = {
 	GetMockResponses(NULL, RPing, id, 0),
@@ -566,7 +566,7 @@ PendingResponse GetRoundtripResponseMessageType(void *responses, char *t, int *r
 {
     (void)(responses);
 
-    DhtHash id = ID("id20:abcdefghij0123456789");
+    Hash id = ID("id20:abcdefghij0123456789");
 
     if (same_bytes_len("pi", t, sizeof(tid_t)))
     {

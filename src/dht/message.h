@@ -21,15 +21,15 @@ typedef struct QPingData {
 } QPingData;
 
 typedef struct QFindNodeData {
-    DhtHash *target;
+    Hash *target;
 } QFindNodeData;
 
 typedef struct QGetPeersData {
-    DhtHash *info_hash;
+    Hash *info_hash;
 } QGetPeersData;
 
 typedef struct QAnnouncePeerData {
-    DhtHash *info_hash;
+    Hash *info_hash;
     uint16_t port;
     char *token;
     size_t token_len;
@@ -63,7 +63,7 @@ typedef struct Message {
     MessageType type;
     char *t;
     size_t t_len;
-    DhtHash id;
+    Hash id;
     void *context;
     union {
 	QPingData qping;

@@ -6,31 +6,31 @@
 
 #include <dht/random.h>
 
-typedef struct DhtHash {
+typedef struct Hash {
     char value[HASH_BYTES];	/* Network byte order */
-} DhtHash;
+} Hash;
 
-DhtHash *DhtHash_Clone(DhtHash *hash);
-void DhtHash_Destroy(DhtHash *hash);
+Hash *Hash_Clone(Hash *hash);
+void Hash_Destroy(Hash *hash);
 
-int DhtHash_Prefix(DhtHash *hash, DhtHash *prefix, unsigned int prefix_len);
-int DhtHash_Random(RandomState *rs, DhtHash *hash);
-int DhtHash_PrefixedRandom(RandomState *rs, DhtHash *hash, DhtHash *prefix, int prefix_len);
-void DhtHash_Invert(DhtHash *hash);
+int Hash_Prefix(Hash *hash, Hash *prefix, unsigned int prefix_len);
+int Hash_Random(RandomState *rs, Hash *hash);
+int Hash_PrefixedRandom(RandomState *rs, Hash *hash, Hash *prefix, int prefix_len);
+void Hash_Invert(Hash *hash);
 
-int DhtHash_Equals(DhtHash *a, DhtHash *b);
-int DhtHash_SharedPrefix(DhtHash *a, DhtHash *b);
+int Hash_Equals(Hash *a, Hash *b);
+int Hash_SharedPrefix(Hash *a, Hash *b);
 
-const char *DhtHash_Str(DhtHash *hash);
+const char *Hash_Str(Hash *hash);
 
-typedef DhtHash DhtDistance;
+typedef Hash DhtDistance;
 
-#define DhtDistance_Destroy(D) DhtHash_Destroy((D))
+#define DhtDistance_Destroy(D) Hash_Destroy((D))
 
-DhtDistance DhtHash_Distance(DhtHash *a, DhtHash *b);
+DhtDistance Hash_Distance(Hash *a, Hash *b);
 
 int DhtDistance_Compare(DhtDistance *a, DhtDistance *b);
 
-uint32_t DhtHash_Hash(DhtHash *hash);
+uint32_t Hash_Hash(Hash *hash);
 
 #endif

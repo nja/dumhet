@@ -13,13 +13,13 @@ void Message_Destroy(Message *message)
     case QPing:
 	break;
     case QFindNode:
-	DhtHash_Destroy(message->data.qfindnode.target);
+	Hash_Destroy(message->data.qfindnode.target);
 	break;
     case QGetPeers:
-	DhtHash_Destroy(message->data.qgetpeers.info_hash);
+	Hash_Destroy(message->data.qgetpeers.info_hash);
 	break;
     case QAnnouncePeer:
-	DhtHash_Destroy(message->data.qannouncepeer.info_hash);
+	Hash_Destroy(message->data.qannouncepeer.info_hash);
 	free(message->data.qannouncepeer.token);
 	break;
     case RPing:

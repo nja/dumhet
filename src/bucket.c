@@ -32,7 +32,7 @@ int Bucket_ContainsNode(Bucket *bucket, DhtNode *node)
     while (bucket_node < bucket->nodes + BUCKET_K)
     {
         if (*bucket_node != NULL &&
-            DhtHash_Equals(&node->id, &(*bucket_node)->id))
+            Hash_Equals(&node->id, &(*bucket_node)->id))
         {
             return 1;
         }

@@ -4,7 +4,7 @@
 
 char *test_Search_CreateDestroy()
 {
-    DhtHash id = { "1234512345abcdeabcd" };
+    Hash id = { "1234512345abcdeabcd" };
     Search *search = Search_Create(&id);
     mu_assert(search != NULL, "Search_Create failed");
 
@@ -18,13 +18,13 @@ char *test_Search_CreateDestroy()
 
 char *test_Search_CopyTable()
 {
-    DhtHash id = { "abcdeABCDE12345!@#$" };
-    DhtHash invid = id;
+    Hash id = { "abcdeABCDE12345!@#$" };
+    Hash invid = id;
 
     const int low_bits = 3;
     mu_assert(1 << low_bits >= BUCKET_K, "Not enough bits");
 
-    DhtHash_Invert(&invid);
+    Hash_Invert(&invid);
 
     DhtTable *table = DhtTable_Create(&id);
 
@@ -42,8 +42,8 @@ char *test_Search_CopyTable()
             node->id.value[HASH_BYTES - 1] &= ~0 << low_bits;
             node->id.value[HASH_BYTES - 1] |= j;
 
-            int rc = DhtHash_Prefix(&node->id, &id, i);
-            mu_assert(rc == 0, "DhtHash_Prefix failed");
+            int rc = Hash_Prefix(&node->id, &id, i);
+            mu_assert(rc == 0, "Hash_Prefix failed");
             
             result = DhtTable_InsertNode(table, node);
             mu_assert(result.rc == OKAdded, "Unexpected rc");
@@ -53,10 +53,10 @@ char *test_Search_CopyTable()
     int shared = 0;
     for (shared = 0; shared < HASH_BITS - low_bits; shared++)
     {
-        DhtHash target = invid;
-        int rc = DhtHash_Prefix(&target, &id, shared);
-        mu_assert(rc == 0, "DhtHash_Prefix failed");
-        mu_assert(DhtHash_SharedPrefix(&id, &target) == shared, "Wrong shared prefix");
+        Hash target = invid;
+        int rc = Hash_Prefix(&target, &id, shared);
+        mu_assert(rc == 0, "Hash_Prefix failed");
+        mu_assert(Hash_SharedPrefix(&id, &target) == shared, "Wrong shared prefix");
 
         Search *search = Search_Create(&target);
         rc = Search_CopyTable(search, table);
@@ -96,7 +96,7 @@ char *test_Search_CopyTable()
 char *test_Search_NodesToQuery()
 {
     time_t now = time(NULL);
-    DhtHash id = { "foo" };
+    Hash id = { "foo" };
     Search *search = Search_Create(&id);
 
     DhtNode *already_replied = DhtNode_Create(&id);

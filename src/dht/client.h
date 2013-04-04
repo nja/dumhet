@@ -7,7 +7,7 @@
 
 #define SECRETS_LEN 2
 
-typedef DhtHash Token;
+typedef Hash Token;
 
 typedef struct Client {
     DhtNode node;
@@ -17,11 +17,11 @@ typedef struct Client {
     struct PendingResponses *pending;
     char *buf;
     int next_t;
-    DhtHash secrets[SECRETS_LEN];
+    Hash secrets[SECRETS_LEN];
     Hashmap *peers;
 } Client;
 
-Client *Client_Create(DhtHash id,
+Client *Client_Create(Hash id,
                       uint32_t addr,
                       uint16_t port,
                       uint16_t peer_port);
@@ -34,7 +34,7 @@ int Client_IsValidToken(Client *client,
                         size_t token_len);
 int Client_NewSecret(Client *client);
 
-int Client_GetPeers(Client *client, DhtHash *info_hash, DArray **peers);
-int Client_AddPeer(Client *client, DhtHash *info_hash, Peer *peer);
+int Client_GetPeers(Client *client, Hash *info_hash, DArray **peers);
+int Client_AddPeer(Client *client, Hash *info_hash, Peer *peer);
 
 #endif

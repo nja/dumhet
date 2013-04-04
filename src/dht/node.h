@@ -6,7 +6,7 @@
 #include <dht/hash.h>
 
 typedef struct DhtNode {
-    DhtHash id;
+    Hash id;
     struct in_addr addr;
     uint16_t port;              /* network byte order */
     time_t reply_time;
@@ -14,7 +14,7 @@ typedef struct DhtNode {
     int pending_queries;
 } DhtNode;
 
-DhtNode *DhtNode_Create(DhtHash *id);
+DhtNode *DhtNode_Create(Hash *id);
 DhtNode *DhtNode_Copy(DhtNode *node);
 void DhtNode_Destroy(DhtNode *node);
 void DhtNode_DestroyBlock(DhtNode **node, size_t count);

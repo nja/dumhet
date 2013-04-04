@@ -9,7 +9,7 @@
 
 char *test_NetworkUpDown()
 {
-    DhtHash id;
+    Hash id;
 
     Client *client = Client_Create(id, 0, TESTPORT, 0);
 
@@ -26,7 +26,7 @@ char *test_NetworkUpDown()
 
 char *test_NetworkSendReceive()
 {
-    DhtHash id;
+    Hash id;
     Client *client = Client_Create(id, htonl(INADDR_LOOPBACK), TESTPORT, 0);
   
     int rc = NetworkUp(client);
@@ -57,7 +57,7 @@ char *test_NetworkSendReceive()
 
 char *test_NetworkSendReceiveMessage()
 {
-    DhtHash ids = { "foo" }, idr = { "bar" };
+    Hash ids = { "foo" }, idr = { "bar" };
     Client *sender = Client_Create(ids, htonl(INADDR_LOOPBACK), TESTPORT, 0);
     Client *recver = Client_Create(idr, htonl(INADDR_LOOPBACK), TESTPORT + 1, 0);
 

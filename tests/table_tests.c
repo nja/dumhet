@@ -48,7 +48,7 @@ char *test_DhtTable_AddBucket()
 
 char *test_DhtTable_InsertNode()
 {
-    DhtHash id = {{0}};
+    Hash id = {{0}};
     
     DhtTable *table = DhtTable_Create(&id);
 
@@ -142,10 +142,10 @@ char *test_DhtTable_InsertNode()
 
 char *test_DhtTable_InsertNode_FullTable()
 {
-    DhtHash id = {{0}};
-    DhtHash inv = {{0}};
+    Hash id = {{0}};
+    Hash inv = {{0}};
 
-    DhtHash_Invert(&inv);
+    Hash_Invert(&inv);
 
     const int low_bits = 3;
     mu_assert(1 << low_bits >= BUCKET_K, "Not enough bits");
@@ -173,7 +173,7 @@ char *test_DhtTable_InsertNode_FullTable()
             node->id.value[HASH_BYTES - 1] &= ~0 << shift;
             node->id.value[HASH_BYTES - 1] |= j;
 
-            DhtHash_Prefix(&node->id, &id, i);
+            Hash_Prefix(&node->id, &id, i);
 
             result = DhtTable_InsertNode(table, node);
             mu_assert(result.rc == OKAdded, "Error adding");
@@ -188,7 +188,7 @@ char *test_DhtTable_InsertNode_FullTable()
     for (i = 0; i < MAX_TABLE_BUCKETS - 2; i++)
     {
         node = DhtNode_Create(&inv);
-        DhtHash_Prefix(&node->id, &id, i);
+        Hash_Prefix(&node->id, &id, i);
         node->id.value[HASH_BYTES - 1] &= 0xf0;
         
         result = DhtTable_InsertNode(table, node);
@@ -205,7 +205,7 @@ char *test_DhtTable_InsertNode_FullTable()
 
 char *test_DhtTable_InsertNode_AddBucket()
 {
-    DhtHash id = {{ 0 }};
+    Hash id = {{ 0 }};
     DhtTable *table = DhtTable_Create(&id);
 
     DhtNode *node;
@@ -248,7 +248,7 @@ DhtNode **MakeNodes(int count, char high)
     int i = 0;
     for (i = 0; i < count; i++)
     {
-        DhtHash id = {{ 0 }};
+        Hash id = {{ 0 }};
         id.value[0] = high;
         id.value[2] = i + 1;
         nodes[i] = DhtNode_Create(&id);
@@ -272,7 +272,7 @@ int HasNode(DArray *nodes, DhtNode *node)
 
 char *test_DhtTable_GatherClosest()
 {
-    DhtHash id = {{ 0 }};
+    Hash id = {{ 0 }};
 
     int i = 0;
     for (i = 0; i <= BUCKET_K; i++)
@@ -306,7 +306,7 @@ char *test_DhtTable_GatherClosest()
             mu_assert(result.rc == OKAdded, "add");
         }            
 
-        DhtHash target = {{ 0 }};
+        Hash target = {{ 0 }};
         target.value[1] = 16;
 
         DArray *found = DhtTable_GatherClosest(table, &target);
@@ -334,7 +334,7 @@ char *test_DhtTable_GatherClosest()
 
 char *test_DhtTable_FindNode_EmptyBucket()
 {
-    DhtHash id = { "id" };
+    Hash id = { "id" };
     DhtTable *table = DhtTable_Create(&id);
 
     DhtNode *node = DhtTable_FindNode(table, &id);

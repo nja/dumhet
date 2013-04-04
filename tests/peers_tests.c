@@ -6,7 +6,7 @@
 
 char *test_Peers_CreateDestroy()
 {
-    DhtHash info_hash = { "info_hash" };
+    Hash info_hash = { "info_hash" };
     Peers *peers = Peers_Create(&info_hash);
     mu_assert(peers != NULL, "Peers_Create failed");
 
@@ -25,7 +25,7 @@ char *test_Peers_CreateDestroy()
 
 char *test_MaxPeersInRGetPeersEncoded()
 {
-    DhtHash id = { "id" };
+    Hash id = { "id" };
     Client *client = Client_Create(id, 0, 0, 0);
 
     Message *query = Message_CreateQGetPeers(client, &id);
@@ -68,7 +68,7 @@ char *test_MaxPeersInRGetPeersEncoded()
 
 char *test_Peers_RepeatAdd()
 {
-    DhtHash info_hash = { "info_hash" };
+    Hash info_hash = { "info_hash" };
     Peers *peers = Peers_Create(&info_hash);
 
     Peer a = { 0 };
@@ -96,7 +96,7 @@ char *test_Peers_RepeatAdd()
 
 char *test_Peers_GetPeers()
 {
-    DhtHash info_hash = { "info_hash" };
+    Hash info_hash = { "info_hash" };
     Peers *peers = Peers_Create(&info_hash);
 
     while (peers->count < MAXPEERS)

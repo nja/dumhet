@@ -7,11 +7,11 @@
 
 typedef struct CloseNodes
 {
-    DhtHash id;
+    Hash id;
     DArray *close_nodes;
 } CloseNodes;
 
-CloseNodes *CloseNodes_Create(DhtHash *id);
+CloseNodes *CloseNodes_Create(Hash *id);
 void CloseNodes_Destroy(CloseNodes *close);
 
 DArray *CloseNodes_GetNodes(CloseNodes *close);

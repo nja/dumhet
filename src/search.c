@@ -4,9 +4,9 @@
 #include <dht/table.h>
 #include <lcthw/dbg.h>
 
-Search *Search_Create(DhtHash *id)
+Search *Search_Create(Hash *id)
 {
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     Search *search = calloc(1, sizeof(Search));
     check_mem(search);

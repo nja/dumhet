@@ -5,9 +5,9 @@
 #include <dht/table.h>
 #include <lcthw/dbg.h>
 
-DhtTable *DhtTable_Create(DhtHash *id)
+DhtTable *DhtTable_Create(Hash *id)
 {
-    assert(id != NULL && "NULL DhtHash id pointer");
+    assert(id != NULL && "NULL Hash id pointer");
 
     DhtTable *table = calloc(1, sizeof(DhtTable));
     check_mem(table);
@@ -45,14 +45,14 @@ void DhtTable_DestroyNodes(DhtTable *table)
     DhtTable_ForEachNode(table, NULL, DhtNode_DestroyOp);
 }
 
-int DhtTable_HasShiftableNodes(DhtHash *id, Bucket *bucket, DhtNode *node)
+int DhtTable_HasShiftableNodes(Hash *id, Bucket *bucket, DhtNode *node)
 {
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
     assert(bucket != NULL && "NULL Bucket pointer");
     assert(node != NULL && "NULL DhtNode pointer");
     assert(bucket->index < MAX_TABLE_BUCKETS && "Bad bucket index");
 
-    if (bucket->index < DhtHash_SharedPrefix(id, &node->id))
+    if (bucket->index < Hash_SharedPrefix(id, &node->id))
     {
 	return 1;
     }
@@ -62,7 +62,7 @@ int DhtTable_HasShiftableNodes(DhtHash *id, Bucket *bucket, DhtNode *node)
     {
         DhtNode *current = bucket->nodes[i];
 	if (current != NULL
-	    && bucket->index < DhtHash_SharedPrefix(id, &current->id))
+	    && bucket->index < Hash_SharedPrefix(id, &current->id))
 	{
 	    return 1;
 	}
@@ -106,7 +106,7 @@ int DhtTable_ShiftBucketNodes(DhtTable *table, Bucket *bucket)
 	if (node == NULL)
             continue;
 
-	if (DhtHash_SharedPrefix(&table->id, &node->id) <= bucket->index)
+	if (Hash_SharedPrefix(&table->id, &node->id) <= bucket->index)
             continue;
 
         int rc = Bucket_AddNode(next, node);
@@ -198,13 +198,13 @@ error:
     return NULL;
 }
 
-Bucket *DhtTable_FindBucket(DhtTable *table, DhtHash *id)
+Bucket *DhtTable_FindBucket(DhtTable *table, Hash *id)
 {
     assert(table != NULL && "NULL DhtTable pointer");
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
     assert(table->end > 0 && "No buckets in table");
 
-    int pfx = DhtHash_SharedPrefix(&table->id, id);
+    int pfx = Hash_SharedPrefix(&table->id, id);
     int i = pfx < table->end ? pfx : table->end - 1;
 
     assert(table->buckets[i] != NULL && "Found NULL bucket");
@@ -242,17 +242,17 @@ error:
     return -1;
 }
 
-DhtNode *DhtTable_FindNode(DhtTable *table, DhtHash *id)
+DhtNode *DhtTable_FindNode(DhtTable *table, Hash *id)
 {
     assert(table != NULL && "NULL DhtTable pointer");
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     Bucket *bucket = DhtTable_FindBucket(table, id);
     DhtNode **node = bucket->nodes;
 
     while (node < &bucket->nodes[BUCKET_K])
     {
-        if (*node != NULL && DhtHash_Equals(id, &(*node)->id))
+        if (*node != NULL && Hash_Equals(id, &(*node)->id))
         {
             return *node;
         }
@@ -268,10 +268,10 @@ int CloseNodes_AddOp(void *close, DhtNode *node)
     return CloseNodes_Add((CloseNodes *)close, node);
 }
 
-DArray *DhtTable_GatherClosest(DhtTable *table, DhtHash *id)
+DArray *DhtTable_GatherClosest(DhtTable *table, Hash *id)
 {
     assert(table != NULL && "NULL DhtTable pointer");
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     CloseNodes *close = CloseNodes_Create(id);
     check(close != NULL, "CloseNodes_Create failed");
@@ -290,10 +290,10 @@ error:
     return NULL;
 }
 
-int DhtTable_MarkReply(DhtTable *table, DhtHash *id)
+int DhtTable_MarkReply(DhtTable *table, Hash *id)
 {
     assert(table != NULL && "NULL DhtTable pointer");
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     DhtNode *node = DhtTable_FindNode(table, id);
 
@@ -310,10 +310,10 @@ error:
     return -1;
 }
 
-void DhtTable_MarkQuery(DhtTable *table, DhtHash *id)
+void DhtTable_MarkQuery(DhtTable *table, Hash *id)
 {
     assert(table != NULL && "NULL DhtTable pointer");
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     DhtNode *node = DhtTable_FindNode(table, id);
 

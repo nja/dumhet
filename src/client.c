@@ -11,10 +11,10 @@
 
 int CreateSocket();
 
-Client *Client_Create(DhtHash id,
-                            uint32_t addr,
-                            uint16_t port,
-                            uint16_t peer_port)
+Client *Client_Create(Hash id,
+                      uint32_t addr,
+                      uint16_t port,
+                      uint16_t peer_port)
 {
     RandomState *rs = NULL;
     Client *client = calloc(1, sizeof(Client));
@@ -41,7 +41,7 @@ Client *Client_Create(DhtHash id,
     rs = RandomState_Create(time(NULL));
     check(rs != NULL, "RandomState_Create failed");
 
-    int rc = Random_Fill(rs, (char *)client->secrets, SECRETS_LEN * sizeof(DhtHash));
+    int rc = Random_Fill(rs, (char *)client->secrets, SECRETS_LEN * sizeof(Hash));
     check(rc == 0, "Random_Fill failed");
 
     client->socket = CreateSocket();
@@ -82,7 +82,7 @@ void Client_Destroy(Client *client)
     free(client);
 }
 
-#define TOKEN_DATA_LEN (sizeof(DhtHash) + sizeof(in_addr_t))
+#define TOKEN_DATA_LEN (sizeof(Hash) + sizeof(in_addr_t))
 
 Token MakeToken(Client *client, DhtNode *from, int secret)
 {
@@ -91,8 +91,8 @@ Token MakeToken(Client *client, DhtNode *from, int secret)
     assert(0 <= secret && secret < SECRETS_LEN && "Bad secret");
 
     unsigned char data[TOKEN_DATA_LEN];
-    memcpy(data, &client->secrets[secret], sizeof(DhtHash));
-    memcpy(data + sizeof(DhtHash), &from->addr.s_addr, sizeof(in_addr_t));
+    memcpy(data, &client->secrets[secret], sizeof(Hash));
+    memcpy(data + sizeof(Hash), &from->addr.s_addr, sizeof(in_addr_t));
 
     Token token;
 
@@ -110,7 +110,7 @@ Token Client_MakeToken(Client *client, DhtNode *from)
 }
 
 int Client_IsValidToken(Client *client, DhtNode *from,
-                           char *token, size_t token_len)
+                        char *token, size_t token_len)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(from != NULL && "NULL DhtNode pointer");
@@ -124,7 +124,7 @@ int Client_IsValidToken(Client *client, DhtNode *from,
     {
         Token valid = MakeToken(client, from, i);
 
-        if (DhtHash_Equals((DhtHash *)token, (DhtHash *)&valid))
+        if (Hash_Equals((Hash *)token, (Hash *)&valid))
             return 1;
     }
 
@@ -148,7 +148,7 @@ int Client_NewSecret(Client *client)
     rc = SHA1_Update(&ctx, client->buf, UDPBUFLEN);
     check(rc == 1, "SHA1_Update failed");
 
-    rc = SHA1_Update(&ctx, client->secrets, sizeof(DhtHash) * SECRETS_LEN);
+    rc = SHA1_Update(&ctx, client->secrets, sizeof(Hash) * SECRETS_LEN);
     check(rc == 1, "SHA1_Update failed");
 
     int i;
@@ -173,10 +173,10 @@ error:
     return -1;
 }
 
-int Client_AddPeer(Client *client, DhtHash *info_hash, Peer *peer)
+int Client_AddPeer(Client *client, Hash *info_hash, Peer *peer)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
     assert(peer != NULL && "NULL Peer pointer");
 
     int rc = PeersHashmap_AddPeer(client->peers, info_hash, peer);
@@ -187,10 +187,10 @@ error:
     return -1;
 }
 
-int Client_GetPeers(Client *client, DhtHash *info_hash, DArray **peers)
+int Client_GetPeers(Client *client, Hash *info_hash, DArray **peers)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
     assert(peers != NULL && "NULL pointer to DArray pointer");
 
     *peers = DArray_create(sizeof(Peer *), 128);

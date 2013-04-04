@@ -28,10 +28,10 @@ Message *Message_CreateQPing(Client *client)
     return Message_CreateQuery(client, QPing);
 }
 
-Message *Message_CreateQFindNode(Client *client, DhtHash *id)
+Message *Message_CreateQFindNode(Client *client, Hash *id)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     Message *message = Message_CreateQuery(client, QFindNode);
     check(message != NULL, "Message_Create failed");
@@ -46,10 +46,10 @@ error:
     return NULL;
 }
 
-Message *Message_CreateQGetPeers(Client *client, DhtHash *info_hash)
+Message *Message_CreateQGetPeers(Client *client, Hash *info_hash)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
 
     Message *message = Message_CreateQuery(client, QGetPeers);
     check(message != NULL, "Message_Create failed");
@@ -65,11 +65,11 @@ error:
 }
 
 Message *Message_CreateQAnnouncePeer(Client *client,
-                                     DhtHash *info_hash,
+                                     Hash *info_hash,
                                      Token *token)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(info_hash != NULL && "NULL DhtHash pointer");
+    assert(info_hash != NULL && "NULL Hash pointer");
     assert(token != NULL && "NULL Token pointer");
 
     QAnnouncePeerData data = { 0 };

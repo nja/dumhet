@@ -29,9 +29,9 @@ DhtNodeStatus DhtNode_Status(DhtNode *node, time_t time)
     return Bad;
 }
 
-DhtNode *DhtNode_Create(DhtHash *id)
+DhtNode *DhtNode_Create(Hash *id)
 {
-    assert(id != NULL && "NULL DhtHash pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     DhtNode *node = calloc(1, sizeof(DhtNode));
     check_mem(node);
@@ -89,6 +89,6 @@ int DhtNode_Same(DhtNode *a, DhtNode *b)
 
     return a->addr.s_addr == b->addr.s_addr
         && a->port == b->port
-        && DhtHash_Equals(&a->id, &b->id);
+        && Hash_Equals(&a->id, &b->id);
 }
 
