@@ -1,6 +1,7 @@
 #ifndef _dht_client_h
 #define _dht_client_h
 
+#include <dht/messagequeue.h>
 #include <dht/table.h>
 #include <dht/protocol.h>
 #include <lcthw/hashmap.h>
@@ -19,6 +20,9 @@ typedef struct Client {
     int next_t;
     Hash secrets[SECRETS_LEN];
     Hashmap *peers;
+    MessageQueue *incoming;
+    MessageQueue *queries;
+    MessageQueue *replies;
 } Client;
 
 Client *Client_Create(Hash id,

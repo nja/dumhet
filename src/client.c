@@ -39,6 +39,13 @@ Client *Client_Create(Hash id,
     client->peers = PeersHashmap_Create();
     check(client->peers != NULL, "PeersHashmap_Create failed");
 
+    client->incoming = MessageQueue_Create();
+    check(client->incoming != NULL, "MessageQueue_Create failed");
+    client->queries = MessageQueue_Create();
+    check(client->queries != NULL, "MessageQueue_Create failed");
+    client->replies = MessageQueue_Create();
+    check(client->replies != NULL, "MessageQueue_Create failed");
+
     rs = RandomState_Create(time(NULL));
     check(rs != NULL, "RandomState_Create failed");
 
@@ -53,16 +60,7 @@ Client *Client_Create(Hash id,
     return client;
 error:
     RandomState_Destroy(rs);
-
-    if (client != NULL)
-    {
-        free(client->buf);
-        HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
-        Table_Destroy(client->table);
-        PeersHashmap_Destroy(client->peers);
-    }
-
-    free(client);
+    Client_Destroy(client);
 
     return NULL;
 }
@@ -76,6 +74,10 @@ void Client_Destroy(Client *client)
     HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
     free(client->buf);
     PeersHashmap_Destroy(client->peers);
+
+    MessageQueue_Destroy(client->incoming);
+    MessageQueue_Destroy(client->queries);
+    MessageQueue_Destroy(client->replies);
   
     if (client->socket != -1)
         close(client->socket);
