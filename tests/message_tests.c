@@ -6,15 +6,17 @@
 char *test_CreateDestroy_QPing()
 {
     Hash id = { "qping" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
+    Node to = {{ "node id" }, {1234}};
 
-    Message *message = Message_CreateQPing(client);
+    Message *message = Message_CreateQPing(client, &to);
 
     mu_assert(message != NULL, "Message_CreateQPing failed");
     mu_assert(message->type == QPing, "Wrong message type");
     mu_assert(Hash_Equals(&id, &message->id), "Wrong message id");
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
+    mu_assert(Node_Same(&to, &message->node), "Wrong node");
 
     Client_Destroy(client);
     Message_Destroy(message);
@@ -26,9 +28,10 @@ char *test_CreateDestroy_QFindNode()
 {
     Hash id = { "qfindnode" };
     Hash target = { "target" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
+    Node to = {{ "node id" }, {1234}};
 
-    Message *message = Message_CreateQFindNode(client, &target);
+    Message *message = Message_CreateQFindNode(client, &to, &target);
 
     mu_assert(message != NULL, "Message_CreateQFindNode failed");
     mu_assert(message->type == QFindNode, "Wrong message type");
@@ -37,6 +40,7 @@ char *test_CreateDestroy_QFindNode()
               "Wrong target");
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
+    mu_assert(Node_Same(&to, &message->node), "Wrong node");
 
     Client_Destroy(client);
     Message_Destroy(message);
@@ -48,9 +52,10 @@ char *test_CreateDestroy_QGetPeers()
 {
     Hash id = { "qgetpeers" };
     Hash info_hash = { "info_hash" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
+    Node to = {{ "node id" }, {1234}};
 
-    Message *message = Message_CreateQGetPeers(client, &info_hash);
+    Message *message = Message_CreateQGetPeers(client, &to, &info_hash);
 
     mu_assert(message != NULL, "Message_CreateQGetPeers failed");
     mu_assert(message->type == QGetPeers, "Wrong message type");
@@ -59,6 +64,7 @@ char *test_CreateDestroy_QGetPeers()
               "Wrong target");
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
+    mu_assert(Node_Same(&to, &message->node), "Wrong node");
 
     Client_Destroy(client);
     Message_Destroy(message);
@@ -71,12 +77,12 @@ char *test_CreateDestroy_QAnnouncePeer()
     const int peer_port = 1234;
     Hash id = { "qannouncepeer" };
     Hash info_hash = { "info_hash" };
-    Client *client = Client_Create(id, 0, 0, peer_port);
-    Node from = {{{ 0 }}};
+    Client *client = Client_Create(id, 2, 4, peer_port);
+    Node to = {{ "node id" }, {1234}};
 
-    Token token = Client_MakeToken(client, &from);
+    Token token = Client_MakeToken(client, &to);
 
-    Message *message = Message_CreateQAnnouncePeer(client, &info_hash, &token);
+    Message *message = Message_CreateQAnnouncePeer(client, &to, &info_hash, &token);
 
     mu_assert(message != NULL, "Message_CreateQGetPeers failed");
     mu_assert(message->type == QAnnouncePeer, "Wrong message type");
@@ -89,12 +95,15 @@ char *test_CreateDestroy_QAnnouncePeer()
     mu_assert(message->data.qannouncepeer.token_len == HASH_BYTES, "Wrong token_len");
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
+    mu_assert(Node_Same(&to, &message->node), "Wrong node");
 
     Client_Destroy(client);
     Message_Destroy(message);
 
     return NULL;
 }
+
+Node test_node = {{ "test from id"}, {2222}};
 
 Message *CreateTestQuery(MessageType type)
 {
@@ -105,6 +114,7 @@ Message *CreateTestQuery(MessageType type)
     memcpy(message->t, t, t_len);
     message->t_len = t_len;
     message->type = type;
+    message->node = test_node;
 
     return message;
 }
@@ -125,7 +135,7 @@ error:
 char *test_CreateDestroy_RPing()
 {
     Hash id = { "rping" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
 
     Message *query = CreateTestQuery(QPing);
     Message *message = Message_CreateRPing(client, query);
@@ -136,6 +146,7 @@ char *test_CreateDestroy_RPing()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(SameT(query, message), "Wrong t");
+    mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
     Client_Destroy(client);
     Message_Destroy(query);
@@ -147,7 +158,7 @@ char *test_CreateDestroy_RPing()
 char *test_CreateDestroy_RFindNode()
 {
     Hash id = { "rfindnode" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Message *query = CreateTestQuery(RFindNode);
 
     int i = 0;
@@ -184,6 +195,7 @@ char *test_CreateDestroy_RFindNode()
         mu_assert(message->t != NULL, "No message t");
         mu_assert(message->t_len > 0, "No t_len");
         mu_assert(SameT(query, message), "Wrong t");
+        mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
         Message_Destroy(message);
 
@@ -202,7 +214,7 @@ char *test_CreateDestroy_RFindNode()
 char *test_CreateDestroy_RAnnouncePeer()
 {
     Hash id = { "rAnnounceData" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
 
     Message *query = CreateTestQuery(RAnnouncePeer);
     Message *message = Message_CreateRAnnouncePeer(client, query);
@@ -213,6 +225,7 @@ char *test_CreateDestroy_RAnnouncePeer()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(SameT(query, message), "Wrong t");
+    mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
     Client_Destroy(client);
     Message_Destroy(query);
@@ -224,7 +237,7 @@ char *test_CreateDestroy_RAnnouncePeer()
 char *test_CreateDestroy_RGetPeers_Nodes()
 {
     Hash id = { "rgetpeers_nodes" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Message *query = CreateTestQuery(RGetPeers);
 
     int i = 0;
@@ -274,6 +287,7 @@ char *test_CreateDestroy_RGetPeers_Nodes()
         mu_assert(message->t != NULL, "No message t");
         mu_assert(message->t_len > 0, "No t_len");
         mu_assert(SameT(query, message), "Wrong t");
+        mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
         Message_Destroy(message);
 
@@ -293,7 +307,7 @@ char *test_CreateDestroy_RGetPeers_Nodes()
 char *test_CreateDestroy_RGetPeers_Peers()
 {
     Hash id = { "rgetpeers_peers" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Message *query = CreateTestQuery(RGetPeers);
 
     int i = 0;
@@ -342,6 +356,7 @@ char *test_CreateDestroy_RGetPeers_Peers()
         mu_assert(message->t != NULL, "No message t");
         mu_assert(message->t_len > 0, "No t_len");
         mu_assert(SameT(query, message), "Wrong t");
+        mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
         Message_Destroy(message);
 
@@ -360,7 +375,7 @@ char *test_CreateDestroy_RGetPeers_Peers()
 char *test_CreateDestroy_RError()
 {
     Hash id = { "rerror" };
-    Client *client = Client_Create(id, 0, 0, 0);
+    Client *client = Client_Create(id, 2, 4, 8);
     Message *query = CreateTestQuery(RAnnouncePeer);
 
     Message *message = Message_CreateRErrorBadToken(client, query);
@@ -370,6 +385,7 @@ char *test_CreateDestroy_RError()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(SameT(query, message), "Wrong t");
+    mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
     mu_assert(message->data.rerror.code == RERROR_PROTOCOL, "Wrong error code");
     mu_assert(blength(message->data.rerror.message) != 0, "No message");

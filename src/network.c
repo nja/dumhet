@@ -113,22 +113,24 @@ error:
     return -1;
 }
 
-int SendMessage(Client *client, Message *msg, Node *node)
+int SendMessage(Client *client, Message *msg)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(msg != NULL && "NULL Message pointer");
-    assert(node != NULL && "NULL Node pointer");
     assert(msg->t_len == sizeof(tid_t) && "Wrong outgoing t");
 
     int len = Message_Encode(msg, client->buf, UDPBUFLEN);
     check(len > 0, "Message_Encode failed");
 
-    int rc = Send(client, node, client->buf, len);
+    int rc = Send(client, &msg->node, client->buf, len);
     check(rc == 0, "Send failed");
 
     if (MessageType_IsQuery(msg->type))
     {
-        PendingResponse entry = { msg->type, *(tid_t *)msg->t, node->id, msg->context };
+        PendingResponse entry = { .type = msg->type,
+                                  .tid = *(tid_t *)msg->t,
+                                  .id = msg->node.id,
+                                  .context = msg->context };
 
         rc = client->pending->addPendingResponse(client->pending, entry);
         check(rc == 0, "addPendingResponses failed");
@@ -139,12 +141,13 @@ error:
     return -1;
 }
 
-int ReceiveMessage(Client *client, Node *node, Message **message)
+int ReceiveMessage(Client *client, Message **message)
 {
     assert(client != NULL && "NULL Client pointer");
-    assert(node != NULL && "NULL Node pointer");
 
-    int len = Receive(client, node, client->buf, UDPBUFLEN);
+    Node node = {{{ 0 }}};
+
+    int len = Receive(client, &node, client->buf, UDPBUFLEN);
     check(len >= 0, "Receive failed");
 
     if (len == 0)
@@ -153,10 +156,15 @@ int ReceiveMessage(Client *client, Node *node, Message **message)
         return 0;
     }
 
-    *message = Message_Decode(client->buf,
+    Message *decoded = Message_Decode(client->buf,
                                       len,
                                       (struct PendingResponses *)client->pending);
-    check(*message != NULL, "Message_Decode failed");
+    check(decoded != NULL, "Message_Decode failed");
+
+    decoded->node = node;
+    decoded->node.id = decoded->id;
+
+    *message = decoded;
 
     return 1;
 error:

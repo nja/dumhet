@@ -4,10 +4,11 @@
 #include <dht/client.h>
 #include <dht/message.h>
 
-Message *Message_CreateQPing(Client *client);
-Message *Message_CreateQFindNode(Client *client, Hash *id);
-Message *Message_CreateQGetPeers(Client *client, Hash *info_hash);
+Message *Message_CreateQPing(Client *client, Node *to);
+Message *Message_CreateQFindNode(Client *client, Node *to, Hash *id);
+Message *Message_CreateQGetPeers(Client *client, Node *to, Hash *info_hash);
 Message *Message_CreateQAnnouncePeer(Client *client,
+                                     Node *to,
                                      Hash *info_hash,
                                      Token *token);
 

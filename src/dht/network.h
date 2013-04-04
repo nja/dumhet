@@ -11,7 +11,7 @@ int NetworkDown(Client *client);
 int Send(Client *client, Node *node, char *buf, size_t len);
 int Receive(Client *client, Node *node, char *buf, size_t len);
 
-int SendMessage(Client *client, Message *msg, Node *node);
-int ReceiveMessage(Client *client, Node *node, Message **message);
+int SendMessage(Client *client, Message *msg);
+int ReceiveMessage(Client *client, Message **message);
 
 #endif

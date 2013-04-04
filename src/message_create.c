@@ -1,7 +1,7 @@
 #include <dht/client.h>
 #include <dht/message.h>
 
-Message *Message_CreateQuery(Client *client, MessageType type)
+Message *Message_CreateQuery(Client *client, Node *to, MessageType type)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(MessageType_IsQuery(type) && "MessageType not a query");
@@ -10,6 +10,7 @@ Message *Message_CreateQuery(Client *client, MessageType type)
     check_mem(message);
 
     message->type = type;
+    message->node = *to;
 
     message->t = malloc(sizeof(tid_t));
     check_mem(message->t);
@@ -23,17 +24,17 @@ error:
     return NULL;
 }    
 
-Message *Message_CreateQPing(Client *client)
+Message *Message_CreateQPing(Client *client, Node *to)
 {
-    return Message_CreateQuery(client, QPing);
+    return Message_CreateQuery(client, to, QPing);
 }
 
-Message *Message_CreateQFindNode(Client *client, Hash *id)
+Message *Message_CreateQFindNode(Client *client, Node *to, Hash *id)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(id != NULL && "NULL Hash pointer");
 
-    Message *message = Message_CreateQuery(client, QFindNode);
+    Message *message = Message_CreateQuery(client, to, QFindNode);
     check(message != NULL, "Message_Create failed");
 
     message->data.qfindnode.target = malloc(HASH_BYTES);
@@ -46,12 +47,12 @@ error:
     return NULL;
 }
 
-Message *Message_CreateQGetPeers(Client *client, Hash *info_hash)
+Message *Message_CreateQGetPeers(Client *client, Node *to, Hash *info_hash)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(info_hash != NULL && "NULL Hash pointer");
 
-    Message *message = Message_CreateQuery(client, QGetPeers);
+    Message *message = Message_CreateQuery(client, to, QGetPeers);
     check(message != NULL, "Message_Create failed");
 
     message->data.qgetpeers.info_hash = malloc(HASH_BYTES);
@@ -65,6 +66,7 @@ error:
 }
 
 Message *Message_CreateQAnnouncePeer(Client *client,
+                                     Node *to,
                                      Hash *info_hash,
                                      Token *token)
 {
@@ -74,7 +76,7 @@ Message *Message_CreateQAnnouncePeer(Client *client,
 
     QAnnouncePeerData data = { 0 };
 
-    Message *message = Message_CreateQuery(client, QAnnouncePeer);
+    Message *message = Message_CreateQuery(client, to, QAnnouncePeer);
     check(message != NULL, "Message_Create failed");
 
     data.info_hash = malloc(HASH_BYTES);
@@ -110,6 +112,7 @@ Message *Message_CreateResponse(Client *client, Message *query, MessageType type
     check_mem(message);
 
     message->type = type;
+    message->node = query->node;
 
     message->t_len = query->t_len;
     message->t = malloc(query->t_len);
