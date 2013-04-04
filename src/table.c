@@ -5,16 +5,16 @@
 #include <dht/table.h>
 #include <lcthw/dbg.h>
 
-DhtTable *DhtTable_Create(Hash *id)
+Table *Table_Create(Hash *id)
 {
     assert(id != NULL && "NULL Hash id pointer");
 
-    DhtTable *table = calloc(1, sizeof(DhtTable));
+    Table *table = calloc(1, sizeof(Table));
     check_mem(table);
 
     table->id = *id;
     
-    Bucket *bucket = DhtTable_AddBucket(table);
+    Bucket *bucket = Table_AddBucket(table);
     check_mem(bucket);
 
     assert(table->end == 1 && "Wrong table end");
@@ -26,7 +26,7 @@ error:
     return NULL;
 }
 
-void DhtTable_Destroy(DhtTable *table)
+void Table_Destroy(Table *table)
 {
     if (table == NULL)
 	return;
@@ -40,12 +40,12 @@ void DhtTable_Destroy(DhtTable *table)
     free(table);
 }
 
-void DhtTable_DestroyNodes(DhtTable *table)
+void Table_DestroyNodes(Table *table)
 {
-    DhtTable_ForEachNode(table, NULL, Node_DestroyOp);
+    Table_ForEachNode(table, NULL, Node_DestroyOp);
 }
 
-int DhtTable_HasShiftableNodes(Hash *id, Bucket *bucket, Node *node)
+int Table_HasShiftableNodes(Hash *id, Bucket *bucket, Node *node)
 {
     assert(id != NULL && "NULL Hash pointer");
     assert(bucket != NULL && "NULL Bucket pointer");
@@ -71,9 +71,9 @@ int DhtTable_HasShiftableNodes(Hash *id, Bucket *bucket, Node *node)
     return 0;
 }
 
-int DhtTable_IsLastBucket(DhtTable *table, Bucket *bucket)
+int Table_IsLastBucket(Table *table, Bucket *bucket)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
     assert(bucket != NULL && "NULL Bucket pointer");
     assert(table->end <= MAX_TABLE_BUCKETS && "Too large table end");
     assert(table->end >= 0 && "Negative table end");
@@ -81,16 +81,16 @@ int DhtTable_IsLastBucket(DhtTable *table, Bucket *bucket)
     return table->end - 1 == bucket->index;
 }
 
-int DhtTable_CanAddBucket(DhtTable *table)
+int Table_CanAddBucket(Table *table)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
 
     return table->end < MAX_TABLE_BUCKETS;
 }
 
-int DhtTable_ShiftBucketNodes(DhtTable *table, Bucket *bucket)
+int Table_ShiftBucketNodes(Table *table, Bucket *bucket)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
     assert(bucket != NULL && "NULL Bucket pointer");
     assert(bucket->index + 1 < table->end && "Shifting with too few buckets");
 
@@ -123,16 +123,16 @@ error:
     return -1;
 }
 
-DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, Node *node)
+Table_InsertNodeResult Table_InsertNode(Table *table, Node *node)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
     assert(node != NULL && "NULL Node pointer");
 
-    Bucket *bucket = DhtTable_FindBucket(table, &node->id);
+    Bucket *bucket = Table_FindBucket(table, &node->id);
     check(bucket != NULL, "Found no bucket for node");
 
     if (Bucket_ContainsNode(bucket, node)) {
-	return (DhtTable_InsertNodeResult)
+	return (Table_InsertNodeResult)
 	{ .rc = OKAlreadyAdded, .bucket = bucket, .replaced = NULL};
     }
 
@@ -143,47 +143,47 @@ DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, Node *node)
 	Node *replaced = NULL;
 
 	if ((replaced = Bucket_ReplaceBad(bucket, node))) {
-	    return (DhtTable_InsertNodeResult)
+	    return (Table_InsertNodeResult)
 	    { .rc = OKReplaced, .bucket = bucket, replaced = replaced};
 	}
 
 	if ((replaced = Bucket_ReplaceQuestionable(bucket, node))) {
-	    return (DhtTable_InsertNodeResult)
+	    return (Table_InsertNodeResult)
 	    { .rc = OKReplaced, .bucket = bucket, replaced = replaced};
 	}
 
-	if (DhtTable_IsLastBucket(table, bucket)
-            && DhtTable_CanAddBucket(table)
-	    && DhtTable_HasShiftableNodes(&table->id, bucket, node))
+	if (Table_IsLastBucket(table, bucket)
+            && Table_CanAddBucket(table)
+	    && Table_HasShiftableNodes(&table->id, bucket, node))
 	{
-	    Bucket *new_bucket = DhtTable_AddBucket(table);
+	    Bucket *new_bucket = Table_AddBucket(table);
 	    check(new_bucket != NULL, "Error adding new bucket");
 
-            rc = DhtTable_ShiftBucketNodes(table, bucket);
-            check(rc == 0, "DhtTable_ShiftBucketNodes failed");
+            rc = Table_ShiftBucketNodes(table, bucket);
+            check(rc == 0, "Table_ShiftBucketNodes failed");
 
-            bucket = DhtTable_FindBucket(table, &node->id);
+            bucket = Table_FindBucket(table, &node->id);
             check(bucket != NULL, "Found no bucket after adding one");
 	}
     }
 
     if (Bucket_IsFull(bucket))
     {
-        return (DhtTable_InsertNodeResult)
+        return (Table_InsertNodeResult)
         { .rc = OKFull, .bucket = NULL, .replaced = NULL};
     }
 
     rc = Bucket_AddNode(bucket, node);
     check(rc == 0, "Bucket_AddNode failed");
 
-    return (DhtTable_InsertNodeResult)
+    return (Table_InsertNodeResult)
     { .rc = OKAdded, .bucket = bucket, .replaced = NULL};
 error:
-    return (DhtTable_InsertNodeResult)
+    return (Table_InsertNodeResult)
     { .rc = ERROR, .bucket = NULL, .replaced = NULL};
 }
 
-Bucket *DhtTable_AddBucket(DhtTable *table)
+Bucket *Table_AddBucket(Table *table)
 {
     assert(table->end < MAX_TABLE_BUCKETS && "Adding one bucket too many");
 
@@ -198,9 +198,9 @@ error:
     return NULL;
 }
 
-Bucket *DhtTable_FindBucket(DhtTable *table, Hash *id)
+Bucket *Table_FindBucket(Table *table, Hash *id)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
     assert(id != NULL && "NULL Hash pointer");
     assert(table->end > 0 && "No buckets in table");
 
@@ -212,9 +212,9 @@ Bucket *DhtTable_FindBucket(DhtTable *table, Hash *id)
     return table->buckets[i];
 }
 
-int DhtTable_ForEachNode(DhtTable *table, void *context, NodeOp operate)
+int Table_ForEachNode(Table *table, void *context, NodeOp operate)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
     assert(operate != NULL && "NULL function pointer");
 
     Bucket **bucket = table->buckets;
@@ -242,12 +242,12 @@ error:
     return -1;
 }
 
-Node *DhtTable_FindNode(DhtTable *table, Hash *id)
+Node *Table_FindNode(Table *table, Hash *id)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
     assert(id != NULL && "NULL Hash pointer");
 
-    Bucket *bucket = DhtTable_FindBucket(table, id);
+    Bucket *bucket = Table_FindBucket(table, id);
     Node **node = bucket->nodes;
 
     while (node < &bucket->nodes[BUCKET_K])
@@ -268,16 +268,16 @@ int CloseNodes_AddOp(void *close, Node *node)
     return CloseNodes_Add((CloseNodes *)close, node);
 }
 
-DArray *DhtTable_GatherClosest(DhtTable *table, Hash *id)
+DArray *Table_GatherClosest(Table *table, Hash *id)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
     assert(id != NULL && "NULL Hash pointer");
 
     CloseNodes *close = CloseNodes_Create(id);
     check(close != NULL, "CloseNodes_Create failed");
 
-    int rc = DhtTable_ForEachNode(table, close, CloseNodes_AddOp);
-    check(rc == 0, "DhtTable_ForEachNode failed");
+    int rc = Table_ForEachNode(table, close, CloseNodes_AddOp);
+    check(rc == 0, "Table_ForEachNode failed");
 
     DArray *found = CloseNodes_GetNodes(close);
     check(found != NULL, "CloseNodes_GetNodes failed");
@@ -290,12 +290,12 @@ error:
     return NULL;
 }
 
-int DhtTable_MarkReply(DhtTable *table, Hash *id)
+int Table_MarkReply(Table *table, Hash *id)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
     assert(id != NULL && "NULL Hash pointer");
 
-    Node *node = DhtTable_FindNode(table, id);
+    Node *node = Table_FindNode(table, id);
 
     if (node == NULL)
         return 0;
@@ -310,12 +310,12 @@ error:
     return -1;
 }
 
-void DhtTable_MarkQuery(DhtTable *table, Hash *id)
+void Table_MarkQuery(Table *table, Hash *id)
 {
-    assert(table != NULL && "NULL DhtTable pointer");
+    assert(table != NULL && "NULL Table pointer");
     assert(id != NULL && "NULL Hash pointer");
 
-    Node *node = DhtTable_FindNode(table, id);
+    Node *node = Table_FindNode(table, id);
 
     if (node == NULL)
         return;

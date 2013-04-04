@@ -11,8 +11,8 @@ Search *Search_Create(Hash *id)
     Search *search = calloc(1, sizeof(Search));
     check_mem(search);
 
-    search->table = DhtTable_Create(id);
-    check(search->table != NULL, "DhtTable_Create failed");
+    search->table = Table_Create(id);
+    check(search->table != NULL, "Table_Create failed");
 
     search->peers = Peers_Create(id);
     check(search->peers != NULL, "Peers_Create failed");
@@ -30,26 +30,26 @@ void Search_Destroy(Search *search)
         return;
     }
 
-    DhtTable_Destroy(search->table);
+    Table_Destroy(search->table);
     Peers_Destroy(search->peers);
     free(search);
 }
 
-int Search_CopyTable(Search *search, DhtTable *source)
+int Search_CopyTable(Search *search, Table *source)
 {
     assert(search != NULL && "NULL Search pointer");
-    assert(source != NULL && "NULL DhtTable pointer");
+    assert(source != NULL && "NULL Table pointer");
 
-    DhtTable *dest = search->table;
+    Table *dest = search->table;
 
-    assert(dest != NULL && "NULL DhtTable pointer");
+    assert(dest != NULL && "NULL Table pointer");
     assert(dest->end == 1 && "Expected a single bucket");
     assert(dest->buckets[0]->count == 0 && "Expected an empty bucket");
 
-    Bucket *last = DhtTable_FindBucket(source, &dest->id);
+    Bucket *last = Table_FindBucket(source, &dest->id);
     Bucket **bucket = source->buckets;
     Node *copy = NULL;
-    DhtTable_InsertNodeResult result = { 0 };
+    Table_InsertNodeResult result = { 0 };
     do
     {
         Node **node = (*bucket)->nodes;
@@ -61,8 +61,8 @@ int Search_CopyTable(Search *search, DhtTable *source)
                 copy = Node_Copy(*node);
                 check_mem(copy);
 
-                result = DhtTable_InsertNode(dest, copy);
-                check(result.rc == OKAdded, "DhtTable_InsertNode failed");
+                result = Table_InsertNode(dest, copy);
+                check(result.rc == OKAdded, "Table_InsertNode failed");
             }
 
             node++;
@@ -111,8 +111,8 @@ int Search_NodesToQuery(Search *search, DArray *nodes, time_t time)
     context.time = time;
     context.nodes = nodes;
 
-    int rc = DhtTable_ForEachNode(search->table, &context, AddIfQueryable);
-    check(rc == 0, "DhtTable_ForEachNode failed");
+    int rc = Table_ForEachNode(search->table, &context, AddIfQueryable);
+    check(rc == 0, "Table_ForEachNode failed");
 
     return 0;
 error:

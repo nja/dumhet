@@ -13,7 +13,7 @@ int HandleReply(Client *client, Message *message)
             || message->type == RAnnouncePeer) && "Wrong message type");
     assert(message->context == NULL && "Non-NULL message context");
 
-    int rc = DhtTable_MarkReply(client->table, &message->id);
+    int rc = Table_MarkReply(client->table, &message->id);
     check(rc == 0, "Table_MarkReply failed");
 
     return 0;
@@ -33,10 +33,10 @@ int HandleRFindNode(Client *client, Message *message)
     Search *search = (Search *)message->context;
     check(search != NULL, "Missing Search context");
 
-    int rc = DhtTable_MarkReply(client->table, &message->id);
+    int rc = Table_MarkReply(client->table, &message->id);
     check(rc == 0, "Table_MarkReply failed (client->table)");
 
-    rc = DhtTable_MarkReply(search->table, &message->id);
+    rc = Table_MarkReply(search->table, &message->id);
     check(rc == 0, "Table_MarkReply failed (search->table)");
 
     rc = AddSearchNodes(search,
@@ -63,10 +63,10 @@ int HandleRGetPeers(Client *client, Message *message)
 
     Search *search = (Search *)message->context;
 
-    int rc = DhtTable_MarkReply(client->table, &message->id);
+    int rc = Table_MarkReply(client->table, &message->id);
     check(rc == 0, "Table_MarkReply failed (client->table)");
 
-    rc = DhtTable_MarkReply(search->table, &message->id);
+    rc = Table_MarkReply(search->table, &message->id);
     check(rc == 0, "Table_MarkReply failed (search->table)");
 
     if (data->nodes != NULL)
@@ -99,9 +99,9 @@ int AddSearchNodes(Search *search, Node **nodes, size_t count)
 
     while (node < end)
     {
-        DhtTable_InsertNodeResult result
-            = DhtTable_InsertNode(search->table, *node);
-        check(result.rc != ERROR, "DhtTable_InsertNode failed");
+        Table_InsertNodeResult result
+            = Table_InsertNode(search->table, *node);
+        check(result.rc != ERROR, "Table_InsertNode failed");
 
         if (result.rc == OKAdded || result.rc == OKReplaced)
         {
@@ -124,11 +124,11 @@ Message *HandleQFindNode(Client *client, Message *query)
     assert(query != NULL && "NULL Message pointer");
     assert(query->type == QFindNode && "Wrong message type");
 
-    DhtTable_MarkQuery(client->table, &query->id);
+    Table_MarkQuery(client->table, &query->id);
 
-    DArray *found = DhtTable_GatherClosest(client->table,
-                                           query->data.qfindnode.target);
-    check(found != NULL, "DhtTable_GatherClosest failed");
+    DArray *found = Table_GatherClosest(client->table,
+                                        query->data.qfindnode.target);
+    check(found != NULL, "Table_GatherClosest failed");
 
     Message *reply = Message_CreateRFindNode(client, query, found);
     check(reply != NULL, "Message_CreateRFindNode failed");
@@ -146,7 +146,7 @@ Message *HandleQPing(Client *client, Message *query)
     assert(query != NULL && "NULL Message pointer");
     assert(query->type == QPing && "Wrong message type");
 
-    DhtTable_MarkQuery(client->table, &query->id);
+    Table_MarkQuery(client->table, &query->id);
 
     Message *reply = Message_CreateRPing(client, query);
     check(reply != NULL, "Message_CreateRPing failed");
@@ -163,7 +163,7 @@ Message *HandleQAnnouncePeer(Client *client, Message *query, Node *from)
     assert(query->type == QAnnouncePeer && "Wrong message type");
     assert(from != NULL && "NULL Node pointer");
 
-    DhtTable_MarkQuery(client->table, &query->id);
+    Table_MarkQuery(client->table, &query->id);
 
     if (!Client_IsValidToken(client,
                              from,
@@ -195,7 +195,7 @@ Message *HandleQGetPeers(Client *client, Message *query, Node *from)
     assert(query->type == QGetPeers && "Wrong message type");
     assert(from != NULL && "NULL Node pointer");
 
-    DhtTable_MarkQuery(client->table, &query->id);
+    Table_MarkQuery(client->table, &query->id);
 
     DArray *peers = NULL;
     DArray *nodes = NULL;
@@ -208,9 +208,9 @@ Message *HandleQGetPeers(Client *client, Message *query, Node *from)
         DArray_destroy(peers);
         peers = NULL;
 
-        nodes = DhtTable_GatherClosest(client->table,
-                                       query->data.qgetpeers.info_hash);
-        check(nodes != NULL, "DhtTable_GatherClosest failed");
+        nodes = Table_GatherClosest(client->table,
+                                    query->data.qgetpeers.info_hash);
+        check(nodes != NULL, "Table_GatherClosest failed");
     }
 
     Token token = Client_MakeToken(client, from);

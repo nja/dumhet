@@ -10,7 +10,7 @@ char *test_Client_CreateDestroy()
 
     Client *client = Client_Create(id, addr, port, peer_port);
     mu_assert(client != NULL, "Client_Create failed");
-    mu_assert(client->table != NULL, "No DhtTable created");
+    mu_assert(client->table != NULL, "No Table created");
     mu_assert(client->pending != NULL, "No pending responses");
     mu_assert(client->buf != NULL, "No buffer allocated");
     mu_assert(client->node.addr.s_addr == addr, "Address not copied");

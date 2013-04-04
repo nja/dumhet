@@ -7,38 +7,37 @@
 
 #define MAX_TABLE_BUCKETS (HASH_BITS + 1 - BUCKET_LAST_BITS)
 
-typedef struct DhtTable {
+typedef struct Table {
     Hash id;
     Bucket *buckets[MAX_TABLE_BUCKETS];
     int end;
-} DhtTable;
+} Table;
 
-DhtTable *DhtTable_Create(Hash *id);
-void DhtTable_Destroy(DhtTable *table);
-void DhtTable_DestroyNodes(DhtTable *table);
+Table *Table_Create(Hash *id);
+void Table_Destroy(Table *table);
+void Table_DestroyNodes(Table *table);
 
-int DhtTable_ForEachNode(DhtTable *table, void *context, NodeOp op);
+int Table_ForEachNode(Table *table, void *context, NodeOp op);
 
-Bucket *DhtTable_AddBucket(DhtTable *table);
-Bucket *DhtTable_FindBucket(DhtTable *table, Hash *id);
+Bucket *Table_AddBucket(Table *table);
+Bucket *Table_FindBucket(Table *table, Hash *id);
 
-Node *DhtTable_FindNode(DhtTable *table, Hash *id);
+Node *Table_FindNode(Table *table, Hash *id);
 
-enum DhtTable_InsertNodeResultRc {
+enum Table_InsertNodeResultRc {
     ERROR, OKAdded, OKReplaced, OKFull, OKAlreadyAdded
 };
-DArray *DhtTable_GatherClosest(DhtTable *table, Hash *id);
+DArray *Table_GatherClosest(Table *table, Hash *id);
 
-
-typedef struct DhtTable_InsertNodeResult {
-    enum DhtTable_InsertNodeResultRc rc;
+typedef struct Table_InsertNodeResult {
+    enum Table_InsertNodeResultRc rc;
     Bucket *bucket;
     Node *replaced;
-} DhtTable_InsertNodeResult;
+} Table_InsertNodeResult;
 
-DhtTable_InsertNodeResult DhtTable_InsertNode(DhtTable *table, Node *node);
+Table_InsertNodeResult Table_InsertNode(Table *table, Node *node);
 
-int DhtTable_MarkReply(DhtTable *table, Hash *id);
-void DhtTable_MarkQuery(DhtTable *table, Hash *id);
+int Table_MarkReply(Table *table, Hash *id);
+void Table_MarkQuery(Table *table, Hash *id);
 
 #endif

@@ -13,9 +13,9 @@ int SameT(Message *a, Message *b)
     return memcmp(a->t, b->t, a->t_len) == 0;
 }
 
-int HasRecentQuery(DhtTable *table, Hash id)
+int HasRecentQuery(Table *table, Hash id)
 {
-    Node *node = DhtTable_FindNode(table, &id);
+    Node *node = Table_FindNode(table, &id);
     check(node != NULL, "No node in client table");
 
     return node->query_time > 0;
@@ -23,9 +23,9 @@ error:
     return 0;
 }
 
-int HasRecentReply(DhtTable *table, Hash id)
+int HasRecentReply(Table *table, Hash id)
 {
-    Node *node = DhtTable_FindNode(table, &id);
+    Node *node = Table_FindNode(table, &id);
     check(node != NULL, "No node in table");
 
     return node->reply_time > 0;
@@ -39,7 +39,7 @@ char *test_HandleQPing()
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 1, 1);
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     Message *qping = Message_CreateQPing(from);
 
@@ -66,7 +66,7 @@ char *test_HandleQGetPeers_nodes()
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 1, 1);
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     Message *qgetpeers = Message_CreateQGetPeers(from, &target_id);
 
@@ -102,7 +102,7 @@ char *test_HandleQGetPeers_peers()
     Client *from = Client_Create(from_id, 1, 1, 1);
     Peer peer = { .addr = 2, .port = 3 };
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
     Client_AddPeer(client, &target_id, &peer);
 
     Message *qgetpeers = Message_CreateQGetPeers(from, &target_id);
@@ -138,7 +138,7 @@ char *test_HandleQAnnouncePeer()
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
     Token token = Client_MakeToken(client, &from->node);
 
     Message *query = Message_CreateQAnnouncePeer(from, &target_id, &token);
@@ -179,7 +179,7 @@ char *test_HandleQAnnouncePeer_badtoken()
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
     Token token = { "bad token" };
 
     Message *query = Message_CreateQAnnouncePeer(from, &target_id, &token);
@@ -208,7 +208,7 @@ char *test_HandleQFindNode()
     Client *client = Client_Create(id, 0, 0, 0);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     Message *query = Message_CreateQFindNode(from, &target_id);
 
@@ -248,10 +248,10 @@ char *test_HandleRFindNode()
     /* Insert to tables so replies can be marked by handle */
     Node *client_from_node = Node_Copy(&from->node);
     client_from_node->pending_queries = 1;
-    DhtTable_InsertNode(client->table, client_from_node);
+    Table_InsertNode(client->table, client_from_node);
     Node *search_from_node = Node_Copy(&from->node);
     search_from_node->pending_queries = 1;
-    DhtTable_InsertNode(search->table, search_from_node);
+    Table_InsertNode(search->table, search_from_node);
 
     Message *query = Message_CreateQFindNode(client, &target_id);
 
@@ -289,7 +289,7 @@ char *test_HandleRPing()
 
     Node *from_node = Node_Copy(&from->node);
     from_node->pending_queries = 1;
-    DhtTable_InsertNode(client->table, from_node);
+    Table_InsertNode(client->table, from_node);
 
     Message *query = Message_CreateQPing(client);
 
@@ -321,7 +321,7 @@ char *test_HandleRAnnouncePeer()
 
     Node *from_node = Node_Copy(&from->node);
     from_node->pending_queries = 1;
-    DhtTable_InsertNode(client->table, from_node);
+    Table_InsertNode(client->table, from_node);
 
     Token token = Client_MakeToken(client, &from->node);
 
@@ -356,7 +356,7 @@ char *test_HandleRGetPeers_nodes()
     Node *found_nodes[nodes_count];
 
     from->node.pending_queries = 1;
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     int i = 0;
     for (i = 0; i < nodes_count; i++)
@@ -364,7 +364,7 @@ char *test_HandleRGetPeers_nodes()
         Hash id = { "  found node id" };
         id.value[0] = '0' + i;
         found_nodes[i] = Node_Create(&id);
-        DhtTable_InsertNode(from->table, found_nodes[i]);
+        Table_InsertNode(from->table, found_nodes[i]);
     }
 
     Message *qgetpeers = Message_CreateQGetPeers(client, &target_id);
@@ -405,7 +405,7 @@ char *test_HandleRGetPeers_peers()
     const int peers_count = 3;
 
     from->node.pending_queries = 1;
-    DhtTable_InsertNode(client->table, &from->node);
+    Table_InsertNode(client->table, &from->node);
 
     int i = 0;
     for (i = 0; i < peers_count; i++)

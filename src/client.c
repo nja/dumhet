@@ -26,7 +26,7 @@ Client *Client_Create(Hash id,
 
     client->peer_port = peer_port;
 
-    client->table = DhtTable_Create(&client->node.id);
+    client->table = Table_Create(&client->node.id);
     check_mem(client->table);
 
     client->pending = (struct PendingResponses *)HashmapPendingResponses_Create();
@@ -57,7 +57,7 @@ error:
     {
         free(client->buf);
         HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
-        DhtTable_Destroy(client->table);
+        Table_Destroy(client->table);
         PeersHashmap_Destroy(client->peers);
     }
 
@@ -71,7 +71,7 @@ void Client_Destroy(Client *client)
     if (client == NULL)
         return;
 
-    DhtTable_Destroy(client->table);
+    Table_Destroy(client->table);
     HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
     free(client->buf);
     PeersHashmap_Destroy(client->peers);

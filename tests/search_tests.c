@@ -26,12 +26,12 @@ char *test_Search_CopyTable()
 
     Hash_Invert(&invid);
 
-    DhtTable *table = DhtTable_Create(&id);
+    Table *table = Table_Create(&id);
 
     int i = 0;
     for (i = 0; i < HASH_BITS - low_bits; i++)
     {
-        DhtTable_InsertNodeResult result;
+        Table_InsertNodeResult result;
         Node *node;
 
         int j = 0;
@@ -45,7 +45,7 @@ char *test_Search_CopyTable()
             int rc = Hash_Prefix(&node->id, &id, i);
             mu_assert(rc == 0, "Hash_Prefix failed");
             
-            result = DhtTable_InsertNode(table, node);
+            result = Table_InsertNode(table, node);
             mu_assert(result.rc == OKAdded, "Unexpected rc");
         }
     }
@@ -78,17 +78,17 @@ char *test_Search_CopyTable()
                     continue;
                 }
 
-                Node *found = DhtTable_FindNode(search->table, &node->id);
+                Node *found = Table_FindNode(search->table, &node->id);
                 mu_assert(found != NULL, "Missing node from original table");
             }
         }
 
-        DhtTable_ForEachNode(search->table, NULL, Node_DestroyOp);
+        Table_ForEachNode(search->table, NULL, Node_DestroyOp);
         Search_Destroy(search);
     }
 
-    DhtTable_DestroyNodes(table);
-    DhtTable_Destroy(table);
+    Table_DestroyNodes(table);
+    Table_Destroy(table);
 
     return NULL;
 }
@@ -118,11 +118,11 @@ char *test_Search_NodesToQuery()
     Node *should_query_b = Node_Create(&id);
     should_query_b->id.value[0] = 5;
 
-    DhtTable_InsertNode(search->table, already_replied);
-    DhtTable_InsertNode(search->table, should_query_a);
-    DhtTable_InsertNode(search->table, max_pending);
-    DhtTable_InsertNode(search->table, just_queried);
-    DhtTable_InsertNode(search->table, should_query_b);
+    Table_InsertNode(search->table, already_replied);
+    Table_InsertNode(search->table, should_query_a);
+    Table_InsertNode(search->table, max_pending);
+    Table_InsertNode(search->table, just_queried);
+    Table_InsertNode(search->table, should_query_b);
 
     DArray *nodes = DArray_create(sizeof(Node *), 2);
 
@@ -133,7 +133,7 @@ char *test_Search_NodesToQuery()
     mu_assert(DArray_first(nodes) == should_query_a, "Wrong node");
     mu_assert(DArray_last(nodes) == should_query_b, "Bad node");
 
-    DhtTable_DestroyNodes(search->table);
+    Table_DestroyNodes(search->table);
     Search_Destroy(search);
     DArray_destroy(nodes);
 

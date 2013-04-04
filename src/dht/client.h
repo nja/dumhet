@@ -11,7 +11,7 @@ typedef Hash Token;
 
 typedef struct Client {
     Node node;
-    DhtTable *table;
+    Table *table;
     int socket;
     uint16_t peer_port;
     struct PendingResponses *pending;
