@@ -1,9 +1,41 @@
+#include <arpa/inet.h>
+
 #include <dht/close.h>
+#include <dht/handle.h>
 #include <dht/message.h>
 #include <dht/message_create.h>
 #include <dht/client.h>
 #include <dht/search.h>
 #include <dht/table.h>
+
+ReplyHandler GetReplyHandler(MessageType type)
+{
+    switch (type)
+    {
+    case RError: return HandleRError;
+    case RPing: return HandleReply;
+    case RAnnouncePeer: return HandleReply;
+    case RFindNode: return HandleRFindNode;
+    case RGetPeers: return HandleRGetPeers;
+    default:
+        log_err("No reply handler for type %d", type);
+        return NULL;
+    }
+}
+
+QueryHandler GetQueryHandler(MessageType type)
+{
+    switch (type)
+    {
+    case QPing: return HandleQPing;
+    case QAnnouncePeer: return HandleQAnnouncePeer;
+    case QFindNode: return HandleQFindNode;
+    case QGetPeers: return HandleQGetPeers;
+    default:
+        log_err("No query handler for type %d", type);
+        return NULL;
+    }
+}
 
 int HandleReply(Client *client, Message *message)
 {
@@ -19,6 +51,26 @@ int HandleReply(Client *client, Message *message)
     return 0;
 error:
     return -1;
+}
+
+int HandleRError(Client *client, Message *message)
+{
+    log_err("Error reply %s:%d %d %s",
+            inet_ntoa(message->node.addr),
+            message->node.port,
+            message->data.rerror.code,
+            bdata(message->data.rerror.message));
+    return HandleReply(client, message);
+}
+
+int HandleUnknown(Client *client, Message *message)
+{
+    (void)client;
+
+    log_err("Unknown message type from %s:%d",
+            inet_ntoa(message->node.addr),
+            message->node.port);
+    return 0;
 }
 
 int AddSearchNodes(Search *search, Node **nodes, size_t count);
