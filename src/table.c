@@ -217,24 +217,24 @@ int Table_ForEachNode(Table *table, void *context, NodeOp operate)
     assert(table != NULL && "NULL Table pointer");
     assert(operate != NULL && "NULL function pointer");
 
-    Bucket **bucket = table->buckets;
-    while (bucket < &table->buckets[table->end])
+    Bucket **bucket;
+    for (bucket = table->buckets;
+         bucket < &table->buckets[table->end];
+         bucket++)
     {
-        Node **node = (*bucket)->nodes;
-        while (node < &(*bucket)->nodes[BUCKET_K])
+        Node **node;
+        for (node = (*bucket)->nodes;
+             node < &(*bucket)->nodes[BUCKET_K];
+             node++)
         {
             if (*node == NULL)
             {
-                node++;
                 continue;
             }
 
             int rc = operate(context, *node);
             check(rc == 0, "Operation on Node failed");
-            node++;
         }
-
-        bucket++;
     }
 
     return 0;
@@ -248,16 +248,16 @@ Node *Table_FindNode(Table *table, Hash *id)
     assert(id != NULL && "NULL Hash pointer");
 
     Bucket *bucket = Table_FindBucket(table, id);
-    Node **node = bucket->nodes;
+    Node **node;
 
-    while (node < &bucket->nodes[BUCKET_K])
+    for (node = bucket->nodes;
+         node < &bucket->nodes[BUCKET_K];
+         node++)
     {
         if (*node != NULL && Hash_Equals(id, &(*node)->id))
         {
             return *node;
         }
-
-        node++;
     }
 
     return NULL;
