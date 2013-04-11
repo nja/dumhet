@@ -4,6 +4,7 @@
 #include <dht/bucket.h>
 #include <dht/hash.h>
 #include <dht/node.h>
+#include <lcthw/bstrlib.h>
 
 #define MAX_TABLE_BUCKETS (HASH_BITS + 1 - BUCKET_LAST_BITS)
 
@@ -39,5 +40,8 @@ Table_InsertNodeResult Table_InsertNode(Table *table, Node *node);
 
 int Table_MarkReply(Table *table, Hash *id);
 void Table_MarkQuery(Table *table, Hash *id);
+
+bstring Table_Dump(Table *table);
+Table *Table_Read(bstring dump);
 
 #endif

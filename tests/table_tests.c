@@ -345,6 +345,99 @@ char *test_Table_FindNode_EmptyBucket()
     return NULL;
 }
 
+Table *RandomTable(int buckets)
+{
+    Hash id;
+    Node *node = NULL;
+    Table *table = NULL;
+    RandomState *rs = RandomState_Create(buckets);
+    check(rs != NULL, "RandomState_Create failed");
+
+    int rc = Hash_Random(rs, &id);
+    check(rc == 0, "Hash_Random failed");
+
+    table = Table_Create(&id);
+    check(table != NULL, "Table_Create failed");
+
+    int i = 0, j = 0;
+
+    for (i = 0; i < buckets; i++)
+    {
+        for (j = 0; j < BUCKET_K; j++)
+        {
+            rc = Hash_PrefixedRandom(rs, &id, &table->id, i);
+            check(rc == 0, "Hash_PrefixedRandom failed");
+
+            node = Node_Create(&id);
+            check(node != NULL, "Node_Create failed");
+
+            rc = Random_Fill(rs, (char *)&node->addr, sizeof(node->addr));
+            check(rc == 0, "Random_Fill failed");
+
+            rc = Random_Fill(rs, (char *)&node->port, sizeof(node->port));
+            check(rc == 0, "Random_Fill failed");
+
+            Table_InsertNodeResult result =
+                Table_InsertNode(table, node);
+
+            check(result.rc != ERROR, "Table_InsertNode failed");
+            Node_Destroy(result.replaced);
+
+            if (result.rc != OKAdded)
+            {
+                Node_Destroy(node);
+                node = NULL;
+            }
+        }
+    }
+
+    RandomState_Destroy(rs);
+
+    return table;
+error:
+    RandomState_Destroy(rs);
+    Node_Destroy(node);
+    Table_DestroyNodes(table);
+    Table_Destroy(table);
+
+    return NULL;
+}
+
+int AlsoHasNode(Table *table, Node *node)
+{
+    Node *other = Table_FindNode(table, &node->id);
+    check(other != NULL, "Table_FindNode failed");
+    check(Node_Same(other, node), "Nodes differ");
+
+    return 0;
+error:
+    return -1;
+}
+
+char *test_TableDump()
+{
+    Table *table = RandomTable(17);
+    mu_assert(table != NULL, "RandomTable failed");
+
+    bstring dump = Table_Dump(table);
+    mu_assert(dump != NULL, "Table_Dump failed");
+
+    Table *read = Table_Read(dump);
+    mu_assert(read != NULL, "Table_Read failed");
+
+    int rc = Table_ForEachNode(table, read, (NodeOp)AlsoHasNode);
+    mu_assert(rc == 0, "Nodes lost after dump and read");
+
+    bdestroy(dump);
+    Table_DestroyNodes(table);
+    Table_Destroy(table);
+    Table_DestroyNodes(read);
+    Table_Destroy(read);
+
+    return NULL;
+}
+
+
 char *all_tests()
 {
     mu_suite_start();
@@ -355,6 +448,7 @@ char *all_tests()
     mu_run_test(test_Table_InsertNode_AddBucket);
     mu_run_test(test_Table_GatherClosest);
     mu_run_test(test_Table_FindNode_EmptyBucket);
+    mu_run_test(test_TableDump);
 
     return NULL;
 }

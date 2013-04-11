@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <arpa/inet.h>
 #include <stdlib.h>
 
 #include <dht/close.h>
@@ -323,4 +324,166 @@ void Table_MarkQuery(Table *table, Hash *id)
     node->query_time = time(NULL);
 
     return;
+}
+
+int AppendLine(bstring dump, Node *node)
+{
+    assert(dump != NULL && "NULL bstring");
+    assert(node != NULL && "NULL Node pointer");
+
+    bstring line = bformat("%s %s %d\n",
+                           Hash_Str(&node->id),
+                           inet_ntoa(node->addr),
+                           node->port);
+    int rc = bconcat(dump, line);
+
+    check(rc == BSTR_OK, "bconcat failed");
+error:
+    bdestroy(line);
+    return rc;
+}
+
+bstring Table_Dump(Table *table)
+{
+    assert(table != NULL && "NULL Table pointer");
+
+    bstring dump = bfromcstr("");
+    check_mem(dump);
+
+    Node tmp_node = { table->id };
+
+    AppendLine(dump, &tmp_node);
+
+    int rc = Table_ForEachNode(table, dump, (NodeOp)AppendLine);
+    check(rc == 0, "Error dumping table nodes");
+
+    return dump;
+error:
+    bdestroy(dump);
+    return NULL;
+}
+
+int IsHexCh(char ch)
+{
+    return ('0' <= ch && ch <= '9')
+        || ('a' <= ch && ch <= 'f');
+}
+
+int HexVal(char ch, char *val)
+{
+    if ('0' <= ch && ch <= '9')
+    {
+        *val = ch - '0';
+        return 0;
+    }
+    else if ('a' <= ch && ch <= 'f')
+    {
+        *val = 0xa + ch - 'a';
+        return 0;
+    }
+
+    log_err("Invalid hex digit");
+    return -1;
+}
+
+int ReadLine(bstring line, Node *result)
+{
+    struct bstrList *list = bsplit(line, ' ');
+    check(list != NULL, "bsplit failed");
+    check(list->qty == 3, "Invalid line");
+
+    bstring hashstr = list->entry[0];
+    bstring addrstr = list->entry[1];
+    bstring portstr = list->entry[2];
+
+    Node node = {{{ 0 }}};
+
+    int i = 0;
+    for (i = 0; i < HASH_BYTES; i++)
+    {
+        char hich = bchar(hashstr, i * 2);
+        char loch = bchar(hashstr, i * 2 + 1);
+
+        char hi = 0, lo = 0;
+
+        check(HexVal(hich, &hi) == 0, "Invalid hash");
+        check(HexVal(loch, &lo) == 0, "Invalid hash");
+
+        node.id.value[i] = (hi << 4) | lo;
+    }
+
+    int rc = inet_aton(bdata(addrstr), &node.addr);
+    check(rc != 0, "Invalid address");
+
+    char *end = NULL;
+    long port = strtol(bdatae(portstr, ""), &end, 10);
+    check(end != NULL, "strtol error");
+    check(*end == '\0', "Invalid port");
+    check(0 <= port && port <= (uint16_t)~0, "Invalid port");
+
+    node.port = (uint16_t)port;
+
+    bstrListDestroy(list);
+    *result = node;
+    return 0;
+error:
+    bstrListDestroy(list);
+    return -1;
+}
+
+Table *Table_Read(bstring dump)
+{
+    Node tmp = {{{ 0 }}};
+    Node *node = NULL;
+    Table *table = NULL;
+
+    struct bstrList *lines = bsplit(dump, '\n');
+    check(lines != NULL, "bsplit failed");
+    check(lines->qty > 0, "bsplit failed");
+
+    int rc = ReadLine(lines->entry[0], &tmp);
+    check(rc == 0, "ReadLine failed");
+    check(tmp.addr.s_addr == 0, "Invalid first line");
+    check(tmp.port == 0, "Invalid first line");
+
+    table = Table_Create(&tmp.id);
+    check(table != NULL, "Table_Create failed");
+
+    int i = 1;
+    for (i = 1; i < lines->qty; i++)
+    {
+        if (blength(lines->entry[i]) == 0)
+        {
+            continue;
+        }
+
+        node = malloc(sizeof(Node));
+        check_mem(node);
+        
+        rc = ReadLine(lines->entry[i], node);
+        check(rc == 0, "ReadLine failed");
+
+        Table_InsertNodeResult result =
+            Table_InsertNode(table, node);
+
+        check(result.rc != ERROR, "Table_InsertNode failed");
+
+        Node_Destroy(result.replaced);
+
+        if (result.rc != OKAdded)
+        {
+            Node_Destroy(node);
+            node = NULL;
+        }
+    }
+
+    bstrListDestroy(lines);
+    return table;
+error:
+    bstrListDestroy(lines);
+    Node_Destroy(node);
+    Table_DestroyNodes(table);
+    Table_Destroy(table);
+
+    return NULL;
 }
