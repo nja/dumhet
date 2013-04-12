@@ -10,12 +10,15 @@ struct PeerEntry {
     time_t time;
 };
 
-int Peer_Compare(struct PeerEntry *a, struct PeerEntry *b)
+int Peer_Compare(Peer *a, Peer *b)
 {
     assert(a != NULL && "NULL Peer pointer");
     assert(b != NULL && "NULL Peer pointer");
 
-    return memcmp(&a->peer, &b->peer, sizeof(Peer));
+    int sa = a->addr + a->port,
+        sb = b->addr + b->port;
+
+    return sa < sb ? -1 : sb < sa;
 }
 
 uint32_t Peer_Hash(void *key)
