@@ -1,15 +1,21 @@
 #include <string.h>
+#include <time.h>
 
 #include <dht/hash.h>
 #include <dht/peers.h>
 #include <lcthw/dbg.h>
 
-int Peer_Compare(Peer *a, Peer *b)
+struct PeerEntry {
+    Peer peer;
+    time_t time;
+};
+
+int Peer_Compare(struct PeerEntry *a, struct PeerEntry *b)
 {
     assert(a != NULL && "NULL Peer pointer");
     assert(b != NULL && "NULL Peer pointer");
 
-    return memcmp(a, b, sizeof(Peer));
+    return memcmp(&a->peer, &b->peer, sizeof(Peer));
 }
 
 uint32_t Peer_Hash(void *key)
@@ -17,6 +23,11 @@ uint32_t Peer_Hash(void *key)
     assert(key != NULL && "NULL Peer pointer");
 
     return ((Peer *)key)->addr;
+}
+
+time_t GetTime()
+{
+    return time(NULL);
 }
 
 Peers *Peers_Create(Hash *info_hash)
@@ -32,6 +43,7 @@ Peers *Peers_Create(Hash *info_hash)
     check(peers->hashmap != NULL, "Hashmap_create failed");
 
     peers->info_hash = *info_hash;
+    peers->GetTime = GetTime;
 
     return peers;
 error:
@@ -49,20 +61,6 @@ void Peers_Destroy(Peers *peers)
     free(peers);
 }
 
-Peer *Peer_Copy(Peer *peer)
-{
-    assert(peer != NULL && "NULL Peer pointer");
-
-    Peer *copy = malloc(sizeof(Peer));
-    check_mem(copy);
-
-    *copy = *peer;
-
-    return copy;
-error:
-    return NULL;
-}
-
 int Peers_AddPeer(Peers *peers, Peer *peer)
 {
     assert(peers != NULL && "NULL Peers pointer");
@@ -72,35 +70,38 @@ int Peers_AddPeer(Peers *peers, Peer *peer)
     if (peers->count == MAXPEERS)
         return -1;
 
-    Peer *to_add = Hashmap_delete(peers->hashmap, peer);
+    struct PeerEntry *entry = Hashmap_delete(peers->hashmap, peer);
 
-    if (to_add == NULL)
+    if (entry == NULL)
     {
-        to_add = Peer_Copy(peer);
-        check(to_add != NULL, "Peer_copy failed");
+        entry = malloc(sizeof(struct PeerEntry));
+        check_mem(entry);
+        entry->peer = *peer;
     }
     else
     {
         peers->count--;
     }
 
-    int rc = Hashmap_set(peers->hashmap, to_add, to_add);
+    entry->time = peers->GetTime();
+
+    int rc = Hashmap_set(peers->hashmap, &entry->peer, entry);
     check(rc == 0, "Hashmap_set failed");
 
     peers->count++;
 
     return 0;
 error:
-    free(to_add);
+    free(entry);
     return -1;
 }
 
-int TraverseAddPeer(void *context, HashmapNode *node)
+int TraverseAddPeer(DArray *array, HashmapNode *node)
 {
-    assert(context != NULL && "NULL Peers pointer");
+    assert(array != NULL && "NULL DArray pointer");
     assert(node != NULL && "NULL HashmapNode pointer");
 
-    int rc = DArray_push((DArray *)context, node->data);
+    int rc = DArray_push(array, node->data);
     check(rc == 0, "DArray_push failed");
 
     return 0;
@@ -113,7 +114,9 @@ int Peers_GetPeers(Peers *peers, DArray *result)
     assert(peers != NULL && "NULL Peers pointer");
     assert(result != NULL && "NULL DArray pointer");
 
-    int rc = Hashmap_traverse(peers->hashmap, result, TraverseAddPeer);
+    int rc = Hashmap_traverse(peers->hashmap,
+                              result,
+                              (Hashmap_traverse_cb)TraverseAddPeer);
     check(rc == 0, "Hashmap_traverse failed");
 
     return 0;
@@ -205,3 +208,34 @@ error:
     return -1;
 }
 
+int Peers_Clean(Peers *peers, time_t cutoff)
+{
+    assert(peers != NULL && "NULL Peers pointer");
+    assert(0 <= peers->count && peers->count <= MAXPEERS && "Bad Peers count");
+
+    DArray *tmp = DArray_create(sizeof(struct PeerEntry *), 128);
+    int rc = Peers_GetPeers(peers, tmp);
+    check(rc == 0, "Peers_GetPeers failed");
+
+    int i = 0;
+    for (i = 0; i < DArray_count(tmp); i++)
+    {
+        struct PeerEntry *entry = DArray_get(tmp, i);
+        check(entry != NULL, "NULL PeerEntry");
+
+        if (entry->time < cutoff)
+        {
+            Hashmap_delete(peers->hashmap, &entry->peer);
+            peers->count--;
+            free(entry);
+        }
+    }
+
+    assert(0 <= peers->count && peers->count <= MAXPEERS && "Bad Peers count");
+
+    DArray_destroy(tmp);
+    return 0;
+error:
+    DArray_destroy(tmp);
+    return -1;
+}

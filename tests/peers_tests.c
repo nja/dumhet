@@ -50,7 +50,6 @@ char *test_MaxPeersInRGetPeersEncoded()
                                                 NULL,
                                                 &token);
 
-    debug("Encoding %d peers in RGetPeers", DArray_count(peers));
     int rc = Message_Encode(response, buffer, UDPBUFLEN);
     mu_assert(rc > 0, "Message_Encode failed");
 
@@ -129,6 +128,71 @@ char *test_Peers_GetPeers()
     return NULL;
 }
 
+time_t GetOldTime()
+{
+    return 0;
+}
+
+time_t GetNewTime()
+{
+    return 1;
+}
+
+char *test_Peers_Clean()
+{
+    Hash info_hash = { "info_hash" };
+    Peers *peers = Peers_Create(&info_hash);
+
+    const int old = 17, new = 23;
+
+    int i = 0;
+
+    peers->GetTime = GetOldTime;
+
+    for (i = 0; i < old; i++)
+    {
+        Peer peer = { i, ~i };
+        Peers_AddPeer(peers, &peer);
+    }
+
+    peers->GetTime = GetNewTime;
+
+    const int new_bit = 0x100;
+
+    for (i = 0; i < new; i++)
+    {
+        Peer peer = { i | new_bit, i };
+        Peers_AddPeer(peers, &peer);
+    }
+
+    mu_assert(peers->count == old + new, "Wrong count");
+
+    int rc = Peers_Clean(peers, GetNewTime());
+    mu_assert(rc == 0, "Peers_Clean failed");
+
+    mu_assert(peers->count == new, "Wrong count");
+
+    DArray *new_only = DArray_create(sizeof(Peer *), new);
+    rc = Peers_GetPeers(peers, new_only);
+    mu_assert(rc == 0, "Peers_GetPeers failed");
+
+    for (i = 0; i < DArray_count(new_only); i++)
+    {
+        Peer *peer = DArray_get(new_only, i);
+        mu_assert(peer->addr & new_bit, "Not a new peer");
+    }
+
+    rc = Peers_Clean(peers, GetNewTime() + 1);
+    mu_assert(rc == 0, "Peers_Clean failed");
+
+    mu_assert(peers->count == 0, "Wrong count");
+
+    DArray_destroy(new_only);
+    Peers_Destroy(peers);
+
+    return NULL;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -137,6 +201,7 @@ char *all_tests()
     mu_run_test(test_MaxPeersInRGetPeersEncoded);
     mu_run_test(test_Peers_RepeatAdd);
     mu_run_test(test_Peers_GetPeers);
+    mu_run_test(test_Peers_Clean);
 
     return NULL;
 }

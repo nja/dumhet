@@ -6,6 +6,7 @@
 #include <lcthw/dbg.h>
 #include <dht/client.h>
 #include <dht/network.h>
+#include <dht/peers.h>
 #include <dht/pendingresponses.h>
 #include <dht/random.h>
 

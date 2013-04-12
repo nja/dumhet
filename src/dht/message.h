@@ -2,12 +2,8 @@
 #define _dht_message_h
 
 #include <dht/node.h>
+#include <dht/peers.h>
 #include <lcthw/bstrlib.h>
-
-typedef struct Peer {
-    uint32_t addr;
-    uint16_t port;
-} Peer;
 
 typedef enum MessageType {
     MUnknown = 0,
