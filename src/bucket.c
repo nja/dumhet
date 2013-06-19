@@ -43,7 +43,6 @@ int Bucket_ContainsNode(Bucket *bucket, Node *node)
     return 0;
 }
 
-/* Returns the replaced node, or NULL when no bad was found */
 Node *Bucket_ReplaceBad(Bucket *bucket, Node *node)
 {
     assert(bucket != NULL && "NULL Bucket pointer");
