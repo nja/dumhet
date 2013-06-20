@@ -16,74 +16,63 @@ char *test_Search_CreateDestroy()
     return NULL;
 }
 
+int BaddenTwoThirds(int *i, Node *node)
+{
+    if ((*i)++ % 3 != 0)
+    {
+        node->reply_time = 0;
+    }
+
+    return 0;
+}
+
 char *test_Search_CopyTable()
 {
     Hash id = { "abcdeABCDE12345!@#$" };
     Hash invid = id;
-
-    const int low_bits = 3;
-    mu_assert(1 << low_bits >= BUCKET_K, "Not enough bits");
-
     Hash_Invert(&invid);
 
     Table *table = Table_Create(&id);
 
+    const int n = 3 * BUCKET_K;
+
     int i = 0;
-    for (i = 0; i < HASH_BITS - low_bits; i++)
+    for (i = 0; i < n; i++)
     {
-        Table_InsertNodeResult result;
         Node *node;
 
-        int j = 0;
-        for (j = 0; j < BUCKET_K; j++)
-        {
-            node = Node_Create(&invid);
+        node = Node_Create(&invid);
+        int rc = Hash_Prefix(&node->id, &id, i / BUCKET_K);
+        node->id.value[8] = i;
+        mu_assert(rc == 0, "Hash_PrefixedRandom failed");
 
-            node->id.value[HASH_BYTES - 1] &= ~0 << low_bits;
-            node->id.value[HASH_BYTES - 1] |= j;
+        node->reply_time = time(NULL); /* Make node good */
 
-            int rc = Hash_Prefix(&node->id, &id, i);
-            mu_assert(rc == 0, "Hash_Prefix failed");
-            
-            result = Table_InsertNode(table, node);
-            mu_assert(result.rc == OKAdded, "Unexpected rc");
-        }
+        mu_assert(Node_Status(node, time(NULL)) == Good, "argh");
+
+        rc = Hash_Prefix(&node->id, &id, i);
+        mu_assert(rc == 0, "Hash_Prefix failed");
+
+        Table_InsertNodeResult result = Table_InsertNode(table, node);
+        mu_assert(result.rc == OKAdded, "Unexpected rc");
     }
 
-    int shared = 0;
-    for (shared = 0; shared < HASH_BITS - low_bits; shared++)
-    {
-        Hash target = invid;
-        int rc = Hash_Prefix(&target, &id, shared);
-        mu_assert(rc == 0, "Hash_Prefix failed");
-        mu_assert(Hash_SharedPrefix(&id, &target) == shared, "Wrong shared prefix");
+    i = 0;
+    Table_ForEachNode(table, &i, (NodeOp)BaddenTwoThirds);
 
-        Search *search = Search_Create(&target);
-        rc = Search_CopyTable(search, table);
+    for (i = 0; i < 5; i++)
+    {
+        Hash searchid = invid;
+        Hash_Prefix(&searchid, &id, i);
+
+        Search *search = Search_Create(&searchid);
+        mu_assert(search != NULL, "Search_Create failed");
+        int rc = Search_CopyTable(search, table);
         mu_assert(rc == 0, "Search_CopyTable failed");
 
-        mu_assert(search->table->end - 1 == shared, "Wrong sized search table");
+        mu_assert(search->table->end == 1, "Too many buckets");
+        mu_assert(search->table->buckets[0]->count == BUCKET_K, "Too few nodes");
 
-        for (i = 0; i < shared; i++)
-        {
-            Bucket *bucket = table->buckets[i];
-
-            int j = 0;
-            for (j = 0; j < BUCKET_K; j++)
-            {
-                Node *node = bucket->nodes[j];
-
-                if (node == NULL)
-                {
-                    continue;
-                }
-
-                Node *found = Table_FindNode(search->table, &node->id);
-                mu_assert(found != NULL, "Missing node from original table");
-            }
-        }
-
-        Table_ForEachNode(search->table, NULL, Node_DestroyOp);
         Search_Destroy(search);
     }
 

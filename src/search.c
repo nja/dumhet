@@ -36,45 +36,43 @@ void Search_Destroy(Search *search)
     free(search);
 }
 
+int CopyAndAdd(Table *dest, Node *node)
+{
+    if (Node_Status(node, time(NULL)) != Good)
+    {
+        return 0;
+    }
+
+    Node *copy = Node_Copy(node);
+    check_mem(copy);
+
+    Table_InsertNodeResult result = Table_InsertNode(dest, copy);
+
+    if (result.rc == ERROR
+        || result.rc == OKFull
+        || result.rc == OKAlreadyAdded)
+    {
+        Node_Destroy(copy);
+    }
+
+    if (result.rc == OKReplaced)
+    {
+        assert(result.replaced != NULL && "OKReplaced with NULL .replaced");
+        Node_Destroy(result.replaced);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 int Search_CopyTable(Search *search, Table *source)
 {
     assert(search != NULL && "NULL Search pointer");
     assert(source != NULL && "NULL Table pointer");
+    assert(search->table != NULL && "NULL Table pointer");
 
-    Table *dest = search->table;
-
-    assert(dest != NULL && "NULL Table pointer");
-    assert(dest->end == 1 && "Expected a single bucket");
-    assert(dest->buckets[0]->count == 0 && "Expected an empty bucket");
-
-    Bucket *last = Table_FindBucket(source, &dest->id);
-    Bucket **bucket = source->buckets;
-    Node *copy = NULL;
-    Table_InsertNodeResult result = { 0 };
-    do
-    {
-        Node **node = (*bucket)->nodes;
-
-        while (node < &(*bucket)->nodes[BUCKET_K])
-        {
-            if (*node != NULL)
-            {
-                copy = Node_Copy(*node);
-                check_mem(copy);
-
-                result = Table_InsertNode(dest, copy);
-                check(result.rc == OKAdded, "Table_InsertNode failed");
-            }
-
-            node++;
-        }
-    } while (*bucket++ != last);
-
-    return 0;
-error:
-    Node_Destroy(copy);
-    Node_Destroy(result.replaced);
-    return -1;
+    return Table_ForEachNode(source, search->table, (NodeOp)CopyAndAdd);
 }
 
 int ShouldQuery(Node *node, time_t time);
