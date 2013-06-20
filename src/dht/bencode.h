@@ -6,10 +6,13 @@
 
 #include <lcthw/bstrlib.h>
 
+/* Types of the dedcoded objects. */
 typedef enum BType { BString, BInteger, BList, BDictionary } BType;
 
 char *BType_Name(BType type);
 
+/* A node in a tree of decoded objects with pointers to the relevant
+ * parts in the source data buffer. */
 typedef struct BNode {
     enum BType type;
     union {
@@ -17,15 +20,18 @@ typedef struct BNode {
 	long integer;
 	struct BNode **nodes;
     } value;
-    size_t count;
-    char *data;
-    size_t data_len;
+    size_t count;               /* Length of string or number of nodes. */
+    char *data;                 /* Original source data of this node. */
+    size_t data_len;            /* Length of source data. */
 } BNode;
 
+/* Decodes the bencoded data into a tree of nodes with pointers into
+ * the data buffer. */
 BNode *BDecode(char *data, size_t len);
 BNode *BDecode_str(char *data, size_t len);
 BNode *BDecode_strlen(char *data);
 
+/* From a BDictionary, get the value of key. */
 BNode *BNode_GetValue(BNode *dict, char *key, size_t key_len);
 
 #define BDecode_str(D, L) BDecode((D), (L))
@@ -33,9 +39,11 @@ BNode *BNode_GetValue(BNode *dict, char *key, size_t key_len);
 
 void BNode_Destroy(BNode *node);
 
+/* Copy the BString value to a new string. */
 char *BNode_CopyString(BNode *string);
 int BNode_StringEquals(char *string, BNode *bstring);
 
+/* Copy the BString value to a bstring. */
 bstring BNode_bstring(BNode *string);
 
 #endif
