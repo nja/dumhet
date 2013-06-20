@@ -148,11 +148,15 @@ int AddSearchNodes(Search *search, Node **nodes, size_t count)
 
     Node **node = nodes;
     Node **end = node + count;
+    Node *copy = NULL;
 
     while (node < end)
     {
+        copy = Node_Copy(*node);
+        check_mem(copy);
+
         Table_InsertNodeResult result
-            = Table_InsertNode(search->table, *node);
+            = Table_InsertNode(search->table, copy);
         check(result.rc != ERROR, "Table_InsertNode failed");
 
         if (result.rc == OKAdded || result.rc == OKReplaced)
@@ -167,6 +171,7 @@ int AddSearchNodes(Search *search, Node **nodes, size_t count)
 
     return 0;
 error:
+    Node_Destroy(copy);
     return -1;
 }
 

@@ -133,7 +133,6 @@ char *test_Search_NodesToQuery()
     mu_assert(DArray_first(nodes) == should_query_a, "Wrong node");
     mu_assert(DArray_last(nodes) == should_query_b, "Bad node");
 
-    Table_DestroyNodes(search->table);
     Search_Destroy(search);
     DArray_destroy(nodes);
 

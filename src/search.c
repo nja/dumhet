@@ -30,6 +30,7 @@ void Search_Destroy(Search *search)
         return;
     }
 
+    Table_DestroyNodes(search->table);
     Table_Destroy(search->table);
     Peers_Destroy(search->peers);
     free(search);

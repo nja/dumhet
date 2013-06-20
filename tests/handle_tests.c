@@ -279,7 +279,6 @@ char *test_HandleRFindNode()
     Client_Destroy(client);
     Client_Destroy(from);
     Node_Destroy(client_from_node);
-    Node_Destroy(search_from_node);
     Message_Destroy(query);
     Message_Destroy(rfindnode);
 
