@@ -210,7 +210,8 @@ int Distance_Compare(Distance *a, Distance *b)
     return memcmp(a->value, b->value, HASH_BYTES);
 }
 
-#define STRBUFLEN (HASH_BYTES * 2 + 1)
+#define HASHSTRLEN (HASH_BYTES * 2)
+#define STRBUFLEN (HASHSTRLEN + 1)
 static char strbuf[STRBUFLEN];
 
 const char *Hash_Str(Hash *hash)
@@ -228,7 +229,7 @@ const char *Hash_Str(Hash *hash)
         src++;
     }
 
-    *++dst = '\0';
+    strbuf[HASHSTRLEN] = '\0';
 
     return strbuf;
 }

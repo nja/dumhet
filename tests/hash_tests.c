@@ -153,8 +153,6 @@ char *test_Hash_Str()
     len = strlen(Hash_Str(&id));
     mu_assert(len == expected_len, "Wrong length string from Hash_Str");
 
-    debug("hashrandom %s", Hash_Str(&id));
-
     RandomState_Destroy(rs);
 
     return NULL;
