@@ -80,7 +80,7 @@ int Client_Receive(Client *client)
 
     Message *message = NULL;
 
-    while (1)
+    for (;;)
     {
         message = NULL;
         int rc = ReceiveMessage(client, &message);
