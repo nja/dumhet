@@ -3,6 +3,11 @@
 #include <dht/pendingresponses.h>
 #include <lcthw/hashmap.h>
 
+int HashmapPendingResponses_Add(void *responses, PendingResponse entry);
+PendingResponse HashmapPendingResponses_Remove(void *responses, char *tid, int *rc);
+uint32_t PendingResponse_Hash(tid_t *tid);
+int PendingResponse_Compare(tid_t *a, tid_t *b);
+
 HashmapPendingResponses *HashmapPendingResponses_Create()
 {
     HashmapPendingResponses *pending = malloc(sizeof(HashmapPendingResponses));

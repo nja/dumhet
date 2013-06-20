@@ -16,7 +16,7 @@ char *test_destroy_with_entries()
     mu_assert(responses != NULL, "HashmapPendingResponses_Create failed");
 
     PendingResponse entry = { QFindNode, 0, {{ 0 }}, NULL };
-    int rc = HashmapPendingResponses_Add(responses, entry);
+    int rc = responses->addPendingResponse(responses, entry);
     mu_assert(rc == 0, "HashmapPendingResponses_Add failed");
 
     HashmapPendingResponses_Destroy(responses);
@@ -26,16 +26,21 @@ char *test_destroy_with_entries()
 
 char *test_compare()
 {
+    HashmapPendingResponses *responses = HashmapPendingResponses_Create();
+    mu_assert(responses != NULL, "HashmapPendingResponses_Create failed");
+
     tid_t a = 0, b = 1;
 
-    int cmp = PendingResponse_Compare(&a, &b);
+    int cmp = responses->hashmap->compare(&a, &b);
     mu_assert(cmp < 0, "Compare fail");
 
-    cmp = PendingResponse_Compare(&b, &a);
+    cmp = responses->hashmap->compare(&b, &a);
     mu_assert(cmp > 0, "Compare fail");
 
-    cmp = PendingResponse_Compare(&a, &a);
+    cmp = responses->hashmap->compare(&a, &a);
     mu_assert(cmp == 0, "Compare fail");
+
+    HashmapPendingResponses_Destroy(responses);
 
     return NULL;
 }
@@ -53,7 +58,7 @@ char *test_addremove()
     while (tid[i] != 0)
     {
         PendingResponse entry = { type[i], tid[i], {{ 0 }}, &dummy };
-	int rc = HashmapPendingResponses_Add(responses, entry);
+	int rc = responses->addPendingResponse(responses, entry);
 	mu_assert(rc == 0, "HashmapPendingResponses_Add failed");
 
 	++i;
@@ -65,7 +70,7 @@ char *test_addremove()
     {
         int rc;
 	PendingResponse entry
-            = HashmapPendingResponses_Remove(responses, (char *)&tid[i], &rc);
+            = responses->getPendingResponse(responses, (char *)&tid[i], &rc);
         mu_assert(rc == 0, "HashmapPendingResponses_Remove failed");
 	mu_assert(entry.type == type[i], "Wrong type");
         mu_assert(entry.tid == tid[i], "Wring tid");
