@@ -5,6 +5,7 @@
 #include <dht/search.h>
 #include <lcthw/hashmap.h>
 
+/* A PendingResponses collection using a hashmap. */
 typedef struct HashmapPendingResponses {
     GetPendingResponse_fp getPendingResponse;
     AddPendingResponse_fp addPendingResponse;
