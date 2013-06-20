@@ -15,10 +15,7 @@ int Peer_Compare(Peer *a, Peer *b)
     assert(a != NULL && "NULL Peer pointer");
     assert(b != NULL && "NULL Peer pointer");
 
-    int sa = a->addr + a->port,
-        sb = b->addr + b->port;
-
-    return sa < sb ? -1 : sb < sa;
+    return (a->addr + a->port) - (b->addr + b->port);
 }
 
 uint32_t Peer_Hash(void *key)

@@ -56,7 +56,7 @@ int PendingResponse_Compare(tid_t *a, tid_t *b)
     assert(a != NULL && "NULL PendingResponse pointer");
     assert(b != NULL && "NULL PendingResponse pointer");
 
-    return *a < *b ? -1 : *b < *a;
+    return *a - *b;
 }
 
 int HashmapPendingResponses_Add(void *responses, PendingResponse entry)
