@@ -207,3 +207,16 @@ error:
     DArray_destroy(*peers);
     return -1;
 }
+
+int Client_MarkInvalidMessage(Client *client, Node *from)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(from != NULL && "NULL Node pointer");
+
+    (void)client;
+    (void)from;
+
+    /* TODO */
+
+    return 0;
+}
