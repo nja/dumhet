@@ -46,6 +46,9 @@ Client *Client_Create(Hash id,
     client->replies = MessageQueue_Create();
     check(client->replies != NULL, "MessageQueue_Create failed");
 
+    client->searches = DArray_create(sizeof(Search *), 128);
+    check(client->searches != NULL, "DArray_create failed");
+
     rs = RandomState_Create(time(NULL));
     check(rs != NULL, "RandomState_Create failed");
 
@@ -78,6 +81,14 @@ void Client_Destroy(Client *client)
     MessageQueue_Destroy(client->incoming);
     MessageQueue_Destroy(client->queries);
     MessageQueue_Destroy(client->replies);
+
+    while (DArray_count(client->searches) > 0)
+    {
+        Search *search = DArray_pop(client->searches);
+        Search_Destroy(search);
+    }
+
+    DArray_destroy(client->searches);
   
     if (client->socket != -1)
         close(client->socket);

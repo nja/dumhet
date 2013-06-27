@@ -13,6 +13,7 @@ char *test_Client_CreateDestroy()
     mu_assert(client->table != NULL, "No Table created");
     mu_assert(client->pending != NULL, "No pending responses");
     mu_assert(client->buf != NULL, "No buffer allocated");
+    mu_assert(client->searches != NULL, "No searches array");
     mu_assert(client->node.addr.s_addr == addr, "Address not copied");
     mu_assert(client->node.port == port, "Port not copied");
     mu_assert(client->peer_port == peer_port, "Peer port not copied");
