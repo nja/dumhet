@@ -14,7 +14,20 @@ int Client_Handle(Client *client)
         message = MessageQueue_Pop(client->incoming);
         check(message != NULL, "MessageQueue_Pop failed");
 
-        if (MessageType_IsQuery(message->type))
+        if (message->errors && MessageType_IsQuery(message->type))
+        {
+            Message *reply = HandleInvalidQuery(client, message);
+            check(reply != NULL, "HandleInvalidQuery failed");
+
+            int rc = MessageQueue_Push(client->replies, reply);
+            check(rc == 0, "MessageQueue_Push failed");
+        }
+        else if (message->errors)
+        {
+            int rc = HandleInvalidReply(client, message);
+            check(rc == 0, "HandleInvalidReply failed");
+        }
+        else if (MessageType_IsQuery(message->type))
         {
             QueryHandler handler = GetQueryHandler(message->type);
             check(handler != NULL, "GetQueryHandler failed");

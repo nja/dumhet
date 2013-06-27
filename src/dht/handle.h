@@ -37,4 +37,9 @@ Message *HandleQAnnouncePeer(Client *client, Message *query);
 /* Finds announced peers or closer nodes. */
 Message *HandleQGetPeers(Client *client, Message *query);
 
+/* Notes the invalid query and makes a suitable RError */
+Message *HandleInvalidQuery(Client *client, Message *query);
+/* Notes the invalid reply */
+int HandleInvalidReply(Client *client, Message *reply);
+
 #endif

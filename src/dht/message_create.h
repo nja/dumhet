@@ -22,5 +22,6 @@ Message *Message_CreateRGetPeers(Client *client,
                                  Token *token);
 
 Message *Message_CreateRErrorBadToken(Client *client, Message *query);
+Message *Message_CreateRError(Client *client, Message *query);
 
 #endif

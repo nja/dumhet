@@ -238,3 +238,44 @@ error:
     Message_Destroy(message);
     return NULL;
 }
+
+struct ErrorMessage {
+    merror_t errors;
+    int code;
+    char *message;
+};
+
+struct ErrorMessage Errors[] = {
+    { MERROR_UNKNOWN_TYPE, RERROR_PROTOCOL, "Bad message type" },
+    { MERROR_INVALID_QUERY_TYPE, RERROR_METHODUNKNOWN, "Unknown method" },
+    { MERROR_INVALID_TID, RERROR_PROTOCOL, "Bad transaction id" },
+    { MERROR_INVALID_NODE_ID, RERROR_PROTOCOL, "Bad node id" },
+    { MERROR_INVALID_DATA, RERROR_PROTOCOL, "Bad data" },
+    { MERROR_PROGRAM, RERROR_SERVER, "Oops" },
+    { ~0, RERROR_GENERIC, "GENERAL ERROR" }
+};
+
+Message *Message_CreateRError(Client *client, Message *query)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(query->errors && "No errors in query");
+
+    Message *message = Message_CreateResponse(client, query, RError);
+    check(message != NULL, "Message_CreateResponse failed");
+
+    struct ErrorMessage *error = Errors;
+
+    while (!(error->errors & query->errors))
+    {
+        error++;
+    }
+
+    message->data.rerror.code = error->code;
+    message->data.rerror.message = bfromcstr(error->message);
+    check_mem(message->data.rerror.message);
+
+    return message;
+error:
+    Message_Destroy(message);
+    return NULL;
+}

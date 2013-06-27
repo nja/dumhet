@@ -284,3 +284,38 @@ error:
 
     return NULL;
 }
+
+Message *HandleInvalidQuery(Client *client, Message *query)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(query != NULL && "NULL Message pointer");
+    assert(MessageType_IsQuery(query->type) && "Not a query");
+    assert(query->errors && "No errors in query");
+
+    Client_MarkInvalidMessage(client, &query->node);
+
+    Message *reply = Message_CreateRError(client, query);
+    check(reply != NULL, "Message_CreateRError failed");
+
+    return reply;
+error:
+    return NULL;
+}
+
+int HandleInvalidReply(Client *client, Message *reply)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(reply != NULL && "NULL Message pointer");
+    assert(MessageType_IsReply(reply->type) && "Not a reply");
+    assert(reply->errors && "No errors in reply");
+
+    int rc = Client_MarkInvalidMessage(client, &reply->node);
+    check(rc == 0, "Client_MarkInvalidMessage failed");
+
+    rc = Table_MarkReply(client->table, &reply->id);
+    check(rc == 0, "Table_MarkReply failed");
+
+    return 0;
+error:
+    return -1;
+}
