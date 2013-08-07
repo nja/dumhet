@@ -280,10 +280,10 @@ char *test_CreateDestroy_RGetPeers_Nodes()
         mu_assert(message != NULL, "Message_CreateRGetPeers failed");
         mu_assert(message->type == RGetPeers, "Wrong message type");
         mu_assert(Hash_Equals(&id, &message->id), "Wrong message id");
-        mu_assert(Hash_Equals(&token, (Hash *)message->data.rgetpeers.token),
-                  "Wrong token");
-        mu_assert(message->data.rgetpeers.token_len == HASH_BYTES,
+        mu_assert(message->data.rgetpeers.token.len == HASH_BYTES,
                   "Wrong token_len");
+        mu_assert(Hash_Equals(&token, (Hash *)message->data.rgetpeers.token.data),
+                  "Wrong token");
         mu_assert(message->t != NULL, "No message t");
         mu_assert(message->t_len > 0, "No t_len");
         mu_assert(SameT(query, message), "Wrong t");
@@ -349,10 +349,10 @@ char *test_CreateDestroy_RGetPeers_Peers()
         mu_assert(message != NULL, "Message_CreateRGetPeers failed");
         mu_assert(message->type == RGetPeers, "Wrong message type");
         mu_assert(Hash_Equals(&id, &message->id), "Wrong message id");
-        mu_assert(Hash_Equals(&token, (Hash *)message->data.rgetpeers.token),
-                  "Wrong token");
-        mu_assert(message->data.rgetpeers.token_len == HASH_BYTES,
+        mu_assert(message->data.rgetpeers.token.len == HASH_BYTES,
                   "Wrong token_len");
+        mu_assert(Hash_Equals(&token, (Hash *)message->data.rgetpeers.token.data),
+                  "Wrong token");
         mu_assert(message->t != NULL, "No message t");
         mu_assert(message->t_len > 0, "No t_len");
         mu_assert(SameT(query, message), "Wrong t");

@@ -183,10 +183,10 @@ Message *Message_CreateRGetPeers(Client *client,
     Message *message = Message_CreateResponse(client, query, RGetPeers);
     check(message != NULL, "Message_Create failed");
 
-    data.token = malloc(HASH_BYTES);
-    check_mem(data.token);
-    memcpy(data.token, token->value, HASH_BYTES);
-    data.token_len = HASH_BYTES;
+    data.token.data = malloc(HASH_BYTES);
+    check_mem(data.token.data);
+    memcpy(data.token.data, token->value, HASH_BYTES);
+    data.token.len = HASH_BYTES;
 
     unsigned int i = 0;
 
@@ -217,7 +217,7 @@ Message *Message_CreateRGetPeers(Client *client,
 
     return message;
 error:
-    free(data.token);
+    free(data.token.data);
     return NULL;
 }
 

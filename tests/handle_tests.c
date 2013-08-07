@@ -78,8 +78,8 @@ char *test_HandleQGetPeers_nodes()
     mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
     mu_assert(Client_IsValidToken(client,
                                   &from->node,
-                                  reply->data.rgetpeers.token,
-                                  reply->data.rgetpeers.token_len),
+                                  reply->data.rgetpeers.token.data,
+                                  reply->data.rgetpeers.token.len),
               "Invalid token");
     mu_assert(reply->data.rgetpeers.nodes != NULL, "No nodes");
     mu_assert(reply->data.rgetpeers.count == 1, "Wrong count");
@@ -115,8 +115,8 @@ char *test_HandleQGetPeers_peers()
     mu_assert(HasRecentQuery(client->table, from_id), "Node query_time not set");
     mu_assert(Client_IsValidToken(client,
                                   &from->node,
-                                  reply->data.rgetpeers.token,
-                                  reply->data.rgetpeers.token_len),
+                                  reply->data.rgetpeers.token.data,
+                                  reply->data.rgetpeers.token.len),
               "Invalid token");
     mu_assert(reply->data.rgetpeers.values != NULL, "No peers");
     mu_assert(reply->data.rgetpeers.count == 1, "Wrong count");

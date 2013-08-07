@@ -252,7 +252,8 @@ char *test_Decode_RGetPeers_nodes()
 
     RGetPeersData *data = &message->data.rgetpeers;
 
-    mu_assert(same_bytes_len("aoeusnth", data->token, data->token_len), "Bad token");
+    mu_assert(same_bytes_len("aoeusnth", data->token.data, data->token.len),
+              "Bad token");
     mu_assert(data->values == NULL, "Bad values");
     mu_assert(data->count == BUCKET_K, "Wrong nodes count");
 
@@ -294,7 +295,8 @@ char *test_Decode_RGetPeers_values()
 
     RGetPeersData *data = &message->data.rgetpeers;
 
-    mu_assert(same_bytes_len("aoeusnth", data->token, data->token_len), "Bad token");
+    mu_assert(same_bytes_len("aoeusnth", data->token.data, data->token.len),
+              "Bad token");
     mu_assert(data->nodes == NULL, "Bad nodes");
     mu_assert(data->count == 3, "Wrong values count");
 

@@ -28,7 +28,7 @@ void Message_Destroy(Message *message)
 	free(message->data.rfindnode.nodes);
 	break;
     case RGetPeers:
-	free(message->data.rgetpeers.token);
+	free(message->data.rgetpeers.token.data);
 	free(message->data.rgetpeers.values); /* TODO: destroy? */
         free(message->data.rgetpeers.nodes);
 	break;

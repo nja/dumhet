@@ -558,10 +558,10 @@ int SetResponseGetPeersData(Message *message, BNode *arguments)
 
     RGetPeersData *data = &message->data.rgetpeers;
 
-    data->token = BNode_CopyString(token);
-    check(data->token != NULL, "Failed to copy token");
+    data->token.data = BNode_CopyString(token);
+    check(data->token.data != NULL, "Failed to copy token");
 
-    data->token_len = token->count;
+    data->token.len = token->count;
 
     data->nodes = NULL;
     data->values = NULL;
@@ -591,8 +591,8 @@ int SetResponseGetPeersData(Message *message, BNode *arguments)
 
     return 0;
 error:
-    free(data->token);
-    data->token = NULL;
+    free(data->token.data);
+    data->token.data = NULL;
 
     return -1;
 }

@@ -428,7 +428,7 @@ int EncodeResponseGetPeers_values(Message *message, char *dest, size_t len)
     check(SLen(RGETPEERSA)
 	  + HASHLEN
 	  + SLen(RGETPEERSB)
-	  + BStringLen(data->token_len)
+	  + BStringLen(data->token.len)
 	  + SLen("6:values")
 	  + ValuesLen(data->count)
 	  + SLen("e")
@@ -440,7 +440,7 @@ int EncodeResponseGetPeers_values(Message *message, char *dest, size_t len)
     SCpy(dest, RGETPEERSA);
     HCpy(dest, message->id.value);
     SCpy(dest, RGETPEERSB);
-    BStringCpy(&dest, data->token, data->token_len);
+    BStringCpy(&dest, data->token.data, data->token.len);
     SCpy(dest, "6:values");
     ValuesCpy(&dest, data->values, data->count);
     SCpy(dest, "e");
@@ -470,7 +470,7 @@ int EncodeResponseGetPeers_nodes(Message *message, char *dest, size_t len)
 	  + HASHLEN
 	  + NodesLen(data->count)
 	  + SLen(RGETPEERSB)
-	  + BStringLen(data->token_len)
+	  + BStringLen(data->token.len)
 	  + SLen("e")
 	  + TLen(message)
 	  + SLen(RGETPEERSC)
@@ -481,7 +481,7 @@ int EncodeResponseGetPeers_nodes(Message *message, char *dest, size_t len)
     HCpy(dest, message->id.value);
     NodesCpy(&dest, data->nodes, data->count);
     SCpy(dest, RGETPEERSB);
-    BStringCpy(&dest, data->token, data->token_len);
+    BStringCpy(&dest, data->token.data, data->token.len);
     SCpy(dest, "e");
     TCpy(&dest, message);
     SCpy(dest, RGETPEERSC);

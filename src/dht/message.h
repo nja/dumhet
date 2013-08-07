@@ -50,8 +50,7 @@ typedef struct RFindNodeData {
 typedef struct RGetPeersData {
     Node **nodes;
     size_t count;
-    char *token;
-    size_t token_len;
+    struct FToken token;
     Peer *values;
 } RGetPeersData;
 
