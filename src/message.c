@@ -20,7 +20,7 @@ void Message_Destroy(Message *message)
 	break;
     case QAnnouncePeer:
 	Hash_Destroy(message->data.qannouncepeer.info_hash);
-	free(message->data.qannouncepeer.token);
+	free(message->data.qannouncepeer.token.data);
 	break;
     case RPing:
 	break;

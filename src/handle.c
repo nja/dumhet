@@ -223,8 +223,8 @@ Message *HandleQAnnouncePeer(Client *client, Message *query)
 
     if (!Client_IsValidToken(client,
                              &query->node,
-                             query->data.qannouncepeer.token,
-                             query->data.qannouncepeer.token_len))
+                             query->data.qannouncepeer.token.data,
+                             query->data.qannouncepeer.token.len))
     {
         Message *error = Message_CreateRErrorBadToken(client, query);
         check(error != NULL, "Message_CreateRErrorBadToken failed");

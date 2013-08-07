@@ -9,6 +9,7 @@
 /* Past secrets are kept to give a grace period for slow announcers */
 #define SECRETS_LEN 2
 
+/* Our own tokens have a known fixed length. See also FToken. */
 typedef Hash Token;
 
 typedef struct Client {

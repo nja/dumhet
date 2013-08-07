@@ -350,10 +350,10 @@ int SetQueryAnnouncePeerData(Message *message, BNode *arguments)
 
     data->port = port->value.integer;
 
-    data->token = BNode_CopyString(token);
-    check(data->token != NULL, "Failed to copy token");
+    data->token.data = BNode_CopyString(token);
+    check(data->token.data != NULL, "Failed to copy token");
 
-    data->token_len = token->count;
+    data->token.len = token->count;
 
     return 0;
 error:

@@ -247,7 +247,7 @@ int EncodeQueryAnnouncePeer(Message *message, char *dest, size_t len)
 	  + SLen(QANNOUNCEPEERC)
 	  + ILen(data->port)
 	  + SLen(QANNOUNCEPEERD)
-	  + BStringLen(data->token_len)
+	  + BStringLen(data->token.len)
 	  + SLen(QANNOUNCEPEERE)
 	  + TLen(message)
 	  + SLen(QANNOUNCEPEERF)
@@ -261,7 +261,7 @@ int EncodeQueryAnnouncePeer(Message *message, char *dest, size_t len)
     SCpy(dest, QANNOUNCEPEERC);
     ICpy(&dest, data->port);
     SCpy(dest, QANNOUNCEPEERD);
-    BStringCpy(&dest, data->token, data->token_len);
+    BStringCpy(&dest, data->token.data, data->token.len);
     SCpy(dest, QANNOUNCEPEERE);
     TCpy(&dest, message);
     SCpy(dest, QANNOUNCEPEERF);

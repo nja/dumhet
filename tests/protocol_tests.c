@@ -329,10 +329,10 @@ char *test_Decode_QAnnouncePeer()
     mu_assert(message->data.qannouncepeer.info_hash != NULL, "Missing info_hash");
     mu_assert(same_bytes(info_hash, message->data.qannouncepeer.info_hash->value),
 	      "Wrong info_hash");
-    mu_assert(message->data.qannouncepeer.token != NULL, "No token");
-    mu_assert(message->data.qannouncepeer.token_len == strlen(token),
+    mu_assert(message->data.qannouncepeer.token.data != NULL, "No token");
+    mu_assert(message->data.qannouncepeer.token.len == strlen(token),
 	      "Wrong token length");
-    mu_assert(same_bytes(token, message->data.qannouncepeer.token),
+    mu_assert(same_bytes(token, message->data.qannouncepeer.token.data),
 	      "Wrong token");
     mu_assert(message->data.qannouncepeer.port == port, "Wrong port");
 

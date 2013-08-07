@@ -84,11 +84,11 @@ Message *Message_CreateQAnnouncePeer(Client *client,
 
     memcpy(data.info_hash, info_hash->value, HASH_BYTES);
 
-    data.token = malloc(HASH_BYTES);
-    check_mem(data.token);
+    data.token.data = malloc(HASH_BYTES);
+    check_mem(data.token.data);
 
-    memcpy(data.token, token->value, HASH_BYTES);
-    data.token_len = HASH_BYTES;
+    memcpy(data.token.data, token->value, HASH_BYTES);
+    data.token.len = HASH_BYTES;
 
     data.port = client->peer_port;
 

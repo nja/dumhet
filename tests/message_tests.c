@@ -90,9 +90,9 @@ char *test_CreateDestroy_QAnnouncePeer()
     mu_assert(Hash_Equals(&info_hash, message->data.qannouncepeer.info_hash),
               "Wrong target");
     mu_assert(message->data.qannouncepeer.port == peer_port, "Wrong peer port");
-    mu_assert(Hash_Equals(&token, (Hash *)message->data.qannouncepeer.token),
+    mu_assert(message->data.qannouncepeer.token.len == HASH_BYTES, "Wrong token_len");
+    mu_assert(Hash_Equals(&token, (Hash *)message->data.qannouncepeer.token.data),
               "Wrong token");
-    mu_assert(message->data.qannouncepeer.token_len == HASH_BYTES, "Wrong token_len");
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(Node_Same(&to, &message->node), "Wrong node");

@@ -5,6 +5,12 @@
 #include <dht/peers.h>
 #include <lcthw/bstrlib.h>
 
+/* Foreign tokens are of unknown length. */
+struct FToken {
+    char *data;
+    size_t len;
+};
+
 typedef enum MessageType {
     MUnknown = 0,
     QPing = 0100, QFindNode = 0101, QGetPeers = 0102, QAnnouncePeer = 0104,
@@ -29,8 +35,7 @@ typedef struct QGetPeersData {
 typedef struct QAnnouncePeerData {
     Hash *info_hash;
     uint16_t port;
-    char *token;
-    size_t token_len;
+    struct FToken token;
 } QAnnouncePeerData;
 
 typedef struct RPingData {

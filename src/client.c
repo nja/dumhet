@@ -123,12 +123,11 @@ Token Client_MakeToken(Client *client, Node *from)
     return MakeToken(client, from, 0);
 }
 
-int Client_IsValidToken(Client *client, Node *from,
-                        char *token, size_t token_len)
+int Client_IsValidToken(Client *client, Node *from, char *token, size_t token_len)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(from != NULL && "NULL Node pointer");
-    assert(token != NULL && "NULL token char pointer");
+    assert(token != NULL && "NULL token data pointer");
 
     if (token_len != HASH_BYTES)
         return 0;
