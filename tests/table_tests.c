@@ -403,6 +403,35 @@ error:
     return NULL;
 }
 
+int CountOp(void *context, Node *node)
+{
+    check(node != NULL, "NULL Node to CountOp");
+
+    *(int *)context += 1;
+
+    return 0;
+error:
+    return -1;
+}
+
+char *test_Table_ForEachCloseNode()
+{
+    Table *table = RandomTable(17);
+    mu_assert(table != NULL, "RandomTable failed");
+
+    int count = 0;
+
+    int rc = Table_ForEachCloseNode(table, &count, (NodeOp)CountOp);
+    mu_assert(rc == 0, "Table_ForEachCloseNode failed");
+
+    mu_assert(count == BUCKET_K, "Wrong count from ForEachCloseNode CountOp");
+
+    Table_DestroyNodes(table);
+    Table_Destroy(table);
+
+    return NULL;
+}
+
 int AlsoHasNode(Table *table, Node *node)
 {
     Node *other = Table_FindNode(table, &node->id);
@@ -449,6 +478,7 @@ char *all_tests()
     mu_run_test(test_Table_GatherClosest);
     mu_run_test(test_Table_FindNode_EmptyBucket);
     mu_run_test(test_TableDump);
+    mu_run_test(test_Table_ForEachCloseNode);
 
     return NULL;
 }

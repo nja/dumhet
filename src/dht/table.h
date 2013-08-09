@@ -22,6 +22,8 @@ void Table_DestroyNodes(Table *table);
 
 /* Calls op(context, node) for each node of the table. */
 int Table_ForEachNode(Table *table, void *context, NodeOp op);
+/* Calls op(context, node) for each close node of the table. */
+int Table_ForEachCloseNode(Table *table, void *context, NodeOp op);
 
 Bucket *Table_AddBucket(Table *table);
 Bucket *Table_FindBucket(Table *table, Hash *id);

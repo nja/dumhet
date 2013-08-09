@@ -243,6 +243,30 @@ error:
     return -1;
 }
 
+int Table_ForEachCloseNode(Table *table, void *context, NodeOp operate)
+{
+    assert(table != NULL && "NULL Table pointer");
+    assert(operate != NULL && "NULL function pointer");
+
+    DArray *nodes = Table_GatherClosest(table, &table->id);
+    check(nodes != NULL, "CloseNodes_GetNodes failed");
+
+    while (DArray_count(nodes) > 0)
+    {
+        Node *node = DArray_pop(nodes);
+
+        int rc = operate(context, node);
+        check(rc == 0, "NodeOp on close node failed");
+    }
+
+    DArray_destroy(nodes);
+
+    return 0;
+error:
+    DArray_destroy(nodes);
+    return -1;
+}
+
 Node *Table_FindNode(Table *table, Hash *id)
 {
     assert(table != NULL && "NULL Table pointer");
