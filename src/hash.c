@@ -14,17 +14,7 @@ Hash *Hash_Clone(Hash *hash)
     Hash *clone = malloc(sizeof(Hash));
     check_mem(clone);
 
-    unsigned int i = 0;
-
-    for (i = 0; i <= HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
-    {
-        *(int_fast32_t *)&clone->value[i] = *(int_fast32_t *)&hash->value[i];
-    }
-
-    for (; i <= HASH_BYTES - sizeof(int32_t); i += sizeof(int32_t))
-    {
-        *(int32_t *)&clone->value[i] = *(int32_t *)&hash->value[i];
-    }
+    memcpy(clone->value, hash->value, HASH_BYTES);
 
     return clone;
 error:
@@ -57,20 +47,6 @@ int Hash_Prefix(Hash *hash, Hash *prefix, unsigned int prefix_len)
     check(prefix_len <= HASH_BITS, "Bad prefix_len");
 
     unsigned int i = 0;
-
-    while (prefix_len >= sizeof(int_fast32_t) * 8)
-    {
-        *(int_fast32_t *)&hash->value[i] = *(int_fast32_t *)&prefix->value[i];
-        prefix_len -= sizeof(int_fast32_t) * 8;
-        i += sizeof(int_fast32_t);
-    }
-
-    while (prefix_len >= sizeof(int32_t) * 8)
-    {
-        *(int32_t *)&hash->value[i] = *(int32_t *)&prefix->value[i];
-        prefix_len -= sizeof(int32_t) * 8;
-        i += sizeof(int32_t);
-    }
 
     while (prefix_len >= 8)
     {
@@ -123,18 +99,6 @@ int Hash_SharedPrefix(Hash *a, Hash *b)
 {
     unsigned int hi = 0;
 
-    for (hi = 0; hi <= HASH_BYTES - sizeof(int_fast32_t); hi += sizeof(int_fast32_t))
-    {
-        if (*(int_fast32_t *)&a->value[hi] != *(int_fast32_t *)&b->value[hi])
-            break;
-    }
-
-    for (; hi <= HASH_BYTES - sizeof(int32_t); hi += sizeof(int32_t))
-    {
-        if (*(int32_t *)&a->value[hi] != *(int32_t *)&b->value[hi])
-            break;
-    }
-
     for (; hi < HASH_BYTES; hi++)
     {
 	if (a->value[hi] != b->value[hi])
@@ -174,14 +138,9 @@ void Hash_Invert(Hash *hash)
 
     unsigned int i = 0;
 
-    for (i = 0; i <= HASH_BYTES - sizeof(int_fast32_t); i += sizeof(int_fast32_t))
+    for (i = 0; i < HASH_BYTES; i++)
     {
-        *(int_fast32_t *)&hash->value[i] = ~(*(int_fast32_t *)&hash->value[i]);
-    }
-
-    for (; i <= HASH_BYTES - sizeof(int32_t); i += sizeof(int32_t))
-    {
-        *(int32_t *)&hash->value[i] = ~(*(int32_t *)&hash->value[i]);
+        hash->value[i] = ~hash->value[i];
     }
 }
 
