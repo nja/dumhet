@@ -223,7 +223,7 @@ char *test_CreateDestroy_RAnnouncePeer()
     Message *query = CreateTestQuery(RAnnouncePeer);
     Message *message = Message_CreateRAnnouncePeer(client, query);
 
-    mu_assert(message != NULL, "Message_CreateQAnnouncePeer failed");
+    mu_assert(message != NULL, "Message_CreateRAnnouncePeer failed");
     mu_assert(message->type == RAnnouncePeer, "Wrong message type");
     mu_assert(Hash_Equals(&id, &message->id), "Wrong message id");
     mu_assert(message->t != NULL, "No message t");
