@@ -68,7 +68,8 @@ error:
 Message *Message_CreateQAnnouncePeer(Client *client,
                                      Node *to,
                                      Hash *info_hash,
-                                     Token *token)
+                                     char *token,
+                                     size_t token_len)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(info_hash != NULL && "NULL Hash pointer");
@@ -84,11 +85,11 @@ Message *Message_CreateQAnnouncePeer(Client *client,
 
     memcpy(data.info_hash, info_hash->value, HASH_BYTES);
 
-    data.token.data = malloc(HASH_BYTES);
+    data.token.data = malloc(token_len);
     check_mem(data.token.data);
 
-    memcpy(data.token.data, token->value, HASH_BYTES);
-    data.token.len = HASH_BYTES;
+    memcpy(data.token.data, token, token_len);
+    data.token.len = token_len;
 
     data.port = client->peer_port;
 

@@ -144,7 +144,8 @@ char *test_HandleQAnnouncePeer()
     Message *query = Message_CreateQAnnouncePeer(from,
                                                  &from->node,
                                                  &target_id,
-                                                 &token);
+                                                 token.value,
+                                                 HASH_BYTES);
 
     Message *reply = HandleQAnnouncePeer(client, query);
 
@@ -188,7 +189,8 @@ char *test_HandleQAnnouncePeer_badtoken()
     Message *query = Message_CreateQAnnouncePeer(from,
                                                  &client->node,
                                                  &target_id,
-                                                 &token);
+                                                 token.value,
+                                                 HASH_BYTES);
 
     Message *reply = HandleQAnnouncePeer(client, query);
 
@@ -333,7 +335,8 @@ char *test_HandleRAnnouncePeer()
     Message *query = Message_CreateQAnnouncePeer(client,
                                                  &from->node,
                                                  &info_hash,
-                                                 &token);
+                                                 token.value,
+                                                 HASH_BYTES);
 
     Message *reply = Message_CreateRAnnouncePeer(from, query);
 

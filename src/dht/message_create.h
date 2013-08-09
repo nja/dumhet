@@ -10,7 +10,8 @@ Message *Message_CreateQGetPeers(Client *client, Node *to, Hash *info_hash);
 Message *Message_CreateQAnnouncePeer(Client *client,
                                      Node *to,
                                      Hash *info_hash,
-                                     Token *token);
+                                     char *token,
+                                     size_t token_len);
 
 Message *Message_CreateRFindNode(Client *client, Message *query, DArray *found);
 Message *Message_CreateRPing(Client *client, Message *query);

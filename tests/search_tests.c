@@ -10,6 +10,8 @@ char *test_Search_CreateDestroy()
 
     mu_assert(search->table != NULL, "NULL table");
     mu_assert(search->peers != NULL, "NULL peers");
+    mu_assert(!search->find_node_sent, "Wrong find_node_sent");
+    mu_assert(search->tokens != NULL, "NULL tokens hashmap");
 
     Search_Destroy(search);
 
@@ -82,6 +84,30 @@ char *test_Search_CopyTable()
     return NULL;
 }
 
+char *test_Search_SetGetToken()
+{
+    Hash id = { "asdf" };
+    Search *search = Search_Create(&id);
+
+    Hash nodeid = { "node id" };
+    struct FToken token = { .data = "token", .len = 5 };
+
+    int rc = Search_SetToken(search, &nodeid, token);
+    mu_assert(rc == 0, "Search_SetToken failed");
+
+    struct FToken *result = Search_GetToken(search, &nodeid);
+    mu_assert(result != NULL, "Search_GetToken failed");
+
+    mu_assert(token.len == result->len, "Wrong result len");
+
+    int cmp = memcmp(token.data, result->data, token.len);
+    mu_assert(cmp == 0, "Wrong result data");
+
+    Search_Destroy(search);
+
+    return NULL;
+}
+
 char *test_Search_NodesToQuery()
 {
     time_t now = time(NULL);
@@ -135,6 +161,7 @@ char *all_tests()
     mu_run_test(test_Search_CreateDestroy);
     mu_run_test(test_Search_CopyTable);
     mu_run_test(test_Search_NodesToQuery);
+    mu_run_test(test_Search_SetGetToken);
 
     return NULL;
 }

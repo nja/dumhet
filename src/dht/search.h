@@ -2,6 +2,7 @@
 #define _dht_search_h
 
 #include <lcthw/darray.h>
+#include <dht/client.h>
 #include <dht/peers.h>
 #include <dht/table.h>
 
@@ -15,6 +16,8 @@
 typedef struct Search {
     Table *table;
     Peers *peers;
+    int find_node_sent;
+    Hashmap *tokens;
 } Search;
 
 Search *Search_Create(Hash *id);
@@ -31,5 +34,11 @@ int Search_NodesToQuery(Search *search, DArray *nodes, time_t time);
 
 /* Adds to the collection of found peers by the search. */
 int Search_AddPeers(Search *search, Peer *peers, int count);
+
+/* Gets the token, if any, for the node id. */
+struct FToken *Search_GetToken(Search *search, Hash *id);
+
+/* Sets the token for the node id. */
+int Search_SetToken(Search *search, Hash *id, struct FToken token);
 
 #endif

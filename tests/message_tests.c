@@ -82,7 +82,11 @@ char *test_CreateDestroy_QAnnouncePeer()
 
     Token token = Client_MakeToken(client, &to);
 
-    Message *message = Message_CreateQAnnouncePeer(client, &to, &info_hash, &token);
+    Message *message = Message_CreateQAnnouncePeer(client,
+                                                   &to,
+                                                   &info_hash,
+                                                   token.value,
+                                                   HASH_BYTES);
 
     mu_assert(message != NULL, "Message_CreateQGetPeers failed");
     mu_assert(message->type == QAnnouncePeer, "Wrong message type");
