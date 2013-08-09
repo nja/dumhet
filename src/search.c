@@ -212,9 +212,8 @@ error:
 
 int Search_SetToken(Search *search, Hash *id, struct FToken token)
 {
-    (void)search;
-    (void)id;
-    (void)token;
+    assert(search != NULL && "NULL Search pointer");
+    assert(id != NULL && "NULL Hash pointer");
 
     struct FTokenEntry *old = Hashmap_delete(search->tokens, id);
     FTokenEntry_Delete(old);
