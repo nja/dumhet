@@ -33,7 +33,4 @@ Node *Bucket_ReplaceQuestionable(Bucket *bucket, Node *node);
 
 int Bucket_AddNode(Bucket *bucket, Node *node);
 
-/* Pushes all Good Nodes in bucket on the found array. */
-int Bucket_GatherGoodNodes(Bucket *bucket, DArray *found);
-
 #endif

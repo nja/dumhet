@@ -146,26 +146,3 @@ int Bucket_AddNode(Bucket *bucket, Node *node)
 error:
     return -1;
 }
-
-int Bucket_GatherGoodNodes(Bucket *bucket, DArray *found)
-{
-    assert(bucket != NULL && "NULL Bucket pointer");
-    assert(found != NULL && "NULL DArray pointer");
-
-    Node **node = bucket->nodes;
-
-    while (DArray_count(found) < BUCKET_K && node < bucket->nodes + BUCKET_K)
-    {
-        if (*node != NULL && Node_Status(*node, time(NULL)) == Good)
-        {
-            int rc = DArray_push(found, *node);
-            check(rc == 0, "DArray_push failed");
-        }
-
-        node++;
-    }
-
-    return 0;
-error:
-    return -1;
-}
