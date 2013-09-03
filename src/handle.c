@@ -121,6 +121,9 @@ int HandleRGetPeers(Client *client, Message *message)
     rc = Table_MarkReply(search->table, &message->id);
     check(rc == 0, "Table_MarkReply failed (search->table)");
 
+    rc = Search_SetToken(search, &message->id, data->token);
+    check(rc == 0, "Search_SetToken failed");
+
     if (data->nodes != NULL)
     {
         rc = AddSearchNodes(search, data->nodes, data->count);
