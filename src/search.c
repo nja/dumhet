@@ -243,3 +243,126 @@ struct FToken *Search_GetToken(Search *search, Hash *id)
 
     return &entry->token;
 }
+
+struct ClientSearch {
+    Client *client;
+    Search *search;
+};
+
+int SendFindNodes(struct ClientSearch *context, Node *node)
+{
+    Message *query = Message_CreateQFindNode(context->client,
+                                             node,
+                                             &context->search->table->id);
+    check(query != NULL, "Message_CreateQFindNode failed");
+
+    int rc = MessageQueue_Push(context->client->queries, query);
+    check(rc == 0, "MessageQueue_Push failed");
+
+    return 0;
+error:
+    Message_Destroy(query);
+    return -1;
+}
+
+int SendGetPeers(struct ClientSearch *context, Node *node)
+{
+    Message *query = Message_CreateQGetPeers(context->client,
+                                             node,
+                                             &context->search->table->id);
+    check(query != NULL, "Message_CreateQGetPeers failed");
+
+    int rc = MessageQueue_Push(context->client->queries, query);
+    check(rc == 0, "MessageQueue_Push failed");
+
+    return 0;
+error:
+    Message_Destroy(query);
+    return -1;
+}
+
+int SendAnnouncePeer(struct ClientSearch *context, Node *node)
+{
+    struct FToken *token = Search_GetToken(context->search,
+                                           &context->search->table->id);
+
+    if (token == NULL)
+    {
+        return 0;
+    }
+
+    Message *query = Message_CreateQAnnouncePeer(context->client,
+                                                 node,
+                                                 &context->search->table->id,
+                                                 token->data,
+                                                 token->len);
+    check(query != NULL, "Message_CreateQAnnouncePeer failed");
+
+    int rc = MessageQueue_Push(context->client->queries, query);
+    check(rc == 0, "MessageQueue_Push failed");
+
+    return 0;
+error:
+    Message_Destroy(query);
+    return -1;
+}
+
+int Search_SendFindNodes(Client *client, Search *search)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(search != NULL && "NULL Search pointer");
+
+    struct ClientSearch context = { .client = client, .search = search };
+
+    int rc = Table_ForEachNode(search->table, &context, (NodeOp)SendFindNodes);
+
+    return rc;
+}
+
+int Search_SendGetPeers(Client *client, Search *search)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(search != NULL && "NULL Search pointer");
+
+    struct ClientSearch context = { .client = client, .search = search };
+
+    return Table_ForEachCloseNode(search->table,
+                                  &context,
+                                  (NodeOp)SendGetPeers);
+}
+
+int Search_SendAnnouncePeer(Client *client, Search *search)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(search != NULL && "NULL Search pointer");
+
+    struct ClientSearch context = { .client = client, .search = search };
+
+    return Table_ForEachCloseNode(search->table,
+                                  &context,
+                                  (NodeOp)SendAnnouncePeer);
+}
+
+int Search_DoWork(Client *client, Search *search)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(search != NULL && "NULL Search pointer");
+
+    if (!search->find_node_sent)
+    {
+        int rc = Search_SendFindNodes(client, search);
+        check(rc == 0, "Search_SendFindNodes failed");
+
+        search->find_node_sent = 1;
+    }
+
+    int rc = Search_SendGetPeers(client, search);
+    check(rc == 0, "Search_SendGetPeers failed");
+
+    rc = Search_SendAnnouncePeer(client, search);
+    check(rc == 0, "Search_SendAnnouncePeer failed");
+
+    return 0;
+error:
+    return -1;
+}

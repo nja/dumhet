@@ -26,6 +26,9 @@ void Search_Destroy(Search *search);
 /* Copy the nodes from source and insert them to the search table. */
 int Search_CopyTable(Search *search, Table *source);
 
+/* Create and enqueue find_nodes, get_peers and announce_peer queries. */
+int Search_DoWork(Client *client, Search *search);
+
 #define SEARCH_RESPITE 3
 #define SEARCH_MAX_PENDING 2
 
