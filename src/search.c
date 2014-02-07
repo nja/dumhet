@@ -307,60 +307,30 @@ error:
     return -1;
 }
 
-int Search_SendFindNodes(Client *client, Search *search)
-{
-    assert(client != NULL && "NULL Client pointer");
-    assert(search != NULL && "NULL Search pointer");
-
-    struct ClientSearch context = { .client = client, .search = search };
-
-    int rc = Table_ForEachNode(search->table, &context, (NodeOp)SendFindNodes);
-
-    return rc;
-}
-
-int Search_SendGetPeers(Client *client, Search *search)
-{
-    assert(client != NULL && "NULL Client pointer");
-    assert(search != NULL && "NULL Search pointer");
-
-    struct ClientSearch context = { .client = client, .search = search };
-
-    return Table_ForEachCloseNode(search->table,
-                                  &context,
-                                  (NodeOp)SendGetPeers);
-}
-
-int Search_SendAnnouncePeer(Client *client, Search *search)
-{
-    assert(client != NULL && "NULL Client pointer");
-    assert(search != NULL && "NULL Search pointer");
-
-    struct ClientSearch context = { .client = client, .search = search };
-
-    return Table_ForEachCloseNode(search->table,
-                                  &context,
-                                  (NodeOp)SendAnnouncePeer);
-}
-
 int Search_DoWork(Client *client, Search *search)
 {
     assert(client != NULL && "NULL Client pointer");
     assert(search != NULL && "NULL Search pointer");
 
+    struct ClientSearch context = { .client = client, .search = search };
+
     if (!search->find_node_sent)
     {
-        int rc = Search_SendFindNodes(client, search);
-        check(rc == 0, "Search_SendFindNodes failed");
+        int rc = Table_ForEachNode(search->table, &context, (NodeOp)SendFindNodes);
+        check(rc == 0, "SendFindNodes failed");
 
         search->find_node_sent = 1;
     }
 
-    int rc = Search_SendGetPeers(client, search);
-    check(rc == 0, "Search_SendGetPeers failed");
+    int rc = Table_ForEachCloseNode(search->table,
+                                    &context,
+                                    (NodeOp)SendGetPeers);
+    check(rc == 0, "SendGetPeers failed");
 
-    rc = Search_SendAnnouncePeer(client, search);
-    check(rc == 0, "Search_SendAnnouncePeer failed");
+    rc = Table_ForEachCloseNode(search->table,
+                                &context,
+                                (NodeOp)SendAnnouncePeer);
+    check(rc == 0, "SendAnnouncePeer failed");
 
     return 0;
 error:
