@@ -9,12 +9,9 @@ List *List_create()
 void List_destroy(List *list)
 {
     LIST_FOREACH(list, first, next, cur) {
-        if(cur->prev) {
-            free(cur->prev);
-        }
+        free(cur);
     }
 
-    free(list->last);
     free(list);
 }
 
@@ -26,13 +23,15 @@ void List_clear(List *list)
     }
 }
 
-
 void List_clear_destroy(List *list)
 {
-    List_clear(list);
-    List_destroy(list);
-}
+    LIST_FOREACH(list, first, next, cur) {
+        free(cur->value);
+        free(cur);
+    }
 
+    free(list);
+}
 
 void List_push(List *list, void *value)
 {

@@ -33,9 +33,12 @@ void List_shift(List *list, void *value);
 void *List_unshift(List *list);
 
 void *List_remove(List *list, ListNode *node);
+void List_remove_all(List *list, void *value);
 
-#define LIST_FOREACH(L, S, M, V) ListNode *_node = NULL;\
+#define LIST_FOREACH(L, S, M, V) ListNode *_next = NULL;\
     ListNode *V = NULL;\
-    for(V = _node = L->S; _node != NULL; V = _node = _node->M)
+    for(V = L->S, _next = V != NULL ? V->M : NULL;   \
+        V != NULL;\
+        V = _next, _next = _next != NULL ? _next->M : NULL)
 
 #endif

@@ -19,6 +19,14 @@ char *test_create()
 
 char *test_destroy()
 {
+    void *a = malloc(1), *b = malloc(2);
+
+    mu_assert(a != NULL, "malloc failed");
+    mu_assert(b != NULL, "malloc failed");
+
+    List_push(list, a);
+    List_push(list, b);
+
     List_clear_destroy(list);
 
     return NULL;
