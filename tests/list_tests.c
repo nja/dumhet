@@ -30,7 +30,6 @@ char *test_destroy()
     List_clear_destroy(list);
 
     return NULL;
-
 }
 
 
@@ -101,7 +100,43 @@ char *test_unshift()
     return NULL;
 }
 
+char *test_remove_all()
+{
+    List_push(list, test1);
+    List_push(list, test2);
+    List_push(list, test3);
+    List_push(list, test3);
+    List_push(list, test1);
+    List_push(list, test2);
+    List_push(list, test3);
 
+    mu_assert(List_count(list) == 7, "Wrong count");
+
+    debug("aaaa");
+
+    List_remove_all(list, test1);
+    mu_assert(List_count(list) == 5, "Wrong count");
+    mu_assert(List_first(list) == test2, "Wrong first");
+    mu_assert(List_last(list) == test3, "Wrong last");
+
+    debug("bbb");
+
+    List_remove_all(list, test3);
+    mu_assert(List_count(list) == 2, "Wrong count");
+    mu_assert(List_first(list) == test2, "Wrong first");
+    mu_assert(List_last(list) == test2, "Wrong last");
+
+    debug("ccc");
+
+    List_remove_all(list, test2);
+    debug("ddd");
+
+    mu_assert(List_count(list) == 0, "Wrong count");
+    mu_assert(List_first(list) == NULL, "Wrong first");
+    mu_assert(List_last(list) == NULL, "Wrong last");
+
+    return NULL;
+}
 
 char *all_tests() {
     mu_suite_start();
@@ -111,6 +146,7 @@ char *all_tests() {
     mu_run_test(test_shift);
     mu_run_test(test_remove);
     mu_run_test(test_unshift);
+    mu_run_test(test_remove_all);
     mu_run_test(test_destroy);
 
     return NULL;

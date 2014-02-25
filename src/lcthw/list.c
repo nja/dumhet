@@ -15,6 +15,14 @@ void List_destroy(List *list)
     free(list);
 }
 
+void List_remove_all(List *list, void *value)
+{
+    LIST_FOREACH(list, first, next, cur) {
+        if (cur->value == value) {
+            List_remove(list, cur);
+        }
+    }
+}
 
 void List_clear(List *list)
 {
