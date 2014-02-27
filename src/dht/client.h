@@ -27,6 +27,7 @@ typedef struct Client {
     MessageQueue *queries;
     MessageQueue *replies;
     DArray *searches;
+    DArray *hooks;
 } Client;
 
 Client *Client_Create(Hash id,

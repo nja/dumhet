@@ -5,6 +5,7 @@
 
 #include <lcthw/dbg.h>
 #include <dht/client.h>
+#include <dht/hooks.h>
 #include <dht/network.h>
 #include <dht/peers.h>
 #include <dht/pendingresponses.h>
@@ -49,6 +50,9 @@ Client *Client_Create(Hash id,
     client->searches = DArray_create(sizeof(Search *), 128);
     check(client->searches != NULL, "DArray_create failed");
 
+    client->hooks = Hooks_Create();
+    check(client->hooks != NULL, "Hooks_Create failed");
+
     rs = RandomState_Create(time(NULL));
     check(rs != NULL, "RandomState_Create failed");
 
@@ -89,6 +93,7 @@ void Client_Destroy(Client *client)
     }
 
     DArray_destroy(client->searches);
+    Hooks_Destroy(client->hooks);
   
     if (client->socket != -1)
         close(client->socket);
