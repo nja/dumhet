@@ -111,6 +111,8 @@ int Client_Receive(Client *client)
 
         rc = MessageQueue_Push(client->incoming, message);
         check(rc == 0, "MessageQueue_Push failed");
+
+        Client_RunHook(client, HookReceiveMessage, message);
     }
 
     return 0;

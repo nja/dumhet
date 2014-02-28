@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include <dht/client.h>
+#include <dht/hooks.h>
 #include <dht/network.h>
 #include <lcthw/dbg.h>
 
@@ -135,6 +136,8 @@ int SendMessage(Client *client, Message *msg)
         rc = client->pending->addPendingResponse(client->pending, entry);
         check(rc == 0, "addPendingResponses failed");
     }
+
+    Client_RunHook(client, HookSendMessage, msg);
 
     return 0;
 error:
