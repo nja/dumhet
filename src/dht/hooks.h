@@ -7,6 +7,7 @@
 typedef enum HookType {
     HookAddPeer,                /* struct HookAddPeerData */
     HookInvalidMessage,         /* Node */
+    HookHandleMessage,          /* Message */
     HookTypeMax
 } HookType;
 

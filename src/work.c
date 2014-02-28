@@ -1,5 +1,6 @@
 #include <dht/client.h>
 #include <dht/handle.h>
+#include <dht/hooks.h>
 #include <dht/network.h>
 #include <dht/work.h>
 
@@ -51,6 +52,8 @@ int Client_Handle(Client *client)
             int rc = HandleUnknown(client, message);
             check(rc == 0, "HandleUnknown failed");
         }
+
+        Client_RunHook(client, HookHandleMessage, message);
 
         Message_Destroy(message);
     }
