@@ -5,7 +5,8 @@
 #include <lcthw/darray.h>
 
 typedef enum HookType {
-    HookAddPeer,
+    HookAddPeer,                /* struct HookAddPeerData */
+    HookInvalidMessage,         /* Node */
     HookTypeMax
 } HookType;
 

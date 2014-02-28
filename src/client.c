@@ -236,5 +236,7 @@ int Client_MarkInvalidMessage(Client *client, Node *from)
 
     /* TODO */
 
+    Client_RunHook(client, HookInvalidMessage, from);
+
     return 0;
 }
