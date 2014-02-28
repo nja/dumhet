@@ -200,6 +200,9 @@ int Client_AddPeer(Client *client, Hash *info_hash, Peer *peer)
     int rc = PeersHashmap_AddPeer(client->peers, info_hash, peer);
     check(rc == 0, "PeersHashmap_AddPeer failed");
 
+    struct HookAddPeerData hook_data = { .info_hash = info_hash, .peer = peer };
+    Client_RunHook(client, HookAddPeer, &hook_data);
+
     return 0;
 error:
     return -1;

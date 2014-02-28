@@ -4,13 +4,22 @@
 #include <dht/client.h>
 #include <lcthw/darray.h>
 
-typedef enum HookType { HookTypeFoo, HookTypeMax } HookType;
+typedef enum HookType {
+    HookAddPeer,
+    HookTypeMax
+} HookType;
+
 typedef void (*HookOp)(void *client, void *args);
 
 typedef struct Hook {
     HookType type;
     HookOp fun;
 } Hook;
+
+struct HookAddPeerData {
+    Hash *info_hash;
+    Peer *peer;
+};
 
 DArray *Hooks_Create();
 void Hooks_Destroy(DArray *array);

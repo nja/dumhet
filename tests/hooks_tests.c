@@ -13,7 +13,7 @@ void TestHookFun(void *hook_client, void *args)
 
 char *test_hooks()
 {
-    HookType hook_type = HookTypeFoo;
+    HookType hook_type = HookAddPeer;
     test_client = calloc(1, sizeof(Client));
     mu_assert(test_client != NULL, "calloc failed");
 
