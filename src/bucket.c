@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <time.h>
 
+#include <dht/dht.h>
 #include <dht/bucket.h>
 #include <dht/node.h>
 #include <lcthw/dbg.h>

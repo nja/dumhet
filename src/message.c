@@ -1,4 +1,8 @@
+#include <stdlib.h>
+
+#include <dht/hash.h>
 #include <dht/message.h>
+#include <dht/node.h>
 #include <lcthw/dbg.h>
 
 void Message_Destroy(Message *message)

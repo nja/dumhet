@@ -1,14 +1,8 @@
 #ifndef _dht_hash_h
 #define _dht_hash_h
 
-#define HASH_BYTES 20
-#define HASH_BITS (HASH_BYTES * 8)
-
+#include <dht/dht.h>
 #include <dht/random.h>
-
-typedef struct Hash {
-    char value[HASH_BYTES];	/* Network byte order */
-} Hash;
 
 Hash *Hash_Clone(Hash *hash);
 void Hash_Destroy(Hash *hash);

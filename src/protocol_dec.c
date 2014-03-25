@@ -2,7 +2,9 @@
 #include <assert.h>
 
 #include <dht/bencode.h>
+#include <dht/hash.h>
 #include <dht/message.h>
+#include <dht/node.h>
 #include <dht/protocol.h>
 #include <lcthw/dbg.h>
 

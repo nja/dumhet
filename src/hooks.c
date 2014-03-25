@@ -38,12 +38,14 @@ void Hooks_Destroy(DArray *array)
     DArray_destroy(array);
 }
     
-int Client_AddHook(Client *client, Hook *hook)
+int Client_AddHook(void *client_, Hook *hook)
 {
+    Client *client = (Client *)client_;
+
     assert(client != NULL && "NULL client pointer");
     assert(hook != NULL && "NULL Hook pointer");
     assert(client->hooks != NULL && "NULL Hooks pointer");
-    
+
     List *list = DArray_get(client->hooks, hook->type);
     check(list != NULL, "NULL Hook List pointer");
 
@@ -53,11 +55,13 @@ error:
     return -1;
 }
 
-int Client_RemoveHook(Client *client, Hook *hook)
+int Client_RemoveHook(void *client_, Hook *hook)
 {
+    Client *client = (Client *)client_;
+
     assert(client != NULL && "NULL client pointer");
     assert(hook != NULL && "NULL Hook pointer");
-    assert(((Client *)client)->hooks != NULL && "NULL DArray pointer");
+    assert(client->hooks != NULL && "NULL DArray pointer");
 
     List *list = DArray_get(client->hooks, hook->type);
     check(list != NULL, "NULL Hook List pointer");
@@ -89,8 +93,10 @@ void Hook_Destroy(Hook *hook)
     free(hook);
 }
 
-int Client_RunHook(Client *client, HookType type, void *args)
+int Client_RunHook(void *client_, HookType type, void *args)
 {
+    Client *client = (Client *)client_;
+
     assert(client != NULL && "NULL Client pointer");
 
     if (client->hooks == NULL)

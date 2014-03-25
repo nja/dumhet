@@ -3,16 +3,8 @@
 
 #include <netinet/in.h>
 
+#include <dht/dht.h>
 #include <dht/hash.h>
-
-typedef struct Node {
-    Hash id;
-    struct in_addr addr;
-    uint16_t port;              /* network byte order */
-    time_t reply_time;
-    time_t query_time;
-    int pending_queries;
-} Node;
 
 Node *Node_Create(Hash *id);
 Node *Node_Copy(Node *node);

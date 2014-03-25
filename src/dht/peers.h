@@ -3,18 +3,12 @@
 
 #include <time.h>
 
+#include <dht/dht.h>
 #include <dht/hash.h>
 #include <lcthw/darray.h>
 #include <lcthw/hashmap.h>
 
 #define MAXPEERS 0x1F00
-
-/* Peers are BitTorrent clients. We don't talk to them, only search
- * for them and track them. */
-typedef struct Peer {
-    uint32_t addr;
-    uint16_t port;
-} Peer;
 
 /* Stores announced peers for a single info_hash.  */
 typedef struct Peers {
