@@ -12,6 +12,7 @@ int Client_Receive(Client *client);
 /* Handles the incoming queue, queuing replies to queries. */
 int Client_HandleMessages(Client *client);
 int Client_RunHooks(Client *client);
+int Client_HandleSearches(Client *client);
 int Client_CleanSearches(Client *client);
 int Client_CleanPeers(Client *client);
 

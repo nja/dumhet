@@ -53,6 +53,8 @@ int Client_GetPeers(Client *client, Hash *info_hash, DArray **peers);
  * when already present.
  * Returns 0 on success, -1 on failure. */
 int Client_AddPeer(Client *client, Hash *info_hash, Peer *peer);
+/* Adds a new Search for target to client. */
+int Client_AddSearch(Client *client, Hash *target);
 
 /* Notes an invalid message from the node. For blacklisting. */
 int Client_MarkInvalidMessage(Client *client, Node *from);

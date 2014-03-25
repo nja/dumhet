@@ -57,10 +57,6 @@ struct HookAddPeerData {
     Peer *peer;
 };
 
-int Client_AddHook(void *client, Hook *hook);
-int Client_RemoveHook(void *client, Hook *hook);
-int Client_RunHook(void *client, HookType type, void *args);
-
 /* Message */
 
 /* Foreign tokens are of unknown length. */
@@ -154,5 +150,17 @@ typedef struct Message {
 #define RERROR_SERVER        202
 #define RERROR_PROTOCOL      203
 #define RERROR_METHODUNKNOWN 204
+
+/* API */
+
+void *Dht_CreateClient(Hash id, uint32_t addr, uint16_t port, uint16_t peer_port);
+int Dht_AddNode(void *client, Hash id, uint32_t addr, uint16_t port);
+
+int Dht_Start(void *client);
+int Dht_Stop(void *client);
+int Dht_Process(void *client);
+
+int Dht_AddHook(void *client, Hook *hook);
+int Dht_RemoveHook(void *client, Hook *hook);
 
 #endif

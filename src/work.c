@@ -2,9 +2,27 @@
 #include <dht/handle.h>
 #include <dht/hooks.h>
 #include <dht/network.h>
+#include <dht/search.h>
 #include <dht/work.h>
 
-int Client_Handle(Client *client)
+int Client_HandleSearches(Client *client)
+{
+    assert(client != NULL && "NULL Client pointer");
+
+    int i;
+    for (i = 0; i < DArray_end(client->searches); i++)
+    {
+        Search *search = (Search *)DArray_get(client->searches, i);
+        int rc = Search_DoWork(client, search);
+        check (rc == 0, "Search_DoWork failed");
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int Client_HandleMessages(Client *client)
 {
     assert(client != NULL && "NULL Client pointer");
 
