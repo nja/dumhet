@@ -23,6 +23,10 @@ all: $(TARGET) $(SO_TARGET) $(PROGRAMS) tests
 dev: CFLAGS=-g -Isrc $(WFLAGS) $(OPTFLAGS)
 dev: all
 
+CFLAGS=-g -Isrc $(WFLAGS) $(OPTFLAGS)
+runapp: bin/app
+	bin/app
+
 $(TARGET): CFLAGS += -fPIC
 $(TARGET): $(OBJECTS)
 	ar rcs $@ $(OBJECTS)
@@ -40,7 +44,7 @@ build/lcthw/%.o: src/lcthw/%.c $(LCTHWHEADERS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 build/%.o: src/%.c $(LCTHWHEADERS) $(DHTHEADERS)
-	@mkdir -p build
+	@mkdir -p build/bin
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 bin/tests/%: $(TARGET) tests/%.c tests/minunit.h
