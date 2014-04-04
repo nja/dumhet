@@ -69,7 +69,8 @@ int Send(Client *client, Node *node, char *buf, size_t len)
     int rc = sendto(client->socket,
                     buf,
                     len,
-                    0, (struct sockaddr *) &addr,
+                    0,
+                    (struct sockaddr *) &addr,
                     sizeof(addr));
     check(rc == (int)len, "sendto failed");
 
