@@ -2,6 +2,7 @@
 #include <dht/dht.h>
 #include <dht/client.h>
 #include <dht/hooks.h>
+#include <dht/message_create.h>
 #include <dht/network.h>
 #include <dht/work.h>
 
@@ -11,35 +12,28 @@ void *Dht_CreateClient(Hash id, uint32_t addr, uint16_t port, uint16_t peer_port
     return client;
 }
 
-int Dht_AddNode(void *client, Hash id, uint32_t addr, uint16_t port)
+void Dht_DestroyClient(void *client)
 {
+    Client_Destroy((Client *)client);
+}
+
+int Dht_AddNode(void *client_, uint32_t addr, uint16_t port)
+{
+    Message *qping = NULL;
+    Client *client = (Client *)client_;
     check(client != NULL, "NULL client pointer");
 
-    Node *node = Node_Create(&id);
-    check(node != NULL, "Node_Create failed");
+    Node node = { .addr.s_addr = addr, .port = port };
 
-    node->addr.s_addr = addr;
-    node->port = port;
+    qping = Message_CreateQPing(client, &node);
+    check(qping != NULL, "Message_CreateQPing failed");
 
-    Table_InsertNodeResult result = Table_InsertNode(((Client *)client)->table, node);
-
-    switch (result.rc)
-    {
-    case OKAdded:
-        break;
-    case OKFull:
-    case OKAlreadyAdded:
-        Node_Destroy(node);
-        break;
-    case OKReplaced:
-        Node_Destroy(result.replaced);
-    default:
-        sentinel("Table_InsertNode failed");
-    }
+    int rc = MessageQueue_Push(client->queries, qping);
+    check(rc == 0, "Messagequeue_Push failed");
 
     return 0;
 error:
-    Node_Destroy(node);
+    Message_Destroy(qping);
     return -1;
 }
 

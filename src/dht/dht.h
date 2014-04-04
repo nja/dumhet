@@ -154,7 +154,8 @@ typedef struct Message {
 /* API */
 
 void *Dht_CreateClient(Hash id, uint32_t addr, uint16_t port, uint16_t peer_port);
-int Dht_AddNode(void *client, Hash id, uint32_t addr, uint16_t port);
+void Dht_DestroyClient(void *client);
+int Dht_AddNode(void *client, uint32_t addr, uint16_t port);
 
 int Dht_Start(void *client);
 int Dht_Stop(void *client);
