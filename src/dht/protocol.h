@@ -16,6 +16,7 @@ typedef struct PendingResponse {
     tid_t tid;
     Hash id;
     void *context;
+    int is_new;                 /* Don't know their id yet */
 } PendingResponse;
 
 /* Try to get the entry for the given transaction_id. (By now we

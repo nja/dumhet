@@ -23,7 +23,7 @@ int Dht_AddNode(void *client_, uint32_t addr, uint16_t port)
     Client *client = (Client *)client_;
     check(client != NULL, "NULL client pointer");
 
-    Node node = { .addr.s_addr = addr, .port = port };
+    Node node = { .addr.s_addr = addr, .port = port, .is_new = 1 };
 
     qping = Message_CreateQPing(client, &node);
     check(qping != NULL, "Message_CreateQPing failed");

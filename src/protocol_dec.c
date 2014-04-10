@@ -388,7 +388,7 @@ int DecodeResponse(Message *message, BNode *dict, struct PendingResponses *pendi
 
     if (rc == 0)
     {
-        if (!Hash_Equals(&message->id, &entry.id))
+        if (!Hash_Equals(&message->id, &entry.id) && !entry.is_new)
         {
             message->errors |= MERROR_INVALID_NODE_ID;
         }
@@ -448,7 +448,6 @@ int SetResponseData(Message *message, BNode *dict)
 
     if (message->type == RPing || message->type == RAnnouncePeer)
     {
-        message->errors |= MERROR_INVALID_DATA;
 	return 0;
     }
 

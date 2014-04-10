@@ -23,6 +23,7 @@ typedef struct Node {
     time_t reply_time;
     time_t query_time;
     int pending_queries;
+    int is_new;                 /* Don't know their id yet */
 } Node;
 
 /* Peer */

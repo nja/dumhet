@@ -129,10 +129,15 @@ int SendMessage(Client *client, Message *msg)
 
     if (MessageType_IsQuery(msg->type))
     {
-        PendingResponse entry = { .type = MessageType_AsReply(msg->type),
-                                  .tid = *(tid_t *)msg->t,
-                                  .id = msg->node.id,
-                                  .context = msg->context };
+        PendingResponse entry = {
+            .type = MessageType_AsReply(msg->type),
+            .tid = *(tid_t *)msg->t,
+            .id = msg->node.id,
+            .context = msg->context,
+            .is_new = msg->node.is_new
+        };
+
+        if (entry.is_new) debug("Sending first ping");
 
         rc = client->pending->addPendingResponse(client->pending, entry);
         check(rc == 0, "addPendingResponses failed");
