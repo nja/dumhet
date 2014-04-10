@@ -74,6 +74,7 @@ typedef enum MessageType {
 
 #define MessageType_IsQuery(T) ((T) & 0100)
 #define MessageType_IsReply(T) ((T) & 0200)
+#define MessageType_AsReply(T) ((T) ^ 0300)
 
 typedef struct QPingData {
 } QPingData;

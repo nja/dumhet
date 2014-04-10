@@ -129,7 +129,7 @@ int SendMessage(Client *client, Message *msg)
 
     if (MessageType_IsQuery(msg->type))
     {
-        PendingResponse entry = { .type = msg->type,
+        PendingResponse entry = { .type = MessageType_AsReply(msg->type),
                                   .tid = *(tid_t *)msg->t,
                                   .id = msg->node.id,
                                   .context = msg->context };
