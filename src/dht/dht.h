@@ -13,6 +13,8 @@ typedef struct Hash {
     char value[HASH_BYTES];	/* Network byte order */
 } Hash;
 
+bstring Dht_HashStr(Hash *hash);
+
 /* Node */
 
 /* Nodes of the DHT network */
@@ -26,6 +28,8 @@ typedef struct Node {
     int is_new;                 /* Don't know their id yet */
 } Node;
 
+bstring Dht_NodeStr(Node *node);
+
 /* Peer */
 
 /* Peers are BitTorrent clients. We don't talk to them, only search
@@ -34,6 +38,8 @@ typedef struct Peer {
     uint32_t addr;
     uint16_t port;              /* network byte order */
 } Peer;
+
+bstring Dht_PeerStr(Peer *peer);
 
 /* Hooks */
 
@@ -66,12 +72,16 @@ struct FToken {
     size_t len;
 };
 
+bstring Dht_FTokenStr(struct FToken *ftoken);
+
 typedef enum MessageType {
     MUnknown = 0,
     QPing = 0100, QFindNode = 0101, QGetPeers = 0102, QAnnouncePeer = 0104,
     RPing = 0200, RFindNode = 0201, RGetPeers = 0202, RAnnouncePeer = 0204,
     RError = 0210,
 } MessageType;
+
+bstring Dht_MessageTypeStr(MessageType type);
 
 #define MessageType_IsQuery(T) ((T) & 0100)
 #define MessageType_IsReply(T) ((T) & 0200)
@@ -141,6 +151,8 @@ typedef struct Message {
     } data;
 } Message;
 
+bstring Dht_MessageStr(Message *message);
+
 #define MERROR_UNKNOWN_TYPE       0x0001
 #define MERROR_INVALID_QUERY_TYPE 0x0002
 #define MERROR_INVALID_TID        0x0004
@@ -148,16 +160,22 @@ typedef struct Message {
 #define MERROR_INVALID_DATA       0x0010
 #define MERROR_PROGRAM            0x0020
 
+bstring Dht_MERROR_Str(merror_t errors);
+
 #define RERROR_GENERIC       201
 #define RERROR_SERVER        202
 #define RERROR_PROTOCOL      203
 #define RERROR_METHODUNKNOWN 204
+
+bstring Dht_RERROR_Str(int code);
 
 /* API */
 
 void *Dht_CreateClient(Hash id, uint32_t addr, uint16_t port, uint16_t peer_port);
 void Dht_DestroyClient(void *client);
 int Dht_AddNode(void *client, uint32_t addr, uint16_t port);
+
+bstring Dht_ClientStr(void *client);
 
 int Dht_Start(void *client);
 int Dht_Stop(void *client);

@@ -1,3 +1,7 @@
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include <lcthw/dbg.h>
 #include <dht/dht.h>
 #include <dht/client.h>
@@ -103,4 +107,85 @@ int Dht_RemoveHook(void *client, Hook *hook)
     return Client_RemoveHook((Client *)client, hook);
 error:
     return -1;
+}
+
+/* bstring */
+
+bstring Dht_HashStr(Hash *hash)
+{
+    if (hash == NULL)
+        return bformat("%*s", HASH_BYTES * 2, "(NULL HASH)");
+
+    bstring str = bfromcstralloc(HASH_BYTES * 2, "");
+
+    char *src = hash->value;
+    char *end = hash->value + HASH_BYTES;
+
+    while (src < end)
+    {
+        bformata(str, "%02hhX", *src++);
+    }
+
+    return str;
+}
+
+bstring Dht_NodeStr(Node *node)
+{
+    if (node == NULL)
+        return bfromcstr("(NULL Node)");
+
+    bstring id = Dht_HashStr(&node->id);
+    char *addr = inet_ntoa(node->addr);
+
+    bstring str = bformat("%15s:%-5d %s", addr, htons(node->port), id->data);
+
+    bdestroy(id);
+
+    return str;
+}
+
+bstring Dht_PeerStr(Peer *peer)
+{
+    if (peer == NULL)
+        return bfromcstr("(NULL Peer)");
+
+    struct in_addr addr = { .s_addr = peer->addr };
+
+    return bformat("%15s:%-5d", inet_ntoa(addr), peer->port);
+}
+
+bstring Dht_FTokenStr(struct FToken *ftoken)
+{
+    if (ftoken == NULL)
+        return bfromcstr("(NULL FToken)");
+
+    bstring str = bfromcstralloc(ftoken->len * 2, "");
+
+    char *src = ftoken->data;
+    char *end = ftoken->data + ftoken->len;
+
+    while (src < end)
+    {
+        bformata(str, "%02X", *src++);
+    }
+
+    return str;
+}
+
+bstring Dht_MessageTypeStr(MessageType type)
+{
+    switch (type)
+    {
+    case MUnknown:      return bfromcstr("MUnknown");
+    case QPing:         return bfromcstr("QPing");
+    case QFindNode:     return bfromcstr("QFindNode");
+    case QGetPeers:     return bfromcstr("QGetPeers");
+    case QAnnouncePeer: return bfromcstr("QAnnouncePeer");
+    case RPing:         return bfromcstr("RPing");
+    case RFindNode:     return bfromcstr("RFindNode");
+    case RGetPeers:     return bfromcstr("RGetPeers");
+    case RAnnouncePeer: return bfromcstr("RAnnouncePeer");
+    case RError:        return bfromcstr("RError");
+    default:            return bfromcstr("(Invalid MessageType");
+    }
 }
