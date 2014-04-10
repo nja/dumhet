@@ -20,7 +20,7 @@ int NetworkUp(Client *client)
 
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_port = client->node.port;
-    sockaddr.sin_addr = client->node.addr;
+    sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     int rc = bind(client->socket,
                   (struct sockaddr *) &sockaddr,
