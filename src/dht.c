@@ -111,22 +111,33 @@ error:
 
 /* bstring */
 
+bstring HexStr(char *data, size_t len)
+{
+    assert(data != NULL && "NULL data pointer");
+
+    bstring str = bfromcstralloc(len * 2, "");
+    check_mem(str);
+
+    char *end = data + len;
+
+    while (data < end)
+    {
+        int rc = bformata(str, "%02X", *data++);
+        check(rc == BSTR_OK, "bformata failed");
+    }
+
+    return str;
+error:
+    bdestroy(str);
+    return NULL;
+}
+
 bstring Dht_HashStr(Hash *hash)
 {
     if (hash == NULL)
         return bformat("%*s", HASH_BYTES * 2, "(NULL HASH)");
 
-    bstring str = bfromcstralloc(HASH_BYTES * 2, "");
-
-    char *src = hash->value;
-    char *end = hash->value + HASH_BYTES;
-
-    while (src < end)
-    {
-        bformata(str, "%02hhX", *src++);
-    }
-
-    return str;
+    return HexStr(hash->value, HASH_BYTES);
 }
 
 bstring Dht_NodeStr(Node *node)
@@ -159,17 +170,15 @@ bstring Dht_FTokenStr(struct FToken *ftoken)
     if (ftoken == NULL)
         return bfromcstr("(NULL FToken)");
 
-    bstring str = bfromcstralloc(ftoken->len * 2, "");
+    return HexStr(ftoken->data, ftoken->len);
+}
 
-    char *src = ftoken->data;
-    char *end = ftoken->data + ftoken->len;
+bstring TokenStr(char *data, size_t len)
+{
+    if (data == NULL)
+        return bfromcstr("(NULL token)");
 
-    while (src < end)
-    {
-        bformata(str, "%02X", *src++);
-    }
-
-    return str;
+    return HexStr(data, len);
 }
 
 bstring Dht_MessageTypeStr(MessageType type)
@@ -188,4 +197,60 @@ bstring Dht_MessageTypeStr(MessageType type)
     case RError:        return bfromcstr("RError");
     default:            return bfromcstr("(Invalid MessageType");
     }
+}
+
+bstring Dht_MessageStr(Message *message)
+{
+    if (message == NULL)
+        return bfromcstr("(NULL Message)");
+
+    bstring type = NULL, node = NULL, token = NULL, id = NULL,
+        str = NULL, data = NULL;
+
+    type = Dht_MessageTypeStr(message->type);
+    check_mem(type);
+
+    node = Dht_NodeStr(&message->node);
+    check_mem(node);
+
+    token = TokenStr(message->t, message->t_len);
+    check_mem(token);
+
+    id = Dht_HashStr(&message->id);
+    check_mem(id);
+
+    str = bformat(
+        "%-13s Errors:%02X\n"
+        "%s\n"
+        "Token %s\n"
+        "Id %s",
+        type->data,
+        message->errors,
+        node->data,
+        token->data,
+        id->data);
+    check_mem(str);
+
+    if (1)
+    {
+        data = bfromcstr("Data todo");
+        bconchar(str, '\n');
+        bconcat(str, data);
+        bdestroy(data);
+    }
+
+    bdestroy(type);
+    bdestroy(node);
+    bdestroy(token);
+    bdestroy(id);
+
+    return str;
+error:
+    bdestroy(type);
+    bdestroy(node);
+    bdestroy(token);
+    bdestroy(id);
+    bdestroy(str);
+
+    return NULL;
 }
