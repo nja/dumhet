@@ -50,6 +50,8 @@ typedef struct Table_InsertNodeResult {
 } Table_InsertNodeResult;
 
 Table_InsertNodeResult Table_InsertNode(Table *table, Node *node);
+/* If Node is good, copy and add to table (when not already there) */
+int Table_CopyAndAddNode(Table *dest, Node *node);
 
 /* Fins the node with the given id in the table and updates its
  * reply_time.*/

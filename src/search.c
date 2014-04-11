@@ -55,43 +55,13 @@ void Search_Destroy(Search *search)
     free(search);
 }
 
-int CopyAndAdd(Table *dest, Node *node)
-{
-    if (Node_Status(node, time(NULL)) != Good)
-    {
-        return 0;
-    }
-
-    Node *copy = Node_Copy(node);
-    check_mem(copy);
-
-    Table_InsertNodeResult result = Table_InsertNode(dest, copy);
-
-    if (result.rc == ERROR
-        || result.rc == OKFull
-        || result.rc == OKAlreadyAdded)
-    {
-        Node_Destroy(copy);
-    }
-
-    if (result.rc == OKReplaced)
-    {
-        assert(result.replaced != NULL && "OKReplaced with NULL .replaced");
-        Node_Destroy(result.replaced);
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
 int Search_CopyTable(Search *search, Table *source)
 {
     assert(search != NULL && "NULL Search pointer");
     assert(source != NULL && "NULL Table pointer");
     assert(search->table != NULL && "NULL Table pointer");
 
-    return Table_ForEachNode(source, search->table, (NodeOp)CopyAndAdd);
+    return Table_ForEachNode(source, search->table, (NodeOp)Table_CopyAndAddNode);
 }
 
 int ShouldQuery(Node *node, time_t time);

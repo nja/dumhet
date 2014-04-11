@@ -184,6 +184,40 @@ error:
     { .rc = ERROR, .bucket = NULL, .replaced = NULL};
 }
 
+int Table_CopyAndAddNode(Table *dest, Node *node)
+{
+    assert(dest != NULL && "NULL Table pointer");
+    assert(node != NULL && "NULL Node pointer");
+
+    if (Node_Status(node, time(NULL)) != Good)
+    {
+        debug("CopyAndAdd non good node");
+        return 0;
+    }
+
+    Node *copy = Node_Copy(node);
+    check_mem(copy);
+
+    Table_InsertNodeResult result = Table_InsertNode(dest, copy);
+
+    if (result.rc == ERROR
+        || result.rc == OKFull
+        || result.rc == OKAlreadyAdded)
+    {
+        Node_Destroy(copy);
+    }
+
+    if (result.rc == OKReplaced)
+    {
+        assert(result.replaced != NULL && "OKReplaced with NULL .replaced");
+        Node_Destroy(result.replaced);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 Bucket *Table_AddBucket(Table *table)
 {
     assert(table->end < MAX_TABLE_BUCKETS && "Adding one bucket too many");
