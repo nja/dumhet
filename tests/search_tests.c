@@ -10,7 +10,6 @@ char *test_Search_CreateDestroy()
 
     mu_assert(search->table != NULL, "NULL table");
     mu_assert(search->peers != NULL, "NULL peers");
-    mu_assert(!search->find_node_sent, "Wrong find_node_sent");
     mu_assert(search->tokens != NULL, "NULL tokens hashmap");
 
     Search_Destroy(search);

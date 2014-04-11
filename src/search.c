@@ -251,6 +251,11 @@ struct ClientSearch {
 
 int SendFindNodes(struct ClientSearch *context, Node *node)
 {
+    NodeStatus status = Node_Status(node, time(NULL));
+
+    if (status == Good || status == Bad)
+        return 0;
+
     Message *query = Message_CreateQFindNode(context->client,
                                              node,
                                              &context->search->table->id);
@@ -314,17 +319,12 @@ int Search_DoWork(Client *client, Search *search)
 
     struct ClientSearch context = { .client = client, .search = search };
 
-    if (!search->find_node_sent)
-    {
-        int rc = Table_ForEachNode(search->table, &context, (NodeOp)SendFindNodes);
-        check(rc == 0, "SendFindNodes failed");
+    int rc = Table_ForEachNode(search->table, &context, (NodeOp)SendFindNodes);
+    check(rc == 0, "SendFindNodes failed");
 
-        search->find_node_sent = 1;
-    }
-
-    int rc = Table_ForEachCloseNode(search->table,
-                                    &context,
-                                    (NodeOp)SendGetPeers);
+    rc = Table_ForEachCloseNode(search->table,
+                                &context,
+                                (NodeOp)SendGetPeers);
     check(rc == 0, "SendGetPeers failed");
 
     rc = Table_ForEachCloseNode(search->table,

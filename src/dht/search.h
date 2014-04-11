@@ -16,7 +16,6 @@
 typedef struct Search {
     Table *table;
     Peers *peers;
-    int find_node_sent;
     Hashmap *tokens;
 } Search;
 
