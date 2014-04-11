@@ -231,6 +231,8 @@ int SendFindNodes(struct ClientSearch *context, Node *node)
                                              &context->search->table->id);
     check(query != NULL, "Message_CreateQFindNode failed");
 
+    query->context = context->search;
+
     int rc = MessageQueue_Push(context->client->queries, query);
     check(rc == 0, "MessageQueue_Push failed");
 
@@ -246,6 +248,8 @@ int SendGetPeers(struct ClientSearch *context, Node *node)
                                              node,
                                              &context->search->table->id);
     check(query != NULL, "Message_CreateQGetPeers failed");
+
+    query->context = context->search;
 
     int rc = MessageQueue_Push(context->client->queries, query);
     check(rc == 0, "MessageQueue_Push failed");
