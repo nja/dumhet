@@ -122,7 +122,7 @@ bstring HexStr(char *data, size_t len)
 
     while (data < end)
     {
-        int rc = bformata(str, "%02X", *data++);
+        int rc = bformata(str, "%02hhX", *data++);
         check(rc == BSTR_OK, "bformata failed");
     }
 
