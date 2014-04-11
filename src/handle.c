@@ -13,7 +13,7 @@ ReplyHandler GetReplyHandler(MessageType type)
     switch (type)
     {
     case RError: return HandleRError;
-    case RPing: return HandleReply;
+    case RPing: return HandleRPing;
     case RAnnouncePeer: return HandleReply;
     case RFindNode: return HandleRFindNode;
     case RGetPeers: return HandleRGetPeers;
@@ -74,6 +74,30 @@ int HandleUnknown(Client *client, Message *message)
 }
 
 int AddSearchNodes(Search *search, Node **nodes, size_t count);
+
+int HandleRPing(Client *client, Message *message)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(message != NULL && "NULL Message pointer");
+    assert(message->type == RPing && "Wrong message type");
+
+    int rc = HandleReply(client, message);
+    check(rc == 0, "HandleReply failed");
+
+    int i;
+    for (i = 0; i < DArray_end(client->searches); i++)
+    {
+        Search *search = (Search *)DArray_get(client->searches, i);
+        /* Only good nodes are copied, so we set the reply_time */
+        message->node.reply_time = time(NULL);
+        rc = Table_CopyAndAddNode(search->table, &message->node);
+        check(rc == 0, "Table_CopyAndAddNode failed");
+    }
+
+    return 0;
+error:
+    return -1;
+}
 
 int HandleRFindNode(Client *client, Message *message)
 {

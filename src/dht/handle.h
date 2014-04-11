@@ -23,6 +23,8 @@ int HandleUnknown(Client *client, Message *message);
 int HandleRError(Client *client, Message *reply);
 /* Notes that the node replied. */
 int HandleReply(Client *client, Message *reply);
+/* Notes that the node replied and adds it to all searches */
+int HandleRPing(Client *client, Message *message);
 /* Adds the replied nodes to the Search and notes that the node replied. */
 int HandleRFindNode(Client *client, Message *reply);
 /* Adds the replied Peers or nodes to the Search and notes that the node replied. */
