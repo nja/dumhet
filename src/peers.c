@@ -166,7 +166,7 @@ Peers *PeersHashmap_GetSetPeers(Hashmap *hashmap, Hash *info_hash)
         peers = new_peers = Peers_Create(info_hash);
         check(peers != NULL, "Peers_Create failed");
 
-        int rc = Hashmap_set(hashmap, info_hash, peers);
+        int rc = Hashmap_set(hashmap, &peers->info_hash, peers);
         check(rc == 0, "Hashmap_set failed");
     }
 
