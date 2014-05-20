@@ -119,7 +119,11 @@ int HandleRFindNode(Client *client, Message *message)
                         message->data.rfindnode.nodes,
                         message->data.rfindnode.count);
     check(rc == 0, "AddSearchNodes failed");
- 
+
+    /* Free nodes not added to search */
+    Node_DestroyBlock(message->data.rfindnode.nodes,
+                      message->data.rfindnode.count);
+
     return 0;
 error:
     return -1;
@@ -152,6 +156,9 @@ int HandleRGetPeers(Client *client, Message *message)
     {
         rc = AddSearchNodes(search, data->nodes, data->count);
         check(rc == 0, "AddSearchNodes failed");
+
+        /* Free nodes not added to search */
+        Node_DestroyBlock(data->nodes, data->count);
     }
     else if (data->values != NULL)
     {
@@ -168,6 +175,7 @@ error:
     return -1;
 }    
 
+/* AddSearchNodes NULLs the added nodes. */
 int AddSearchNodes(Search *search, Node **nodes, size_t count)
 {
     assert(search != NULL && "NULL Search pointer");
@@ -175,15 +183,11 @@ int AddSearchNodes(Search *search, Node **nodes, size_t count)
 
     Node **node = nodes;
     Node **end = node + count;
-    Node *copy = NULL;
 
     while (node < end)
     {
-        copy = Node_Copy(*node);
-        check_mem(copy);
-
         Table_InsertNodeResult result
-            = Table_InsertNode(search->table, copy);
+            = Table_InsertNode(search->table, *node);
         check(result.rc != ERROR, "Table_InsertNode failed");
 
         if (result.rc == OKAdded || result.rc == OKReplaced)
@@ -198,7 +202,6 @@ int AddSearchNodes(Search *search, Node **nodes, size_t count)
 
     return 0;
 error:
-    Node_Destroy(copy);
     return -1;
 }
 

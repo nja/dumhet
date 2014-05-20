@@ -242,14 +242,18 @@ char *test_HandleRFindNode()
     Hash id = { "client id" };
     Hash from_id = { "from id" };
     Hash target_id = { "target id" };
+    Hash found_id = { "found_id" };
     Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
-    Node found_node = { .id = { "found id" },
-                        .addr = { .s_addr = 2345 },
-                        .port = 2345};
+
+    Node* found_node = Node_Create(&found_id);
+    found_node->addr.s_addr = 2345;
+    found_node->port = 2345;
+
+    debug("found_node %p", found_node);
 
     DArray *found = DArray_create(sizeof(Node *), 2);
-    DArray_push(found, &found_node);
+    DArray_push(found, found_node);
 
     Search *search = Search_Create(&target_id);
 
@@ -275,7 +279,6 @@ char *test_HandleRFindNode()
               "Reply not marked in client->table");
     mu_assert(HasRecentReply(search->table, from->node.id),
               "Reply not marked in search->table");
-
     DArray_destroy(found);
     Search_Destroy(search);
     Client_Destroy(client);
@@ -395,11 +398,6 @@ char *test_HandleRGetPeers_nodes()
 
     Client_Destroy(client);
     Client_Destroy(from);
-
-    for (i = 0; i < nodes_count; i++)
-    {
-        Node_Destroy(found_nodes[i]);
-    }
 
     Message_Destroy(qgetpeers);
     Message_Destroy(rgetpeers);
