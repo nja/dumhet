@@ -236,6 +236,8 @@ int SendFindNodes(struct ClientSearch *context, Node *node)
     int rc = MessageQueue_Push(context->client->queries, query);
     check(rc == 0, "MessageQueue_Push failed");
 
+    node->pending_queries++;
+
     return 0;
 error:
     Message_Destroy(query);
@@ -253,6 +255,8 @@ int SendGetPeers(struct ClientSearch *context, Node *node)
 
     int rc = MessageQueue_Push(context->client->queries, query);
     check(rc == 0, "MessageQueue_Push failed");
+
+    node->pending_queries++;
 
     return 0;
 error:
@@ -279,6 +283,8 @@ int SendAnnouncePeer(struct ClientSearch *context, Node *node)
 
     int rc = MessageQueue_Push(context->client->queries, query);
     check(rc == 0, "MessageQueue_Push failed");
+
+    node->pending_queries++;
 
     return 0;
 error:
