@@ -73,6 +73,10 @@ int Client_HandleMessages(Client *client)
 
         Client_RunHook(client, HookHandleMessage, message);
 
+        /* We must send any RGetPeers before its Nodes might be
+         * destroyed by some other action. */
+        Client_Send(client, client->replies);
+
         Message_Destroy(message);
     }
 
