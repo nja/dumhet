@@ -71,8 +71,7 @@ int Node_DestroyOp(void *context, Node *node)
 
 void Node_DestroyBlock(Node **nodes, size_t count)
 {
-    assert(((nodes == NULL && count == 0)
-	    || (nodes != NULL && count > 0)) && "Bad count for block");
+    assert(!(nodes == NULL && count != 0) && "Bad count for NULL Nodes block");
 
     unsigned int i = 0;
     for (i = 0; i < count; i++)
