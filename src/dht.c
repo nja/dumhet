@@ -173,10 +173,10 @@ bstring Dht_FTokenStr(struct FToken *ftoken)
     return HexStr(ftoken->data, ftoken->len);
 }
 
-bstring TokenStr(char *data, size_t len)
+bstring TidStr(char *data, size_t len)
 {
     if (data == NULL)
-        return bfromcstr("(NULL token)");
+        return bfromcstr("(NULL tid)");
 
     return HexStr(data, len);
 }
@@ -204,7 +204,7 @@ bstring Dht_MessageStr(Message *message)
     if (message == NULL)
         return bfromcstr("(NULL Message)");
 
-    bstring type = NULL, node = NULL, token = NULL, id = NULL,
+    bstring type = NULL, node = NULL, tid = NULL, id = NULL,
         str = NULL, data = NULL;
 
     type = Dht_MessageTypeStr(message->type);
@@ -213,8 +213,8 @@ bstring Dht_MessageStr(Message *message)
     node = Dht_NodeStr(&message->node);
     check_mem(node);
 
-    token = TokenStr(message->t, message->t_len);
-    check_mem(token);
+    tid = TidStr(message->t, message->t_len);
+    check_mem(tid);
 
     id = Dht_HashStr(&message->id);
     check_mem(id);
@@ -222,12 +222,12 @@ bstring Dht_MessageStr(Message *message)
     str = bformat(
         "%-13s Errors:%02X\n"
         "%s\n"
-        "Token %s\n"
+        "tid %s\n"
         "Id %s",
         type->data,
         message->errors,
         node->data,
-        token->data,
+        tid->data,
         id->data);
     check_mem(str);
 
@@ -241,14 +241,14 @@ bstring Dht_MessageStr(Message *message)
 
     bdestroy(type);
     bdestroy(node);
-    bdestroy(token);
+    bdestroy(tid);
     bdestroy(id);
 
     return str;
 error:
     bdestroy(type);
     bdestroy(node);
-    bdestroy(token);
+    bdestroy(tid);
     bdestroy(id);
     bdestroy(str);
 
