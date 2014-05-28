@@ -3,6 +3,20 @@
 #include <dht/message.h>
 #include <dht/message_create.h>
 
+int DoMessageStr(Message *message)
+{
+    bstring str = Dht_MessageStr(message);
+    check(str != NULL, "Dht_MessageStr failed");
+
+    debug("MessageStr:\n%s\n", str->data);
+
+    bdestroy(str);
+
+    return 0;
+error:
+    return -1;
+}
+
 char *test_CreateDestroy_QPing()
 {
     Hash id = { "qping" };
@@ -17,6 +31,9 @@ char *test_CreateDestroy_QPing()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(Node_Same(&to, &message->node), "Wrong node");
+
+    int rc = DoMessageStr(message);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
 
     Client_Destroy(client);
     Message_Destroy(message);
@@ -42,6 +59,9 @@ char *test_CreateDestroy_QFindNode()
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(Node_Same(&to, &message->node), "Wrong node");
 
+    int rc = DoMessageStr(message);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
+
     Client_Destroy(client);
     Message_Destroy(message);
 
@@ -65,6 +85,9 @@ char *test_CreateDestroy_QGetPeers()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(Node_Same(&to, &message->node), "Wrong node");
+
+    int rc = DoMessageStr(message);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
 
     Client_Destroy(client);
     Message_Destroy(message);
@@ -100,6 +123,9 @@ char *test_CreateDestroy_QAnnouncePeer()
     mu_assert(message->t != NULL, "No message t");
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(Node_Same(&to, &message->node), "Wrong node");
+
+    int rc = DoMessageStr(message);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
 
     Client_Destroy(client);
     Message_Destroy(message);
@@ -152,6 +178,9 @@ char *test_CreateDestroy_RPing()
     mu_assert(SameT(query, message), "Wrong t");
     mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
+    int rc = DoMessageStr(message);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
+
     Client_Destroy(client);
     Message_Destroy(query);
     Message_Destroy(message);
@@ -201,6 +230,9 @@ char *test_CreateDestroy_RFindNode()
         mu_assert(SameT(query, message), "Wrong t");
         mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
+        int rc = DoMessageStr(message);
+        mu_assert(rc == 0, "Dht_MessageStr failed");
+
         Message_Destroy(message);
 
         while (DArray_count(found) > 0)
@@ -208,6 +240,9 @@ char *test_CreateDestroy_RFindNode()
 
         DArray_destroy(found);
     }
+
+    int rc = DoMessageStr(query);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
 
     Message_Destroy(query);
     Client_Destroy(client);
@@ -230,6 +265,11 @@ char *test_CreateDestroy_RAnnouncePeer()
     mu_assert(message->t_len > 0, "No t_len");
     mu_assert(SameT(query, message), "Wrong t");
     mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
+
+    int rc = DoMessageStr(query);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
+    rc = DoMessageStr(message);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
 
     Client_Destroy(client);
     Message_Destroy(query);
@@ -293,6 +333,9 @@ char *test_CreateDestroy_RGetPeers_Nodes()
         mu_assert(SameT(query, message), "Wrong t");
         mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
+        int rc = DoMessageStr(message);
+        mu_assert(rc == 0, "Dht_MessageStr failed");
+
         Message_Destroy(message);
 
         while (DArray_count(found) > 0)
@@ -300,6 +343,9 @@ char *test_CreateDestroy_RGetPeers_Nodes()
 
         DArray_destroy(found);
     }
+
+    int rc = DoMessageStr(query);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
 
     Client_Destroy(client);
     Message_Destroy(query);
@@ -362,6 +408,9 @@ char *test_CreateDestroy_RGetPeers_Peers()
         mu_assert(SameT(query, message), "Wrong t");
         mu_assert(Node_Same(&test_node, &message->node), "Wrong node");
 
+        int rc = DoMessageStr(message);
+        mu_assert(rc == 0, "Dht_MessageStr failed");
+
         Message_Destroy(message);
 
         while (DArray_count(found) > 0)
@@ -369,6 +418,9 @@ char *test_CreateDestroy_RGetPeers_Peers()
 
         DArray_destroy(found);
     }
+
+    int rc = DoMessageStr(query);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
 
     Client_Destroy(client);
     Message_Destroy(query);
@@ -393,6 +445,12 @@ char *test_CreateDestroy_RError()
 
     mu_assert(message->data.rerror.code == RERROR_PROTOCOL, "Wrong error code");
     mu_assert(blength(message->data.rerror.message) != 0, "No message");
+
+    int rc = DoMessageStr(query);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
+
+    rc = DoMessageStr(message);
+    mu_assert(rc == 0, "Dht_MessageStr failed");
 
     Client_Destroy(client);
     Message_Destroy(query);

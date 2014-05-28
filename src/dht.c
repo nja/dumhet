@@ -165,12 +165,12 @@ bstring Dht_PeerStr(Peer *peer)
     return bformat("%15s:%-5d", inet_ntoa(addr), peer->port);
 }
 
-bstring Dht_FTokenStr(struct FToken *ftoken)
+bstring Dht_FTokenStr(struct FToken ftoken)
 {
-    if (ftoken == NULL)
-        return bfromcstr("(NULL FToken)");
+    if (ftoken.data == NULL)
+        return bfromcstr("(NULL ftoken)");
 
-    return HexStr(ftoken->data, ftoken->len);
+    return HexStr(ftoken.data, ftoken.len);
 }
 
 bstring TidStr(char *data, size_t len)
@@ -198,6 +198,20 @@ bstring Dht_MessageTypeStr(MessageType type)
     default:            return bfromcstr("(Invalid MessageType");
     }
 }
+
+bstring Dht_RERROR_Str(int code)
+{
+    switch (code)
+    {
+    case RERROR_GENERIC:       return bfromcstr("GENERIC");
+    case RERROR_SERVER:        return bfromcstr("SERVER");
+    case RERROR_PROTOCOL:      return bfromcstr("PROTOCOL");
+    case RERROR_METHODUNKNOWN: return bfromcstr("METHOD UNKNOWN");
+    default:                   return bfromcstr("(UNKNOWN CODE)");
+    }
+}
+
+bstring DataStr(Message *message);
 
 bstring Dht_MessageStr(Message *message)
 {
@@ -231,13 +245,11 @@ bstring Dht_MessageStr(Message *message)
         id->data);
     check_mem(str);
 
-    if (1)
-    {
-        data = bfromcstr("Data todo");
-        bconchar(str, '\n');
-        bconcat(str, data);
-        bdestroy(data);
-    }
+    data = DataStr(message);
+    check_mem(data);
+    bconchar(str, '\n');
+    bconcat(str, data);
+    bdestroy(data);
 
     bdestroy(type);
     bdestroy(node);
@@ -251,6 +263,151 @@ error:
     bdestroy(tid);
     bdestroy(id);
     bdestroy(str);
+    bdestroy(data);
 
     return NULL;
+}
+
+bstring DataQFindNodeStr(Message *message);
+bstring DataQGetPeersStr(Message *message);
+bstring DataQAnnouncePeerStr(Message *message);
+bstring DataRFindNodeStr(Message *message);
+bstring DataRGetPeersStr(Message *message);
+bstring DataRErrorStr(Message *message);
+
+bstring DataStr(Message *message)
+{
+    if (message == NULL)
+        return bfromcstr("(NULL Message)");
+
+    switch (message->type)
+    {
+    case MUnknown:
+    case QPing:
+    case RPing:
+    case RAnnouncePeer:
+        return bfromcstr("");   /* No data. */
+    case QFindNode: return DataQFindNodeStr(message);
+    case QGetPeers: return DataQGetPeersStr(message);
+    case QAnnouncePeer: return DataQAnnouncePeerStr(message);
+    case RFindNode: return DataRFindNodeStr(message);
+    case RGetPeers: return DataRGetPeersStr(message);
+    case RError: return DataRErrorStr(message);
+    default: return bfromcstr("(Invalid MessageType)");
+    }
+}
+
+bstring DataQFindNodeStr(Message *message)
+{
+    bstring target = Dht_HashStr(message->data.qfindnode.target);
+
+    bstring str = bformat("QFindNode target: %s", target->data);
+
+    bdestroy(target);
+
+    return str;
+}
+
+bstring DataQGetPeersStr(Message *message)
+{
+    bstring info_hash = Dht_HashStr(message->data.qgetpeers.info_hash);
+
+    bstring str =  bformat("QGetPeers info_hash: %s", info_hash->data);
+
+    bdestroy(info_hash);
+
+    return str;
+}
+
+bstring DataQAnnouncePeerStr(Message *message)
+{
+    bstring info_hash = Dht_HashStr(message->data.qannouncepeer.info_hash);
+    bstring ftoken = Dht_FTokenStr(message->data.qannouncepeer.token);
+
+    bstring str = bformat("QAnnouncePeer info_hash: %s\n"
+                          "                  token: %s\n"
+                          "                   port: %hd",
+                          info_hash->data,
+                          ftoken->data,
+                          message->data.qannouncepeer.port);
+
+    bdestroy(info_hash);
+    bdestroy(ftoken);
+
+    return str;
+}
+
+bstring DataRFindNodeStr(Message *message)
+{
+    if (message->data.rfindnode.nodes == NULL)
+        return bfromcstr("(NULL rfindnode.nodes)");
+
+    if (message->data.rfindnode.count == 0)
+        return bfromcstr("(Zero nodes)");
+
+    size_t i = 0;
+    Node **nodes = message->data.rfindnode.nodes;
+
+    bstring str = bfromcstr("");
+
+    for (i = 0; i < message->data.rfindnode.count; i++)
+    {
+        bstring node = Dht_NodeStr(nodes[i]);
+
+        bformata(str, "%sNode %02zd: %s",
+                 i > 0 ? "\n" : "",
+                 i,
+                 node->data);
+
+        bdestroy(node);
+    }
+
+    return str;
+}
+        
+bstring DataRGetPeersStr(Message *message)
+{
+    if (message->data.rgetpeers.nodes != NULL)
+    {
+        return DataRFindNodeStr(message);
+    }
+
+    bstring ftoken = Dht_FTokenStr(message->data.rgetpeers.token);
+
+    bstring str = bformat("Token: %s", ftoken->data);
+
+    bdestroy(ftoken);
+
+    size_t i = 0;
+
+    if (message->data.rgetpeers.values == NULL)
+    {
+        bformata(str, "\n(NULL rgetpeers.values)");
+        return str;
+    }
+
+    for (i = 0; i < message->data.rgetpeers.count; i++)
+    {
+        bstring peer = Dht_PeerStr(message->data.rgetpeers.values + i);
+
+        bformata(str, "\nPeer %03zd: %s", i, peer->data);
+
+        bdestroy(peer);
+    }
+
+    return str;
+}
+
+bstring DataRErrorStr(Message *message)
+{
+    bstring error = Dht_RERROR_Str(message->data.rerror.code);
+
+    bstring str =  bformat("%03d %s: %s",
+                           message->data.rerror.code,
+                           error->data,
+                           message->data.rerror.message->data);
+
+    bdestroy(error);
+
+    return str;
 }

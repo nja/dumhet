@@ -72,7 +72,7 @@ struct FToken {
     size_t len;
 };
 
-bstring Dht_FTokenStr(struct FToken *ftoken);
+bstring Dht_FTokenStr(struct FToken ftoken);
 
 typedef enum MessageType {
     MUnknown = 0,
