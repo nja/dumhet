@@ -199,14 +199,18 @@ char *test_CreateDestroy_RFindNode()
     {
         DArray *found = DArray_create(sizeof(Node *), i + 1);
 
+        int j = 0;
+
         while (DArray_count(found) < i)
         {
             Hash found_id = { "found" };
-            found_id.value[5] = i;
+            found_id.value[5] = j;
             Node *node = Node_Create(&found_id);
-            node->addr.s_addr = i;
-            node->port = ~i;
+            node->addr.s_addr = j;
+            node->port = ~j;
             DArray_push(found, node);
+
+            j++;
         }
 
         Message *message = Message_CreateRFindNode(client, query, found);
@@ -214,7 +218,6 @@ char *test_CreateDestroy_RFindNode()
         mu_assert(message->data.rfindnode.count == (unsigned int)i,
                   "Wrong node count");
 
-        int j = 0;
         for (j = 0; j < DArray_count(found); j++)
         {
             mu_assert(Node_Same(DArray_get(found, j),
@@ -290,14 +293,18 @@ char *test_CreateDestroy_RGetPeers_Nodes()
     {
         DArray *found = DArray_create(sizeof(Node *), i + 1);
 
+        int j = 0;
+
         while (DArray_count(found) < i)
         {
             Hash found_id = { "found" };
-            found_id.value[5] = i;
+            found_id.value[5] = j;
             Node *node = Node_Create(&found_id);
-            node->addr.s_addr = i;
-            node->port = ~i;
+            node->addr.s_addr = j;
+            node->port = ~j;
             DArray_push(found, node);
+
+            j++;
         }
 
         Token token = { "token" };
@@ -313,7 +320,6 @@ char *test_CreateDestroy_RGetPeers_Nodes()
         mu_assert(message->data.rgetpeers.count == (unsigned int)i,
                   "Wrong node count");
 
-        int j = 0;
         for (j = 0; j < DArray_count(found); j++)
         {
             mu_assert(Node_Same(DArray_get(found, j),
