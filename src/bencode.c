@@ -410,7 +410,11 @@ BNode *BNode_GetValue(BNode *dict, char *key, size_t key_len)
     BNode *found = dict->value.nodes[l * 2];
     cmp = compare_keys(key, key_len, found->value.string, found->count);
 
-    check(cmp == 0, "Key not found");
+    if (cmp != 0)
+    {
+        /* Key not found */
+        return NULL;
+    }
 
     return dict->value.nodes[l * 2 + 1];
 error:
