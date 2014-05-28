@@ -35,6 +35,8 @@ char *test_hooks()
     Hooks_Destroy(test_client->hooks);
     Hook_Destroy(hook);
 
+    free(test_client);
+
     return NULL;
 }
 
