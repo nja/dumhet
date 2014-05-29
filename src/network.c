@@ -173,6 +173,16 @@ int ReceiveMessage(Client *client, Message **message)
     decoded->node = node;
     decoded->node.id = decoded->id;
 
+    if (MessageType_IsQuery(decoded->type))
+    {
+        decoded->node.query_time = time(NULL);
+    }
+
+    if (MessageType_IsReply(decoded->type))
+    {
+        decoded->node.reply_time = time(NULL);
+    }
+
     *message = decoded;
 
     return 1;

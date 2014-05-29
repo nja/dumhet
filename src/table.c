@@ -191,7 +191,6 @@ int Table_CopyAndAddNode(Table *dest, Node *node)
 
     if (Node_Status(node, time(NULL)) != Good)
     {
-        debug("CopyAndAdd non good node");
         return 0;
     }
 
@@ -349,39 +348,63 @@ error:
     return NULL;
 }
 
-int Table_MarkReply(Table *table, Hash *id)
+int Table_MarkReply(Table *table, Node *node)
 {
     assert(table != NULL && "NULL Table pointer");
-    assert(id != NULL && "NULL Hash pointer");
+    assert(node != NULL && "NULL Node pointer");
 
-    Node *node = Table_FindNode(table, id);
+    Node *found = Table_FindNode(table, &node->id);
 
-    if (node == NULL)
+    if (found == NULL)
+    {
+        int rc = Table_CopyAndAddNode(table, node);
+        check(rc == 0, "Table_CopyAndAddNode failed");
+
+        Node *added = Table_FindNode(table, &node->id);
+
+        if (added != NULL)
+        {
+            added->reply_time = time(NULL);
+        }
+
         return 0;
+    }
 
-    check(node->pending_queries > 0, "No pending queries on node");
+    found->reply_time = time(NULL);
 
-    node->reply_time = time(NULL);
-    node->pending_queries--;
+    if (found->pending_queries > 0)
+    {
+        found->pending_queries--;
+    }
 
     return 0;
 error:
     return -1;
 }
 
-void Table_MarkQuery(Table *table, Hash *id)
+int Table_MarkQuery(Table *table, Node *node)
 {
     assert(table != NULL && "NULL Table pointer");
-    assert(id != NULL && "NULL Hash pointer");
+    assert(node != NULL && "NULL Node pointer");
 
-    Node *node = Table_FindNode(table, id);
+    Node *found = Table_FindNode(table, &node->id);
 
-    if (node == NULL)
-        return;
+    if (found == NULL)
+    {
+        int rc = Table_CopyAndAddNode(table, node);
+        check(rc == 0, "Table_CopyAndAddNode failed");
 
-    node->query_time = time(NULL);
+        found = Table_FindNode(table, &node->id);
 
-    return;
+        if (found == NULL)
+            return 0;
+    }
+
+    found->query_time = time(NULL);
+
+    return 0;
+error:
+    return -1;
 }
 
 int AppendLine(bstring dump, Node *node)

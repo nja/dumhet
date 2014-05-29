@@ -53,12 +53,10 @@ Table_InsertNodeResult Table_InsertNode(Table *table, Node *node);
 /* If Node is good, copy and add to table (when not already there) */
 int Table_CopyAndAddNode(Table *dest, Node *node);
 
-/* Fins the node with the given id in the table and updates its
- * reply_time.*/
-int Table_MarkReply(Table *table, Hash *id);
-/* Fins the node with the given id in the table and updates its
- * query_time.*/
-void Table_MarkQuery(Table *table, Hash *id);
+/* Finds or adds the node in the table and updates its reply_time.*/
+int Table_MarkReply(Table *table, Node *node);
+/* Finds or adds the node in the table and updates its query_time.*/
+int Table_MarkQuery(Table *table, Node *node);
 
 bstring Table_Dump(Table *table);
 Table *Table_Read(bstring dump);

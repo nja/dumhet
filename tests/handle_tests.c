@@ -41,7 +41,7 @@ char *test_HandleQPing()
 
     Table_InsertNode(client->table, &from->node);
 
-    Message *qping = Message_CreateQPing(from, &client->node);
+    Message *qping = Message_CreateQPing(from, &from->node);
 
     Message *reply = HandleQPing(client, qping);
 
@@ -187,7 +187,7 @@ char *test_HandleQAnnouncePeer_badtoken()
     Token token = { "bad token" };
 
     Message *query = Message_CreateQAnnouncePeer(from,
-                                                 &client->node,
+                                                 &from->node,
                                                  &target_id,
                                                  token.value,
                                                  HASH_BYTES);
@@ -218,7 +218,7 @@ char *test_HandleQFindNode()
 
     Table_InsertNode(client->table, &from->node);
 
-    Message *query = Message_CreateQFindNode(from, &client->node, &target_id);
+    Message *query = Message_CreateQFindNode(from, &from->node, &target_id);
 
     Message *reply = HandleQFindNode(client, query);
 
@@ -382,7 +382,7 @@ char *test_HandleRGetPeers_nodes()
     }
 
     Message *qgetpeers = Message_CreateQGetPeers(client,
-                                                 &from->node,
+                                                 &client->node,
                                                  &target_id);
 
     Message *rgetpeers = HandleQGetPeers(from, qgetpeers);
@@ -390,10 +390,16 @@ char *test_HandleRGetPeers_nodes()
     Search *search = Search_Create(&target_id);
     rgetpeers->context = search;
 
+    /* rgetpeers is addressed to client, now change it as if it had
+     * arrived from from */
+    rgetpeers->node = from->node;
+    rgetpeers->node.reply_time = time(NULL);
     int rc = HandleRGetPeers(client, rgetpeers);
 
     mu_assert(rc == 0, "HandleRGetPeers failed");
-    mu_assert(search->table->buckets[0]->count == nodes_count, "Found nodes missing.");
+
+    mu_assert(search->table->buckets[0]->count == nodes_count + 1, /* +1 for from node */
+              "Found nodes missing.");
     mu_assert(search->peers->count == 0, "No peers expected");
 
     Client_Destroy(client);
@@ -429,15 +435,19 @@ char *test_HandleRGetPeers_peers()
                                                  &from->node,
                                                  &target_id);
 
+    qgetpeers->node = client->node;
     Message *rgetpeers = HandleQGetPeers(from, qgetpeers);
 
     Search *search = Search_Create(&target_id);
     rgetpeers->context = search;
 
+    rgetpeers->node = from->node;
+    rgetpeers->node.reply_time = time(NULL);
+
     int rc = HandleRGetPeers(client, rgetpeers);
 
     mu_assert(rc == 0, "HandleRGetPeers failed");
-    mu_assert(search->table->buckets[0]->count == 0, "No nodes expected.");
+    mu_assert(search->table->buckets[0]->count == 1, "Only from node expected.");
     mu_assert(search->peers->count == peers_count, "Missing peers");
 
     Client_Destroy(client);
