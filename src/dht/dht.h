@@ -26,6 +26,9 @@ typedef struct Node {
     time_t query_time;
     int pending_queries;
     int is_new;                 /* Don't know their id yet */
+    unsigned int rfindnode_count;
+    unsigned int rgetpeers_count;
+    unsigned int rannounce_count;
 } Node;
 
 bstring Dht_NodeStr(Node *node);

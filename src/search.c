@@ -221,9 +221,7 @@ struct ClientSearch {
 
 int SendFindNodes(struct ClientSearch *context, Node *node)
 {
-    NodeStatus status = Node_Status(node, time(NULL));
-
-    if (status == Good || status == Bad)
+    if (node->rfindnode_count > 0)
         return 0;
 
     Message *query = Message_CreateQFindNode(context->client,
@@ -246,6 +244,9 @@ error:
 
 int SendGetPeers(struct ClientSearch *context, Node *node)
 {
+    if (node->rgetpeers_count > 0)
+        return 0;
+
     Message *query = Message_CreateQGetPeers(context->client,
                                              node,
                                              &context->search->table->id);
@@ -266,6 +267,9 @@ error:
 
 int SendAnnouncePeer(struct ClientSearch *context, Node *node)
 {
+    if (node->rannounce_count > 0)
+        return 0;
+
     struct FToken *token = Search_GetToken(context->search,
                                            &context->search->table->id);
 

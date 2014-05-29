@@ -189,7 +189,7 @@ int Table_CopyAndAddNode(Table *dest, Node *node)
     assert(dest != NULL && "NULL Table pointer");
     assert(node != NULL && "NULL Node pointer");
 
-    if (Node_Status(node, time(NULL)) != Good)
+    if (Node_Status(node, time(NULL)) == Bad)
     {
         return 0;
     }
@@ -348,26 +348,22 @@ error:
     return NULL;
 }
 
-int Table_MarkReply(Table *table, Node *node)
+int Table_MarkReply(Table *table, Message *message)
 {
     assert(table != NULL && "NULL Table pointer");
-    assert(node != NULL && "NULL Node pointer");
+    assert(message != NULL && "NULL Message pointer");
 
-    Node *found = Table_FindNode(table, &node->id);
+    Node *found = Table_FindNode(table, &message->node.id);
 
     if (found == NULL)
     {
-        int rc = Table_CopyAndAddNode(table, node);
+        int rc = Table_CopyAndAddNode(table, &message->node);
         check(rc == 0, "Table_CopyAndAddNode failed");
 
-        Node *added = Table_FindNode(table, &node->id);
+        found = Table_FindNode(table, &message->node.id);
 
-        if (added != NULL)
-        {
-            added->reply_time = time(NULL);
-        }
-
-        return 0;
+        if (found == NULL)
+            return 0;
     }
 
     found->reply_time = time(NULL);
@@ -376,6 +372,13 @@ int Table_MarkReply(Table *table, Node *node)
     {
         found->pending_queries--;
     }
+
+    if (message->type == RFindNode)
+        ++found->rfindnode_count;
+    else if (message->type == RGetPeers)
+        ++found->rgetpeers_count;
+    else if (message->type == RAnnouncePeer)
+        ++found->rannounce_count;
 
     return 0;
 error:

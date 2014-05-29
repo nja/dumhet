@@ -22,6 +22,7 @@ int BaddenTwoThirds(int *i, Node *node)
     if ((*i)++ % 3 != 0)
     {
         node->reply_time = 0;
+        node->pending_queries = NODE_MAX_PENDING;
     }
 
     return 0;

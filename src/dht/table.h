@@ -54,7 +54,7 @@ Table_InsertNodeResult Table_InsertNode(Table *table, Node *node);
 int Table_CopyAndAddNode(Table *dest, Node *node);
 
 /* Finds or adds the node in the table and updates its reply_time.*/
-int Table_MarkReply(Table *table, Node *node);
+int Table_MarkReply(Table *table, Message *message);
 /* Finds or adds the node in the table and updates its query_time.*/
 int Table_MarkQuery(Table *table, Node *node);
 

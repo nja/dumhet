@@ -45,7 +45,7 @@ int HandleReply(Client *client, Message *message)
             || message->type == RAnnouncePeer) && "Wrong message type");
     assert(message->context == NULL && "Non-NULL message context");
 
-    int rc = Table_MarkReply(client->table, &message->node);
+    int rc = Table_MarkReply(client->table, message);
     check(rc == 0, "Table_MarkReply failed");
 
     return 0;
@@ -109,10 +109,10 @@ int HandleRFindNode(Client *client, Message *message)
     Search *search = (Search *)message->context;
     check(search != NULL, "Missing Search context");
 
-    int rc = Table_MarkReply(client->table, &message->node);
+    int rc = Table_MarkReply(client->table, message);
     check(rc == 0, "Table_MarkReply failed (client->table)");
 
-    rc = Table_MarkReply(search->table, &message->node);
+    rc = Table_MarkReply(search->table, message);
     check(rc == 0, "Table_MarkReply failed (search->table)");
 
     rc = AddSearchNodes(client,
@@ -144,10 +144,10 @@ int HandleRGetPeers(Client *client, Message *message)
 
     Search *search = (Search *)message->context;
 
-    int rc = Table_MarkReply(client->table, &message->node);
+    int rc = Table_MarkReply(client->table, message);
     check(rc == 0, "Table_MarkReply failed (client->table)");
 
-    rc = Table_MarkReply(search->table, &message->node);
+    rc = Table_MarkReply(search->table, message);
     check(rc == 0, "Table_MarkReply failed (search->table)");
 
     rc = Search_SetToken(search, &message->id, data->token);
@@ -226,7 +226,7 @@ Message *HandleQFindNode(Client *client, Message *query)
     check(rc == 0, "Table_MarkQuery failed");
 
     found = Table_GatherClosest(client->table,
-                                        query->data.qfindnode.target);
+                                query->data.qfindnode.target);
     check(found != NULL, "Table_GatherClosest failed");
 
     Message *reply = Message_CreateRFindNode(client, query, found);
@@ -357,7 +357,7 @@ int HandleInvalidReply(Client *client, Message *reply)
     int rc = Client_MarkInvalidMessage(client, &reply->node);
     check(rc == 0, "Client_MarkInvalidMessage failed");
 
-    rc = Table_MarkReply(client->table, &reply->node);
+    rc = Table_MarkReply(client->table, reply);
     check(rc == 0, "Table_MarkReply failed");
 
     return 0;
