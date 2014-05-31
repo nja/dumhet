@@ -43,7 +43,7 @@ char *test_HandleQPing()
 
     Message *qping = Message_CreateQPing(from, &from->node);
 
-    Message *reply = HandleQPing(client, qping);
+    Message *reply = (GetQueryHandler(qping->type))(client, qping);
 
     mu_assert(reply != NULL, "HandleQPing failed");
     mu_assert(reply->type == RPing, "Wrong type");
@@ -70,7 +70,7 @@ char *test_HandleQGetPeers_nodes()
 
     Message *qgetpeers = Message_CreateQGetPeers(from, &from->node, &target_id);
 
-    Message *reply = HandleQGetPeers(client, qgetpeers);
+    Message *reply = (GetQueryHandler(qgetpeers->type))(client, qgetpeers);
 
     mu_assert(reply != NULL, "HandleQGetPeers failed");
     mu_assert(reply->type == RGetPeers, "Wrong type");
@@ -107,7 +107,7 @@ char *test_HandleQGetPeers_peers()
 
     Message *qgetpeers = Message_CreateQGetPeers(from, &from->node, &target_id);
 
-    Message *reply = HandleQGetPeers(client, qgetpeers);
+    Message *reply = (GetQueryHandler(qgetpeers->type))(client, qgetpeers);
 
     mu_assert(reply != NULL, "HandleQGetPeers failed");
     mu_assert(reply->type == RGetPeers, "Wrong type");
@@ -147,7 +147,7 @@ char *test_HandleQAnnouncePeer()
                                                  token.value,
                                                  HASH_BYTES);
 
-    Message *reply = HandleQAnnouncePeer(client, query);
+    Message *reply = (GetQueryHandler(query->type))(client, query);
 
     mu_assert(reply != NULL, "HandleQAnnouncePeer failed");
     mu_assert(reply->type == RAnnouncePeer, "Wrong type");
@@ -192,7 +192,7 @@ char *test_HandleQAnnouncePeer_badtoken()
                                                  token.value,
                                                  HASH_BYTES);
 
-    Message *reply = HandleQAnnouncePeer(client, query);
+    Message *reply = (GetQueryHandler(query->type))(client, query);
 
     mu_assert(reply != NULL, "HandleQAnnouncePeer failed");
     mu_assert(reply->type == RError, "Wrong type");
@@ -220,7 +220,7 @@ char *test_HandleQFindNode()
 
     Message *query = Message_CreateQFindNode(from, &from->node, &target_id);
 
-    Message *reply = HandleQFindNode(client, query);
+    Message *reply = (GetQueryHandler(query->type))(client, query);
 
     mu_assert(reply != NULL, "HandleQFindNode failed");
     mu_assert(reply->type == RFindNode, "Wrong type");
@@ -270,7 +270,7 @@ char *test_HandleRFindNode()
     Message *rfindnode = Message_CreateRFindNode(from, query, found);
     rfindnode->context = search; /* Would be set when decoding */
 
-    int rc = HandleRFindNode(client, rfindnode);
+    int rc = (GetReplyHandler(rfindnode->type))(client, rfindnode);
     mu_assert(rc == 0, "HandleRFindNode failed");
 
     mu_assert(search->peers->count == 0, "Wrong peers count on search");
@@ -305,7 +305,7 @@ char *test_HandleRPing()
 
     Message *reply = Message_CreateRPing(from, query);
 
-    int rc = HandleReply(client, reply);
+    int rc = (GetReplyHandler(reply->type))(client, reply);
 
     mu_assert(rc == 0, "HandleReply failed");
     mu_assert(HasRecentReply(client->table, from_node->id), "Reply not marked");
@@ -343,7 +343,7 @@ char *test_HandleRAnnouncePeer()
 
     Message *reply = Message_CreateRAnnouncePeer(from, query);
 
-    int rc = HandleReply(client, reply);
+    int rc = (GetReplyHandler(reply->type))(client, reply);
 
     mu_assert(rc == 0, "HandleReply failed");
     mu_assert(HasRecentReply(client->table, from_node->id), "Reply not marked");
@@ -394,7 +394,7 @@ char *test_HandleRGetPeers_nodes()
      * arrived from from */
     rgetpeers->node = from->node;
     rgetpeers->node.reply_time = time(NULL);
-    int rc = HandleRGetPeers(client, rgetpeers);
+    int rc = (GetReplyHandler(rgetpeers->type))(client, rgetpeers);
 
     mu_assert(rc == 0, "HandleRGetPeers failed");
 
@@ -444,7 +444,7 @@ char *test_HandleRGetPeers_peers()
     rgetpeers->node = from->node;
     rgetpeers->node.reply_time = time(NULL);
 
-    int rc = HandleRGetPeers(client, rgetpeers);
+    int rc = (GetReplyHandler(rgetpeers->type))(client, rgetpeers);
 
     mu_assert(rc == 0, "HandleRGetPeers failed");
     mu_assert(search->table->buckets[0]->count == 1, "Only from node expected.");
