@@ -418,7 +418,7 @@ int AppendLine(bstring dump, Node *node)
     bstring line = bformat("%s %s %d\n",
                            Hash_Str(&node->id),
                            inet_ntoa(node->addr),
-                           node->port);
+                           ntohs(node->port));
     int rc = bconcat(dump, line);
 
     check(rc == BSTR_OK, "bconcat failed");
@@ -505,7 +505,7 @@ int ReadLine(bstring line, Node *result)
     check(*end == '\0', "Invalid port");
     check(0 <= port && port <= (uint16_t)~0, "Invalid port");
 
-    node.port = (uint16_t)port;
+    node.port = htons((uint16_t)port);
 
     bstrListDestroy(list);
     *result = node;
