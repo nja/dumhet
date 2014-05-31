@@ -212,7 +212,7 @@ int SendAnnouncePeer(struct ClientSearch *context, Node *node)
         return 0;
 
     struct FToken *token = Search_GetToken(context->search,
-                                           &context->search->table->id);
+                                           &node->id);
 
     if (token == NULL)
     {
