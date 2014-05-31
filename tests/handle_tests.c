@@ -333,6 +333,8 @@ char *test_HandleRAnnouncePeer()
     from_node->pending_queries = 1;
     Table_InsertNode(client->table, from_node);
 
+    Search *search = Search_Create(&info_hash);
+
     Token token = Client_MakeToken(client, &from->node);
 
     Message *query = Message_CreateQAnnouncePeer(client,
@@ -342,11 +344,13 @@ char *test_HandleRAnnouncePeer()
                                                  HASH_BYTES);
 
     Message *reply = Message_CreateRAnnouncePeer(from, query);
+    reply->context = search; /* Would be set when decoding */
 
     int rc = (GetReplyHandler(reply->type))(client, reply);
 
     mu_assert(rc == 0, "HandleReply failed");
     mu_assert(HasRecentReply(client->table, from_node->id), "Reply not marked");
+    mu_assert(HasRecentReply(search->table, from_node->id), "Search reply not marked");
     mu_assert(reply->type == RAnnouncePeer, "Wrong type");
     mu_assert(SameT(query, reply), "Wrong t");
 

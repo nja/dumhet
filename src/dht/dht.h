@@ -49,6 +49,7 @@ bstring Dht_PeerStr(Peer *peer);
 typedef enum HookType {         /* HookOp args: */
     HookAddPeer,                /* struct HookPeerData */
     HookFoundPeer,              /* struct HookPeerData */
+    HookAnnouncedPeer,          /* struct HookPeerData */
     HookInvalidMessage,         /* Node */
     HookHandleMessage,          /* Message */
     HookSendMessage,            /* Message */
@@ -67,6 +68,11 @@ struct HookPeerData {
     Hash *info_hash;
     Peer *peers;
     size_t count;
+};
+
+struct HookAnnounceData {
+    void *search;
+    Node *node;
 };
 
 /* Message */

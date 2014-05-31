@@ -15,7 +15,7 @@ ReplyHandler GetReplyHandler(MessageType type)
     {
     case RError: return HandleRError;
     case RPing: return HandleRPing;
-    case RAnnouncePeer: return HandleReply;
+    case RAnnouncePeer: return HandleRAnnouncePeer;
     case RFindNode: return HandleRFindNode;
     case RGetPeers: return HandleRGetPeers;
     default:
@@ -184,6 +184,34 @@ int HandleRGetPeers(Client *client, Message *message)
 error:
     return -1;
 }    
+
+int HandleRAnnouncePeer(Client *client, Message *message)
+{
+    assert(client != NULL && "NULL Client pointer");
+    assert(message != NULL && "NULL Message pointer");
+    assert(message->type == RAnnouncePeer && "Wrong message type");
+    assert(message->context != NULL && "NULL message context");
+
+    Search *search = (Search *)message->context;
+    check(search != NULL, "Missing Search context");
+
+    int rc = Table_MarkReply(client->table, message);
+    check(rc == 0, "Table_MarkReply failed (client->table)");
+
+    rc = Table_MarkReply(search->table, message);
+    check(rc == 0, "Table_MarkReply failed (search->table)");
+
+    struct HookAnnounceData hook_data = {
+        .search = search,
+        .node = &message->node
+    };
+
+    Client_RunHook(client, HookAnnouncedPeer, &hook_data);
+
+    return 0;
+error:
+    return -1;
+}
 
 /* AddSearchNodes NULLs the added nodes. */
 int AddSearchNodes(Client *client, Search *search, Node **nodes, size_t count)

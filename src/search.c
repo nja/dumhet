@@ -228,6 +228,8 @@ int SendAnnouncePeer(struct ClientSearch *context, Node *node)
 
     int rc = MessageQueue_Push(context->client->queries, query);
     check(rc == 0, "MessageQueue_Push failed");
+    query->context = context->search;
+
 
     node->pending_queries++;
 

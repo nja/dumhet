@@ -29,6 +29,8 @@ int HandleRPing(Client *client, Message *message);
 int HandleRFindNode(Client *client, Message *reply);
 /* Adds the replied Peers or nodes to the Search and notes that the node replied. */
 int HandleRGetPeers(Client *client, Message *reply);
+/* Runs the HookAnnouncedPeer */
+int HandleRAnnouncePeer(Client *client, Message *reply);
 
 /* Gathers the closest nodes. */
 Message *HandleQFindNode(Client *client, Message *query);
