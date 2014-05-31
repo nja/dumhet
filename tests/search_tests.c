@@ -108,59 +108,12 @@ char *test_Search_SetGetToken()
     return NULL;
 }
 
-char *test_Search_NodesToQuery()
-{
-    time_t now = time(NULL);
-    Hash id = { "foo" };
-    Search *search = Search_Create(&id);
-
-    Node *already_replied = Node_Create(&id);
-    already_replied->reply_time = now;
-    already_replied->id.value[0] = 1;
-
-    Node *max_pending = Node_Create(&id);
-    max_pending->pending_queries = SEARCH_MAX_PENDING;
-    max_pending->id.value[0] = 2;
-
-    Node *just_queried = Node_Create(&id);
-    just_queried->query_time = now;
-    just_queried->id.value[0] = 3;
-
-    Node *should_query_a = Node_Create(&id);
-    should_query_a->pending_queries = 1;
-    should_query_a->id.value[0] = 4;
-
-    Node *should_query_b = Node_Create(&id);
-    should_query_b->id.value[0] = 5;
-
-    Table_InsertNode(search->table, already_replied);
-    Table_InsertNode(search->table, should_query_a);
-    Table_InsertNode(search->table, max_pending);
-    Table_InsertNode(search->table, just_queried);
-    Table_InsertNode(search->table, should_query_b);
-
-    DArray *nodes = DArray_create(sizeof(Node *), 2);
-
-    int rc = Search_NodesToQuery(search, nodes, now);
-    mu_assert(rc == 0, "Search_NodesToQuery failed");
-
-    mu_assert(DArray_count(nodes) == 2, "Too many nodes to query");
-    mu_assert(DArray_first(nodes) == should_query_a, "Wrong node");
-    mu_assert(DArray_last(nodes) == should_query_b, "Bad node");
-
-    Search_Destroy(search);
-    DArray_destroy(nodes);
-
-    return NULL;
-}
-
 char *all_tests()
 {
     mu_suite_start();
 
     mu_run_test(test_Search_CreateDestroy);
     mu_run_test(test_Search_CopyTable);
-    mu_run_test(test_Search_NodesToQuery);
     mu_run_test(test_Search_SetGetToken);
 
     return NULL;

@@ -31,9 +31,6 @@ int Search_DoWork(Client *client, Search *search);
 #define SEARCH_RESPITE 3
 #define SEARCH_MAX_PENDING 2
 
-/* Finds nodes in the search table that should be queried. */
-int Search_NodesToQuery(Search *search, DArray *nodes, time_t time);
-
 /* Adds to the collection of found peers by the search. */
 int Search_AddPeers(Search *search, Peer *peers, int count);
 
