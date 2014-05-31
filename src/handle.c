@@ -2,6 +2,7 @@
 
 #include <dht/close.h>
 #include <dht/handle.h>
+#include <dht/hooks.h>
 #include <dht/message.h>
 #include <dht/message_create.h>
 #include <dht/client.h>
@@ -165,6 +166,14 @@ int HandleRGetPeers(Client *client, Message *message)
     {
         rc = Search_AddPeers(search, data->values, data->count);
         check(rc == 0, "Search_AddPeers failed");
+
+        struct HookPeerData hook_data = {
+            .info_hash = &search->table->id,
+            .peers = data->values,
+            .count = data->count
+        };
+
+        Client_RunHook(client, HookFoundPeer, &hook_data);
     }
     else
     {
