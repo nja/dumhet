@@ -54,6 +54,7 @@ typedef enum HookType {         /* HookOp args: */
     HookHandleMessage,          /* Message */
     HookSendMessage,            /* Message */
     HookReceiveMessage,         /* Message */
+    HookSearchDone,             /* Search */
     HookTypeMax
 } HookType;
 
@@ -185,6 +186,7 @@ bstring Dht_RERROR_Str(int code);
 void *Dht_CreateClient(Hash id, uint32_t addr, uint16_t port, uint16_t peer_port);
 void Dht_DestroyClient(void *client);
 int Dht_AddNode(void *client, uint32_t addr, uint16_t port);
+void *Dht_AddSearch(void *client, Hash info_hash);
 
 bstring Dht_ClientStr(void *client);
 

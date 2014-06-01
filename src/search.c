@@ -1,9 +1,9 @@
 #include <assert.h>
 
+#include <dht/search.h>
 #include <dht/client.h>
 #include <dht/close.h>
 #include <dht/message_create.h>
-#include <dht/search.h>
 #include <dht/table.h>
 #include <lcthw/dbg.h>
 
@@ -158,6 +158,7 @@ struct FToken *Search_GetToken(Search *search, Hash *id)
 struct ClientSearch {
     Client *client;
     Search *search;
+    int count;
 };
 
 int SendFindNodes(struct ClientSearch *context, Node *node)
@@ -199,6 +200,7 @@ int SendGetPeers(struct ClientSearch *context, Node *node)
     check(rc == 0, "MessageQueue_Push failed");
 
     node->pending_queries++;
+    context->count++;
 
     return 0;
 error:
@@ -226,12 +228,15 @@ int SendAnnouncePeer(struct ClientSearch *context, Node *node)
                                                  token->len);
     check(query != NULL, "Message_CreateQAnnouncePeer failed");
 
+    query->context = context->search;
+
     int rc = MessageQueue_Push(context->client->queries, query);
     check(rc == 0, "MessageQueue_Push failed");
     query->context = context->search;
 
 
     node->pending_queries++;
+    context->count++;
 
     return 0;
 error:
@@ -258,6 +263,9 @@ int Search_DoWork(Client *client, Search *search)
                                 &context,
                                 (NodeOp)SendAnnouncePeer);
     check(rc == 0, "SendAnnouncePeer failed");
+
+    if (context.count > 0)
+        search->send_time = time(NULL);
 
     return 0;
 error:

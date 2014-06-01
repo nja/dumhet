@@ -46,10 +46,10 @@ int Dht_Start(void *client_)
     Client *client = (Client *)client_;
     check(client != NULL, "NULL client pointer");
 
-    int rc = Client_AddSearch(client, &client->table->id);
-    check(rc == 0, "Client_AddSearch failed");
+    Search *search = Client_AddSearch(client, &client->table->id);
+    check(search != NULL, "Client_AddSearch failed");
 
-    rc = NetworkUp(client);
+    int rc = NetworkUp(client);
     check(rc == 0, "NetworkUp failed");
 
     return 0;
@@ -410,4 +410,13 @@ bstring DataRErrorStr(Message *message)
     bdestroy(error);
 
     return str;
+}
+
+void *Dht_AddSearch(void *client, Hash info_hash)
+{
+    check(client != NULL, "NULL client pointer");
+
+    return Client_AddSearch((Client *)client, &info_hash);
+error:
+    return NULL;
 }

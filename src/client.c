@@ -227,7 +227,7 @@ error:
     return -1;
 }
 
-int Client_AddSearch(Client *client, Hash *target)
+Search *Client_AddSearch(Client *client, Hash *target)
 {
     Search *search = Search_Create(target);
     check(search != NULL, "Search_Create failed");
@@ -238,10 +238,10 @@ int Client_AddSearch(Client *client, Hash *target)
     rc = DArray_push(client->searches, search);
     check(rc == 0, "DArray_push failed");
 
-    return 0;
+    return search;
 error:
     Search_Destroy(search);
-    return -1;
+    return NULL;
 }
 
 int Client_MarkInvalidMessage(Client *client, Node *from)

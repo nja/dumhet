@@ -17,6 +17,7 @@ typedef struct Search {
     Table *table;
     Peers *peers;
     Hashmap *tokens;
+    time_t send_time;
 } Search;
 
 Search *Search_Create(Hash *id);
@@ -29,7 +30,6 @@ int Search_CopyTable(Search *search, Table *source);
 int Search_DoWork(Client *client, Search *search);
 
 #define SEARCH_RESPITE 3
-#define SEARCH_MAX_PENDING 2
 
 /* Adds to the collection of found peers by the search. */
 int Search_AddPeers(Search *search, Peer *peers, int count);
