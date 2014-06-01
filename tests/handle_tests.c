@@ -39,7 +39,7 @@ char *test_HandleQPing()
     Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 1, 1);
 
-    Table_InsertNode(client->table, &from->node);
+    Table_CopyAndAddNode(client->table, &from->node);
 
     Message *qping = Message_CreateQPing(from, &from->node);
 
@@ -66,7 +66,7 @@ char *test_HandleQGetPeers_nodes()
     Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 1, 1);
 
-    Table_InsertNode(client->table, &from->node);
+    Table_CopyAndAddNode(client->table, &from->node);
 
     Message *qgetpeers = Message_CreateQGetPeers(from, &from->node, &target_id);
 
@@ -102,7 +102,7 @@ char *test_HandleQGetPeers_peers()
     Client *from = Client_Create(from_id, 1, 1, 1);
     Peer peer = { .addr = 23, .port = 32 };
 
-    Table_InsertNode(client->table, &from->node);
+    Table_CopyAndAddNode(client->table, &from->node);
     Client_AddPeer(client, &target_id, &peer);
 
     Message *qgetpeers = Message_CreateQGetPeers(from, &from->node, &target_id);
@@ -138,7 +138,7 @@ char *test_HandleQAnnouncePeer()
     Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
-    Table_InsertNode(client->table, &from->node);
+    Table_CopyAndAddNode(client->table, &from->node);
     Token token = Client_MakeToken(client, &from->node);
 
     Message *query = Message_CreateQAnnouncePeer(from,
@@ -183,7 +183,7 @@ char *test_HandleQAnnouncePeer_badtoken()
     Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
-    Table_InsertNode(client->table, &from->node);
+    Table_CopyAndAddNode(client->table, &from->node);
     Token token = { "bad token" };
 
     Message *query = Message_CreateQAnnouncePeer(from,
@@ -216,7 +216,7 @@ char *test_HandleQFindNode()
     Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
-    Table_InsertNode(client->table, &from->node);
+    Table_CopyAndAddNode(client->table, &from->node);
 
     Message *query = Message_CreateQFindNode(from, &from->node, &target_id);
 
@@ -257,14 +257,6 @@ char *test_HandleRFindNode()
 
     Search *search = Search_Create(&target_id);
 
-    /* Insert to tables so replies can be marked by handle */
-    Node *client_from_node = Node_Copy(&from->node);
-    client_from_node->pending_queries = 1;
-    Table_InsertNode(client->table, client_from_node);
-    Node *search_from_node = Node_Copy(&from->node);
-    search_from_node->pending_queries = 1;
-    Table_InsertNode(search->table, search_from_node);
-
     Message *query = Message_CreateQFindNode(client, &from->node, &target_id);
 
     Message *rfindnode = Message_CreateRFindNode(from, query, found);
@@ -283,7 +275,6 @@ char *test_HandleRFindNode()
     Search_Destroy(search);
     Client_Destroy(client);
     Client_Destroy(from);
-    Node_Destroy(client_from_node);
     Message_Destroy(query);
     Message_Destroy(rfindnode);
 
@@ -297,10 +288,6 @@ char *test_HandleRPing()
     Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
 
-    Node *from_node = Node_Copy(&from->node);
-    from_node->pending_queries = 1;
-    Table_InsertNode(client->table, from_node);
-
     Message *query = Message_CreateQPing(client, &from->node);
 
     Message *reply = Message_CreateRPing(from, query);
@@ -308,13 +295,12 @@ char *test_HandleRPing()
     int rc = (GetReplyHandler(reply->type))(client, reply);
 
     mu_assert(rc == 0, "HandleReply failed");
-    mu_assert(HasRecentReply(client->table, from_node->id), "Reply not marked");
+    mu_assert(HasRecentReply(client->table, from->node.id), "Reply not marked");
     mu_assert(reply->type == RPing, "Wrong type");
     mu_assert(SameT(query, reply), "Wrong t");
 
     Client_Destroy(client);
     Client_Destroy(from);
-    Node_Destroy(from_node);
     Message_Destroy(query);
     Message_Destroy(reply);
 
@@ -328,10 +314,6 @@ char *test_HandleRAnnouncePeer()
     Hash info_hash = { "info_hash" };
     Client *client = Client_Create(id, 2, 4, 8);
     Client *from = Client_Create(from_id, 1, 2, 3);
-
-    Node *from_node = Node_Copy(&from->node);
-    from_node->pending_queries = 1;
-    Table_InsertNode(client->table, from_node);
 
     Search *search = Search_Create(&info_hash);
 
@@ -349,16 +331,16 @@ char *test_HandleRAnnouncePeer()
     int rc = (GetReplyHandler(reply->type))(client, reply);
 
     mu_assert(rc == 0, "HandleReply failed");
-    mu_assert(HasRecentReply(client->table, from_node->id), "Reply not marked");
-    mu_assert(HasRecentReply(search->table, from_node->id), "Search reply not marked");
+    mu_assert(HasRecentReply(client->table, from->node.id), "Reply not marked");
+    mu_assert(HasRecentReply(search->table, from->node.id), "Search reply not marked");
     mu_assert(reply->type == RAnnouncePeer, "Wrong type");
     mu_assert(SameT(query, reply), "Wrong t");
 
     Client_Destroy(client);
     Client_Destroy(from);
-    Node_Destroy(from_node);
     Message_Destroy(query);
     Message_Destroy(reply);
+    Search_Destroy(search);
 
     return NULL;
 }
@@ -372,9 +354,6 @@ char *test_HandleRGetPeers_nodes()
     Client *from = Client_Create(from_id, 1, 1, 1);
     const int nodes_count = 3;
     Node *found_nodes[nodes_count];
-
-    from->node.pending_queries = 1;
-    Table_InsertNode(client->table, &from->node);
 
     int i = 0;
     for (i = 0; i < nodes_count; i++)
@@ -407,6 +386,11 @@ char *test_HandleRGetPeers_nodes()
     mu_assert(search->peers->count == 0, "No peers expected");
 
     Client_Destroy(client);
+
+    /* Nodes already destroyed by reply handler: just destroy table
+     * and replace it with a dummy for Client_Destroy. */
+    Table_Destroy(from->table);
+    from->table = Table_Create(&from_id);
     Client_Destroy(from);
 
     Message_Destroy(qgetpeers);
@@ -426,7 +410,7 @@ char *test_HandleRGetPeers_peers()
     const int peers_count = 3;
 
     from->node.pending_queries = 1;
-    Table_InsertNode(client->table, &from->node);
+    Table_CopyAndAddNode(client->table, &from->node);
 
     int i = 0;
     for (i = 0; i < peers_count; i++)

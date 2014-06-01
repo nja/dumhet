@@ -77,6 +77,7 @@ void Client_Destroy(Client *client)
     if (client == NULL)
         return;
 
+    Table_DestroyNodes(client->table);
     Table_Destroy(client->table);
     HashmapPendingResponses_Destroy((HashmapPendingResponses *)client->pending);
     free(client->buf);
