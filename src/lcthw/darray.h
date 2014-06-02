@@ -51,6 +51,8 @@ void DArray_destroy(DArray *array);
 
 void DArray_clear(DArray *array);
 
+void DArray_compact(DArray *array);
+
 int DArray_expand(DArray *array);
 
 int DArray_contract(DArray *array);

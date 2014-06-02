@@ -32,6 +32,7 @@
  */
 
 #include "minunit.h"
+#include <stdarg.h>
 #include <lcthw/darray.h>
 
 static DArray *array = NULL;
@@ -137,6 +138,77 @@ char *test_push_pop()
     return NULL;
 }
 
+char *do_compact(int expected, int count, ...)
+{
+    va_list ap;
+
+    DArray *array = DArray_create(sizeof(char *), count + 1);
+
+    va_start(ap, count);
+
+    int i;
+    for (i = 0; i < count; i++)
+    {
+        DArray_push(array, va_arg(ap, char *));
+    }
+
+    va_end(ap);
+
+    DArray_compact(array);
+
+    mu_assert(DArray_end(array) == expected, "Wrong length");
+
+    for (i = 0; i < DArray_end(array); i++)
+    {
+        mu_assert(DArray_get(array, i) != NULL, "NULL still in array");
+
+        if (i == 0)
+            continue;
+
+        char *a = DArray_get(array, i - 1);
+        char *b = DArray_get(array, i);
+
+        mu_assert(*a < *b, "Shuffled array");
+    }
+
+    DArray_destroy(array);
+
+    return NULL;
+}
+
+char *test_compact()
+{
+    char *r;
+
+    r = do_compact(0, 0);
+    mu_assert(!r, "Compact failed");
+
+    r = do_compact(0, 1, NULL);
+    mu_assert(!r, "Compact failed");
+
+    r = do_compact(1, 1, "1");
+    mu_assert(!r, "Compact failed");
+
+    r = do_compact(0, 2, NULL, NULL);
+    mu_assert(!r, "Compact failed");
+
+    r = do_compact(1, 3, "1", NULL, NULL);
+    mu_assert(!r, "Compact failed");
+
+    r = do_compact(1, 3, NULL, "1", NULL);
+    mu_assert(!r, "Compact failed");
+
+    r = do_compact(5, 7, "1", "2", NULL, "3", NULL, "4", "5");
+    mu_assert(!r, "Compact failed");
+
+    r = do_compact(5, 8, "1", "2", NULL, "3", NULL, "4", "5", NULL);
+    mu_assert(!r, "Compact failed");
+
+    r = do_compact(6, 11, NULL, "1", "2", NULL, "3", NULL, "4", "5", "6", NULL, NULL);
+    mu_assert(!r, "Compact failed");
+
+    return r;
+}
 
 char * all_tests() {
     mu_suite_start();
@@ -150,8 +222,9 @@ char * all_tests() {
     mu_run_test(test_push_pop);
     mu_run_test(test_destroy);
 
+    mu_run_test(test_compact);
+
     return NULL;
 }
 
 RUN_TESTS(all_tests);
-

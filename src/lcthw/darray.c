@@ -143,4 +143,23 @@ error:
     return NULL;
 }
 
+void DArray_compact(DArray *array)
+{
+    int i = 0;
 
+    for (i = 0; i < DArray_end(array); i++)
+    {
+        if (DArray_get(array, i) != NULL)
+            continue;
+
+        int j;
+        for (j = i; j < DArray_end(array) - 1; j++)
+        {
+            void *tmp = DArray_get(array, j + 1);
+            DArray_set(array, j, tmp);
+        }
+
+        DArray_pop(array);
+        i--;
+    }
+}
