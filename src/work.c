@@ -22,6 +22,28 @@ error:
     return -1;
 }
 
+void Client_CleanSearches(Client *client)
+{
+    assert(client != NULL && "NULL Client pointer");
+
+    int i;
+    for (i = 0; i < DArray_end(client->searches); i++)
+    {
+        Search *search = (Search *)DArray_get(client->searches, i);
+
+        if (!Search_IsDone(search, time(NULL)))
+            continue;
+
+        Client_RunHook(client, HookSearchDone, search);
+
+        Search_Destroy(search);
+
+        DArray_remove(client->searches, i);
+    }
+
+    DArray_compact(client->searches);
+}
+
 int Client_HandleMessages(Client *client)
 {
     assert(client != NULL && "NULL Client pointer");

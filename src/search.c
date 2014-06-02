@@ -55,6 +55,19 @@ void Search_Destroy(Search *search)
     free(search);
 }
 
+int Search_IsDone(Search *search, time_t now)
+{
+    const int search_respite = 3;
+
+    if (search->send_time == 0)
+        return 0;
+
+    if (search->send_time + search_respite < now)
+        return 1;
+
+    return 0;
+}
+
 int Search_CopyTable(Search *search, Table *source)
 {
     assert(search != NULL && "NULL Search pointer");

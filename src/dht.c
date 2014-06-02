@@ -74,6 +74,8 @@ int Dht_Process(void *client_)
     int rc = Client_HandleSearches(client);
     check(rc == 0, "Client_HandleSearches failed");
 
+    Client_CleanSearches(client);
+
     rc = Client_Send(client, client->queries);
     check(rc == 0, "Client_Send failed");
 

@@ -13,7 +13,7 @@ int Client_Receive(Client *client);
 int Client_HandleMessages(Client *client);
 int Client_RunHooks(Client *client);
 int Client_HandleSearches(Client *client);
-int Client_CleanSearches(Client *client);
+void Client_CleanSearches(Client *client);
 int Client_CleanPeers(Client *client);
 
 #endif

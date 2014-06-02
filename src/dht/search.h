@@ -29,7 +29,8 @@ int Search_CopyTable(Search *search, Table *source);
 /* Create and enqueue find_nodes, get_peers and announce_peer queries. */
 int Search_DoWork(Client *client, Search *search);
 
-#define SEARCH_RESPITE 3
+/* Checks if the search is done */
+int Search_IsDone(Search *search, time_t now);
 
 /* Adds to the collection of found peers by the search. */
 int Search_AddPeers(Search *search, Peer *peers, int count);
